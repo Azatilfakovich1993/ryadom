@@ -35,31 +35,10 @@ function spreadOverlapping(events) {
 }
 
 const PIN_STYLES = `
-  @keyframes ryadom-pin-p1 {
-    0%   { transform:scale(1);   opacity:.65; }
-    70%  { transform:scale(2.4); opacity:0;   }
-    100% { transform:scale(2.4); opacity:0;   }
-  }
-  @keyframes ryadom-pin-p2 {
-    0%   { transform:scale(1);   opacity:.4;  }
-    70%  { transform:scale(1.8); opacity:0;   }
-    100% { transform:scale(1.8); opacity:0;   }
-  }
-  @keyframes ryadom-ya-pulse {
-    0%   { transform:scale(1);   opacity:0.7; }
-    100% { transform:scale(3);   opacity:0;   }
-  }
   .rp-wrap {
     position:relative; width:48px; height:64px; cursor:pointer;
     transform: translate(-24px, -62px);
   }
-  .rp-r1, .rp-r2 {
-    position:absolute; top:5px; left:5px;
-    width:38px; height:38px; border-radius:50%;
-    pointer-events:none;
-  }
-  .rp-r1 { animation:ryadom-pin-p1 2.6s ease-out infinite; }
-  .rp-r2 { animation:ryadom-pin-p2 2.6s ease-out infinite; animation-delay:.7s; }
   .rp-pin { position:absolute; top:0; left:0; overflow:visible; }
 `
 
@@ -83,8 +62,6 @@ const YA_ICON_URL = `data:image/svg+xml,${YA_ICON_SVG}`
 function makePinLayout(ymaps) {
   return ymaps.templateLayoutFactory.createClass(`
     <div class="rp-wrap">
-      <div class="rp-r1" style="border:2px solid {{ properties.color }};"></div>
-      <div class="rp-r2" style="border:1.5px solid {{ properties.color }};"></div>
       <svg class="rp-pin" width="48" height="64" viewBox="0 0 48 64">
         <defs>
           <radialGradient id="rp-glow-{{ properties.uid }}" cx="50%" cy="45%" r="55%">
@@ -251,7 +228,7 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
           circle.options.set('strokeWidth', 1 + (1 - t) * 3)
         } catch (_) {}
       })
-    }, 50)
+    }, 100)
 
     radarCleanRef.current = () => {
       stopped = true
