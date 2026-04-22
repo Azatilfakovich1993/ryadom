@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg:           #111827;
+  --bg-2:         #1f2937;
+  --bg-3:         #374151;
+  --text:         #f9fafb;
+  --hint:         #9ca3af;
+  --accent:       #22d3ee;
+  --accent-dim:   rgba(34,211,238,0.15);
+  --accent-glow:  rgba(34,211,238,0.35);
+  --border:       rgba(34,211,238,0.18);
+  --danger:       #f87171;
+  --success:      #34d399;
+  --warning:      #fbbf24;
+
+  /* override Telegram vars */
+  --tg-theme-bg-color:            var(--bg);
+  --tg-theme-secondary-bg-color:  var(--bg-2);
+  --tg-theme-text-color:          var(--text);
+  --tg-theme-hint-color:          var(--hint);
+  --tg-theme-button-color:        var(--accent);
+  --tg-theme-button-text-color:   #111827;
+}
+
+* { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%; width: 100%;
+  margin: 0; padding: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Scrollbar hide */
+::-webkit-scrollbar { display: none; }
+
+/* Yandex map container */
+.ymap-container { width: 100%; height: 100%; }
+
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  70%  { transform: scale(1.9); opacity: 0;   }
+  100% { transform: scale(1.9); opacity: 0;   }
+}
+@keyframes pulse-ring2 {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  70%  { transform: scale(1.6); opacity: 0;   }
+  100% { transform: scale(1.6); opacity: 0;   }
+}
+
+/* Glow text utility */
+.glow { text-shadow: 0 0 12px var(--accent-glow); }
