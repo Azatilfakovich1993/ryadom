@@ -242,13 +242,6 @@ export default function App() {
   return (
     <div className="relative w-full h-full overflow-hidden" style={{ background: 'var(--bg)' }}>
 
-      {/* DEBUG — удалить после диагностики */}
-      <div style={{ position:'absolute', top:70, left:8, zIndex:9999, background:'rgba(0,0,0,0.85)', color:'#22d3ee', padding:'8px 12px', borderRadius:10, fontSize:11, pointerEvents:'none', lineHeight:1.8 }}>
-        📍 loc: {location ? `${location.lat.toFixed(5)}, ${location.lon.toFixed(5)}` : 'null'}<br/>
-        ⏳ loading: {locLoading ? 'true' : 'false'}<br/>
-        🚫 denied: {geoDenied ? 'true' : 'false'}
-      </div>
-
       {/* Map */}
       <div className="absolute inset-0">
         <MapComponent

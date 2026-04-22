@@ -320,40 +320,6 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         </button>
       )}
 
-      {/* Пульсирующее кольцо вокруг «Я» */}
-      {mapReady && userLocation && (
-        <>
-          <style>{`
-            @keyframes ya-ring {
-              0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
-              100% { transform: translate(-50%,-50%) scale(3.2); opacity: 0;   }
-            }
-          `}</style>
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            width: 32, height: 32,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 5,
-          }}>
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%',
-              width: 40, height: 40,
-              marginTop: -20, marginLeft: -20,
-              borderRadius: '50%',
-              border: '2px solid rgba(34,211,238,0.6)',
-              animation: 'ya-ring 2.4s ease-out infinite',
-            }} />
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%',
-              width: 40, height: 40,
-              marginTop: -20, marginLeft: -20,
-              borderRadius: '50%',
-              border: '2px solid rgba(34,211,238,0.35)',
-              animation: 'ya-ring 2.4s ease-out 1.2s infinite',
-            }} />
-          </div>
-        </>
-      )}
     </div>
   )
 }
