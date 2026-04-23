@@ -210,6 +210,17 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [confirmDelete, setConfirm]   = useState(false)
   const [creator, setCreator]         = useState(null)
   const [showCreator, setShowCreator] = useState(false)
+  const [showYaMode, setShowYaMode]   = useState(false)
+
+  const openYandex = (mode) => {
+    const schemes = { auto: 'yandexnavi', pd: 'yandexmaps', mt: 'yandexmaps' }
+    const rtt = { auto: 'auto', pd: 'pd', mt: 'mt' }
+    window.location.href = `${schemes[mode]}://maps.yandex.ru/?rtext=~${event.lat},${event.lon}&rtt=${rtt[mode]}`
+    setTimeout(() => {
+      window.open(`https://yandex.ru/maps/?rtext=~${event.lat},${event.lon}&rtt=${rtt[mode]}`, '_blank')
+    }, 1500)
+    setShowYaMode(false)
+  }
   const [editing, setEditing]         = useState(false)
   const [editTitle, setEditTitle]     = useState(event.title)
   const [saving, setSaving]           = useState(false)
@@ -407,14 +418,33 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                 🧭 Добраться
               </p>
               <div className="flex gap-2">
-                <button onClick={() => {
-                            window.location.href = `yandexnavi://build_route_on_map?lat_to=${event.lat}&lon_to=${event.lon}`
-                            setTimeout(() => { window.open(`https://yandex.ru/maps/?rtext=~${event.lat},${event.lon}&rtt=pd`, '_blank') }, 1500)
-                          }}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
-                        style={{ background: 'rgba(252,211,77,0.15)', border: '1px solid rgba(252,211,77,0.4)', color: '#fcd34d' }}>
-                  🚕 Яндекс
-                </button>
+                <div className="flex-1 flex flex-col gap-1.5">
+                  {!showYaMode ? (
+                    <button onClick={() => setShowYaMode(true)}
+                            className="w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
+                            style={{ background: 'rgba(252,211,77,0.15)', border: '1px solid rgba(252,211,77,0.4)', color: '#fcd34d' }}>
+                      🚕 Яндекс
+                    </button>
+                  ) : (
+                    <div className="flex gap-1.5">
+                      <button onClick={() => openYandex('auto')}
+                              className="flex-1 flex flex-col items-center py-2 rounded-xl text-xs font-bold transition active:scale-95"
+                              style={{ background: 'rgba(252,211,77,0.2)', border: '1px solid rgba(252,211,77,0.5)', color: '#fcd34d' }}>
+                        <span>🚗</span><span>Авто</span>
+                      </button>
+                      <button onClick={() => openYandex('pd')}
+                              className="flex-1 flex flex-col items-center py-2 rounded-xl text-xs font-bold transition active:scale-95"
+                              style={{ background: 'rgba(252,211,77,0.2)', border: '1px solid rgba(252,211,77,0.5)', color: '#fcd34d' }}>
+                        <span>🚶</span><span>Пешком</span>
+                      </button>
+                      <button onClick={() => openYandex('mt')}
+                              className="flex-1 flex flex-col items-center py-2 rounded-xl text-xs font-bold transition active:scale-95"
+                              style={{ background: 'rgba(252,211,77,0.2)', border: '1px solid rgba(252,211,77,0.5)', color: '#fcd34d' }}>
+                        <span>🚌</span><span>Транспорт</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <button onClick={() => {
                             window.open(`https://2gis.ru/directions/pedestrian/to/${event.lon},${event.lat}`, '_blank')
                           }}
