@@ -516,16 +516,41 @@ export default function App() {
         </div>
       )}
 
-      {/* Create button — только в режиме карты */}
+      {/* FAB кнопки — только в режиме карты */}
       {mode === 'map' && !showCreate && !selectedEvent && !clusterEvents && (
-        <div className="absolute z-10 flex flex-col items-end gap-2"
-             style={{ bottom: 32, right: 16, marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="absolute z-10 flex flex-col items-end gap-3"
+             style={{ bottom: 100, right: 16 }}>
           {showCreateHint && (
             <div className="rounded-2xl px-3 py-2 text-xs font-semibold animate-pulse"
                  style={{ background: 'rgba(17,24,39,0.95)', color: 'var(--accent)', border: '1px solid var(--accent)', boxShadow: '0 0 12px var(--accent-glow)', whiteSpace: 'nowrap' }}>
               Что происходит рядом? 👀
             </div>
           )}
+          {/* Моё местоположение */}
+          <button
+            onClick={() => {
+              haptic('impact', 'light')
+              if (location && window._ryadomMap) {
+                window._ryadomMap.setCenter([location.lat, location.lon], 15, { duration: 500 })
+              }
+            }}
+            className="transition active:scale-90"
+            style={{
+              width: 52, height: 52, borderRadius: 15,
+              background: 'rgba(17,24,39,0.82)',
+              backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--accent)' }}>
+              <circle cx="12" cy="12" r="3" fill="var(--accent)" stroke="none"/>
+              <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              <circle cx="12" cy="12" r="7" strokeOpacity="0.4"/>
+            </svg>
+          </button>
+          {/* Добавить событие */}
           <button
             onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
             className="transition active:scale-90"
@@ -549,11 +574,6 @@ export default function App() {
           onSelect={(ev) => { setClusterEvents(null); setSelectedEvent(ev) }}
           onClose={() => setClusterEvents(null)}
         />
-      )}
-
-      {/* Events peek bar — снизу в режиме карты */}
-      {mode === 'map' && !selectedEvent && !clusterEvents && !showCreate && visibleEvents.length > 0 && (
-        <EventsPeek events={visibleEvents} location={location} onSelect={handleEventClick} />
       )}
 
       {selectedEvent && (

@@ -152,6 +152,7 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
           controls: ['zoomControl'],
           behaviors: ['drag', 'scrollZoom', 'multiTouch'],
         })
+        window._ryadomMap = mapRef.current
         setMapReady(true)
       })
       return true
