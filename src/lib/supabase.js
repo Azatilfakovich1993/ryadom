@@ -2,12 +2,13 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const proxyUrl = import.meta.env.VITE_SUPABASE_PROXY_URL
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase env vars missing. Copy .env.example → .env and fill in values.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(proxyUrl || supabaseUrl, supabaseAnonKey)
 
 export async function fetchNearbyEvents(lat, lon, radiusMeters = 5000) {
   const { data, error } = await supabase.rpc('get_nearby_events', {
