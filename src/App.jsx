@@ -112,7 +112,9 @@ export default function App() {
   const { tg, user, haptic } = useTelegram()
   const { location, loading: locLoading, denied: geoDenied, refetch: geoRefetch } = useGeolocation(tg)
 
-  const [events, setEvents]             = useState([])
+  const [events, setEvents]             = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ryadom_events') || '[]') } catch { return [] }
+  })
   const [activeFilter, setActiveFilter] = useState(null) // null = все категории
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [clusterEvents, setClusterEvents] = useState(null)
@@ -253,7 +255,10 @@ export default function App() {
         fetchNearbyEvents(location.lat, location.lon, RADIUS_M),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000)),
       ])
-      if (data.length > 0) setEvents(data)
+      if (data.length > 0) {
+        setEvents(data)
+        localStorage.setItem('ryadom_events', JSON.stringify(data))
+      }
     } catch (e) {
       console.warn('loadEvents:', e.message)
     } finally {
