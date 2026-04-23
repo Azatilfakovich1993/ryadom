@@ -156,7 +156,7 @@ function RadarCard({ hasEvents, radiusIdx, onExpand, onCreateEvent }) {
           }} />
         ))}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 42 }}>
-          {hasEvents ? '🔇' : '📡'}
+          {hasEvents ? '🔍' : '📡'}
         </div>
       </div>
 
@@ -208,7 +208,6 @@ export default function FeedView({ events, location, onViewEvent, onCreateEvent 
 
   const goTo = (index) => setCurrentIndex(Math.max(0, Math.min(index, totalCards - 1)))
 
-  useEffect(() => { setCurrentIndex(0) }, [radiusIdx])
 
   const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; dragging.current = true }
   const onTouchEnd = (e) => {
