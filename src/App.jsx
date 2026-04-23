@@ -60,6 +60,7 @@ export default function App() {
   const [showCreateHint, setShowCreateHint] = useState(false)
   const [radarActive, setRadarActive]       = useState(false)
   const [showRadarCard, setShowRadarCard]   = useState(false)
+  const [showFilterMenu, setShowFilterMenu] = useState(false)
   const radarShown                          = useRef(false)
 
   // ── Auth state ────────────────────────────────────────────
@@ -284,35 +285,76 @@ export default function App() {
                          boxShadow: connected ? '0 0 5px #34d399' : '0 0 5px #fbbf24' }} />
         </div>
 
-        {/* Чипы-фильтры */}
-        <div className="flex gap-2 overflow-x-auto flex-1 min-w-0" style={{ scrollbarWidth: 'none' }}>
-          {CHIPS.map(c => {
-            const count = events.filter(e => e.category === c.key).length
-            const active = activeFilter === c.key
-            return (
-              <button
-                key={c.key}
-                onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key) }}
-                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold whitespace-nowrap flex-shrink-0 transition active:scale-95"
-                style={{
-                  background: active ? c.color : 'rgba(17,24,39,0.92)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: `1px solid ${active ? c.color : c.color + '55'}`,
-                  color: active ? '#111827' : c.color,
-                  boxShadow: active ? `0 0 12px ${c.color}66` : '0 2px 12px rgba(0,0,0,0.35)',
-                }}>
-                <span>{c.icon}</span>
-                <span>{c.label}</span>
-                {count > 0 && (
-                  <span className="rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold"
-                        style={{ background: active ? '#111827' : c.color, color: active ? c.color : '#111827' }}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            )
-          })}
+        {/* Кнопка фильтра */}
+        <div className="relative flex-1">
+          <button
+            onClick={() => { haptic('impact', 'light'); setShowFilterMenu(v => !v) }}
+            className="flex items-center gap-2 rounded-2xl px-3 py-2 transition active:scale-95"
+            style={{
+              background: activeFilter ? CHIPS.find(c => c.key === activeFilter)?.color : 'rgba(17,24,39,0.92)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: activeFilter ? `1px solid ${CHIPS.find(c => c.key === activeFilter)?.color}` : '1px solid var(--border)',
+              boxShadow: activeFilter ? `0 0 12px ${CHIPS.find(c => c.key === activeFilter)?.color}66` : '0 2px 12px rgba(0,0,0,0.35)',
+              color: activeFilter ? '#111827' : 'var(--accent)',
+            }}>
+            <span style={{ fontSize: 15 }}>
+              {activeFilter ? CHIPS.find(c => c.key === activeFilter)?.icon : '🎚️'}
+            </span>
+            <span className="text-xs font-semibold whitespace-nowrap">
+              {activeFilter ? CHIPS.find(c => c.key === activeFilter)?.label : 'Фильтр'}
+            </span>
+            {activeFilter && (
+              <span className="text-xs font-bold opacity-70">✕</span>
+            )}
+          </button>
+
+          {showFilterMenu && (
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setShowFilterMenu(false)} />
+              <div style={{
+                position: 'absolute', top: '110%', left: 0, zIndex: 50,
+                background: 'rgba(17,24,39,0.97)',
+                border: '1px solid var(--border)',
+                borderRadius: 16, padding: 8,
+                backdropFilter: 'blur(24px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                minWidth: 160,
+              }}>
+                <button
+                  onClick={() => { setActiveFilter(null); setShowFilterMenu(false); haptic('impact', 'light') }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95"
+                  style={{
+                    background: !activeFilter ? 'rgba(34,211,238,0.15)' : 'transparent',
+                    color: !activeFilter ? 'var(--accent)' : 'var(--hint)',
+                    border: !activeFilter ? '1px solid rgba(34,211,238,0.3)' : '1px solid transparent',
+                    marginBottom: 4,
+                  }}>
+                  <span>🗺️</span><span>Все категории</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11 }}>{events.length}</span>
+                </button>
+                {CHIPS.map(c => {
+                  const count = events.filter(e => e.category === c.key).length
+                  const active = activeFilter === c.key
+                  return (
+                    <button
+                      key={c.key}
+                      onClick={() => { setActiveFilter(active ? null : c.key); setShowFilterMenu(false); haptic('impact', 'light') }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95"
+                      style={{
+                        background: active ? c.color + '22' : 'transparent',
+                        color: active ? c.color : 'var(--text)',
+                        border: active ? `1px solid ${c.color}44` : '1px solid transparent',
+                        marginBottom: 2,
+                      }}>
+                      <span>{c.icon}</span><span>{c.label}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--hint)' }}>{count}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Профиль */}
