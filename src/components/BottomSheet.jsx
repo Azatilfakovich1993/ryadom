@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { supabase, fetchMessages, sendMessage, deleteEvent } from '../lib/supabase'
+import { supabase, fetchMessages, sendMessage, deleteEvent, getProfile } from '../lib/supabase'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
@@ -173,7 +173,13 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const hasPhotos = event.photos?.length > 0
   const [lightbox, setLightbox] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [creator, setCreator] = useState(null)
   const isOwner = authUser && event.creator_id === authUser.id
+
+  useEffect(() => {
+    if (!event.creator_id) return
+    getProfile(event.creator_id).then(p => setCreator(p ?? null))
+  }, [event.creator_id])
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -240,6 +246,28 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
               </h2>
             </div>
           </div>
+
+          {/* Creator */}
+          {creator && (
+            <div className="flex items-center gap-3 mb-4 rounded-2xl px-3 py-2.5"
+                 style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+              <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                   style={{ background: cfg.color + '33', border: `1.5px solid ${cfg.color}55` }}>
+                {creator.avatar_url
+                  ? <img src={creator.avatar_url} className="w-full h-full object-cover" alt="" />
+                  : <span style={{ color: cfg.color }}>
+                      {(creator.display_name ?? creator.username ?? '?')[0].toUpperCase()}
+                    </span>
+                }
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>Инициатор</p>
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
+                  {creator.display_name || creator.username || 'Аноним'}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Photos */}
           {hasPhotos && (
