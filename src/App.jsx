@@ -251,7 +251,7 @@ export default function App() {
         fetchNearbyEvents(location.lat, location.lon, RADIUS_M),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000)),
       ])
-      setEvents(data)
+      if (data.length > 0) setEvents(data)
     } catch (e) {
       console.warn('loadEvents:', e.message)
     } finally {

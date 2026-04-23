@@ -16,7 +16,7 @@ export async function fetchNearbyEvents(lat, lon, radiusMeters = 5000) {
     user_lon: lon,
     radius_meters: radiusMeters,
   })
-  if (error) { console.error('fetchNearbyEvents error:', error); return [] }
+  if (error) throw error
   return data ?? []
 }
 
