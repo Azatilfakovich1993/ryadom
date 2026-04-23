@@ -303,7 +303,8 @@ export default function App() {
       const cnt = (profile?.events_count ?? 0) + 1
       if (cnt >= 3)  showAchievement('activist')
       if (cnt >= 10) showAchievement('legend')
-      await loadEvents()
+      setEvents(prev => prev.find(e => e.id === event.id) ? prev : [event, ...prev])
+      loadEvents()
     } catch (err) {
       console.error('createEvent failed:', err)
       showToast('Ошибка: ' + (err.message ?? JSON.stringify(err)), 'error')
