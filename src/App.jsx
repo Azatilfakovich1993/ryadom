@@ -310,7 +310,10 @@ export default function App() {
     setCreating(true)
     try {
       const uid = authUser?.id ?? user?.id?.toString() ?? localStorage.getItem('ryadom_uid') ?? 'anonymous'
-      const event = await createEvent({ title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [] })
+      const event = await Promise.race([
+        createEvent({ title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [] }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('Превышено время ожидания. Попробуй ещё раз.')), 15000)),
+      ])
       haptic('notification', 'success')
       setShowCreate(false)
       showToast('Событие опубликовано!')
