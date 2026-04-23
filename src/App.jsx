@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import MapComponent from './components/MapComponent'
 import FeedView from './components/FeedView'
 import BottomSheet from './components/BottomSheet'
@@ -18,6 +18,79 @@ import { supabase, fetchNearbyEvents, createEvent, getProfile } from './lib/supa
 import { tryUnlock } from './utils/achievements'
 
 const RADIUS_M = 15000
+
+import { CATEGORY_CONFIG } from './components/MapComponent'
+
+function EventsPeek({ events, location, onSelect }) {
+  const [open, setOpen] = useState(false)
+
+  const sorted = useMemo(() => {
+    if (!location) return events
+    return [...events].sort((a, b) => {
+      const da = Math.hypot(a.lat - location.lat, a.lon - location.lon)
+      const db = Math.hypot(b.lat - location.lat, b.lon - location.lon)
+      return da - db
+    })
+  }, [events, location])
+
+  const active = sorted.filter(e => new Date(e.expires_at) > new Date())
+
+  return (
+    <div className="absolute left-0 right-0 z-10 transition-all duration-300"
+         style={{ bottom: open ? 0 : -4, maxHeight: open ? '55vh' : 'auto' }}>
+
+      {/* Handle */}
+      <button onClick={() => setOpen(v => !v)}
+              className="w-full flex flex-col items-center pt-2 pb-1"
+              style={{
+                background: 'rgba(17,24,39,0.88)',
+                backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                borderTop: '1px solid var(--border)',
+                borderRadius: open ? 0 : '16px 16px 0 0',
+              }}>
+        <div className="w-9 h-[3px] rounded-full mb-1" style={{ background: 'var(--bg-3)' }} />
+        <p className="text-[10px] font-bold" style={{ color: 'var(--hint)' }}>
+          {open ? '▼ скрыть' : `▲ ${active.length} активных события рядом`}
+        </p>
+      </button>
+
+      {/* List */}
+      {open && (
+        <div className="overflow-y-auto pb-4 px-3 flex flex-col gap-2"
+             style={{
+               maxHeight: 'calc(55vh - 44px)',
+               background: 'rgba(17,24,39,0.95)',
+               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+             }}>
+          {active.map(ev => {
+            const cfg = CATEGORY_CONFIG[ev.category] ?? CATEGORY_CONFIG.chat
+            const remaining = Math.max(0, new Date(ev.expires_at) - Date.now())
+            const mins = Math.floor(remaining / 60000)
+            const timeLabel = mins >= 60 ? `${Math.floor(mins/60)}ч ${mins%60}м` : `${mins}м`
+            return (
+              <button key={ev.id} onClick={() => { setOpen(false); onSelect(ev) }}
+                      className="w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition active:scale-95"
+                      style={{ background: 'var(--bg-2)', border: `1px solid ${cfg.color}33` }}>
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
+                      style={{ background: cfg.color + '22' }}>
+                  {cfg.icon}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{ev.title}</p>
+                  <p className="text-[10px]" style={{ color: cfg.color }}>⏱ {timeLabel}</p>
+                </div>
+                <svg className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--hint)' }}
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function distanceM(lat1, lon1, lat2, lon2) {
   const R = 6371000
@@ -280,112 +353,138 @@ export default function App() {
         />
       )}
 
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 pt-3 pb-2">
+      {/* Top bar — единая панель */}
+      {mode === 'map' && (
+        <div className="absolute top-0 left-0 right-0 z-20 px-3 pt-3 pb-2">
+          {/* Строка 1: лого / переключатель / профиль */}
+          <div className="flex items-center gap-2 mb-2">
+            {/* Лого */}
+            <div className="flex items-center gap-1.5 rounded-2xl px-3 py-2 flex-shrink-0"
+                 onClick={handleLogoTap}
+                 style={{
+                   background: 'rgba(17,24,39,0.85)',
+                   backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                   border: '1px solid var(--border)',
+                   boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+                   cursor: 'pointer',
+                 }}>
+              <LogoIcon size={18} />
+              <span className="font-bold text-xs tracking-wide" style={{ color: 'var(--accent)' }}>RYADOM</span>
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: connected ? 'var(--success)' : 'var(--warning)',
+                             boxShadow: connected ? '0 0 5px #34d399' : '0 0 5px #fbbf24' }} />
+            </div>
 
-        {/* Лого + иконки категорий — только в режиме карты */}
-        <div className="flex-shrink-0 rounded-2xl px-3 py-2"
-             style={{
-               display: mode === 'feed' ? 'none' : undefined,
-               background: 'rgba(17,24,39,0.92)',
-               backdropFilter: 'blur(20px)',
-               WebkitBackdropFilter: 'blur(20px)',
-               border: '1px solid var(--border)',
-               boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
-             }}>
-          {/* Строка 1: лого */}
-          <div className="flex items-center gap-1.5 mb-1.5" onClick={handleLogoTap} style={{ cursor: 'pointer' }}>
-            <LogoIcon size={18} />
-            <span className="font-bold text-xs tracking-wide" style={{ color: 'var(--accent)' }}>RYADOM</span>
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ background: connected ? 'var(--success)' : 'var(--warning)',
-                           boxShadow: connected ? '0 0 5px #34d399' : '0 0 5px #fbbf24' }} />
+            <div className="flex-1" />
+
+            {/* Переключатель Лента / Карта */}
+            <div style={{
+              display: 'flex', borderRadius: 14, padding: 3, flexShrink: 0,
+              background: 'rgba(17,24,39,0.85)',
+              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid var(--border)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+            }}>
+              {[{ key: 'feed', label: '▤ Лента' }, { key: 'map', label: '🗺 Карта' }].map(m => (
+                <button key={m.key} onClick={() => setMode(m.key)}
+                        style={{
+                          padding: '6px 12px', borderRadius: 11,
+                          fontSize: 12, fontWeight: 700,
+                          border: 'none', cursor: 'pointer',
+                          background: mode === m.key ? 'var(--accent)' : 'transparent',
+                          color: mode === m.key ? '#111827' : 'var(--hint)',
+                          transition: 'all 0.2s',
+                        }}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Профиль */}
+            <button onClick={() => authUser ? setShowProfile(true) : setShowAuth(true)}
+                    className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition active:scale-90"
+                    style={{
+                      background: 'rgba(17,24,39,0.85)',
+                      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                      border: authUser ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                      boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.35)',
+                    }}>
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
+                : <span style={{ color: authUser ? 'var(--accent)' : 'var(--hint)', fontSize: 16 }}>👤</span>
+              }
+            </button>
           </div>
-          {/* Строка 2: иконки категорий */}
-          <div className="flex gap-1">
+
+          {/* Строка 2: фильтры + обновить */}
+          <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {CHIPS.map(c => {
               const active = activeFilter === c.key
               return (
-                <button
-                  key={c.key}
-                  onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key) }}
-                  className="transition active:scale-90"
-                  style={{
-                    width: 28, height: 28,
-                    borderRadius: 8,
-                    fontSize: 14,
-                    background: active ? c.color + '33' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${active ? c.color : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: active ? `0 0 8px ${c.color}55` : 'none',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                  {c.icon}
+                <button key={c.key}
+                        onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key) }}
+                        className="flex items-center gap-1.5 flex-shrink-0 transition active:scale-90"
+                        style={{
+                          height: 32, borderRadius: 10, padding: '0 10px',
+                          fontSize: 13,
+                          background: active ? c.color + '28' : 'rgba(17,24,39,0.75)',
+                          backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                          border: `1px solid ${active ? c.color + '88' : 'rgba(255,255,255,0.1)'}`,
+                          boxShadow: active ? `0 0 10px ${c.color}44` : '0 1px 6px rgba(0,0,0,0.25)',
+                          color: active ? c.color : 'var(--hint)',
+                          fontWeight: active ? 700 : 400,
+                        }}>
+                  <span>{c.icon}</span>
+                  <span style={{ fontSize: 11 }}>{c.label}</span>
                 </button>
               )
             })}
+
+            <button onClick={loadEvents} disabled={loadingEvents}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 transition active:scale-90"
+                    style={{
+                      background: 'rgba(17,24,39,0.75)',
+                      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: '0 1px 6px rgba(0,0,0,0.25)',
+                    }}>
+              <svg className={`w-3.5 h-3.5 ${loadingEvents ? 'animate-spin' : ''}`}
+                   style={{ color: 'var(--accent)' }}
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Переключатель Лента / Карта */}
-        <div style={{
-          display: 'flex', borderRadius: 14, padding: 3,
-          background: 'rgba(17,24,39,0.92)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
-          flexShrink: 0,
-        }}>
-          {[{ key: 'feed', label: '▤ Лента' }, { key: 'map', label: '🗺 Карта' }].map(m => (
-            <button
-              key={m.key}
-              onClick={() => setMode(m.key)}
-              style={{
-                padding: '6px 12px', borderRadius: 11,
-                fontSize: 12, fontWeight: 700,
-                border: 'none', cursor: 'pointer',
-                background: mode === m.key ? 'var(--accent)' : 'transparent',
-                color: mode === m.key ? '#111827' : 'var(--hint)',
-                transition: 'all 0.2s',
-              }}
-            >
-              {m.label}
-            </button>
-          ))}
+      {/* Top bar — режим ленты (только переключатель) */}
+      {mode === 'feed' && (
+        <div className="absolute top-0 left-0 right-0 z-20 flex justify-center pt-3 pb-2">
+          <div style={{
+            display: 'flex', borderRadius: 14, padding: 3,
+            background: 'rgba(17,24,39,0.85)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+          }}>
+            {[{ key: 'feed', label: '▤ Лента' }, { key: 'map', label: '🗺 Карта' }].map(m => (
+              <button key={m.key} onClick={() => setMode(m.key)}
+                      style={{
+                        padding: '6px 12px', borderRadius: 11,
+                        fontSize: 12, fontWeight: 700,
+                        border: 'none', cursor: 'pointer',
+                        background: mode === m.key ? 'var(--accent)' : 'transparent',
+                        color: mode === m.key ? '#111827' : 'var(--hint)',
+                        transition: 'all 0.2s',
+                      }}>
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
-
-        {/* Профиль — только в режиме карты */}
-        {mode === 'map' && (
-          <button onClick={() => authUser ? setShowProfile(true) : setShowAuth(true)}
-                  className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition active:scale-90"
-                  style={{
-                    background: 'rgba(17,24,39,0.92)',
-                    border: authUser ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-                    boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.35)',
-                  }}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
-              : <span style={{ color: authUser ? 'var(--accent)' : 'var(--hint)', fontSize: 16 }}>👤</span>
-            }
-          </button>
-        )}
-
-        {/* Обновить — только в режиме карты */}
-        {mode === 'map' && (
-          <button onClick={loadEvents} disabled={loadingEvents}
-                  className="w-9 h-9 flex items-center justify-center rounded-2xl flex-shrink-0 transition active:scale-90"
-                  style={{
-                    background: 'rgba(17,24,39,0.92)',
-                    border: '1px solid var(--border)',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
-                  }}>
-            <svg className={`w-4 h-4 ${loadingEvents ? 'animate-spin' : ''}`}
-                 style={{ color: 'var(--accent)' }}
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Кнопка "+" в режиме ленты — над кнопкой ПОДРОБНЕЕ */}
       {mode === 'feed' && !showCreate && (
@@ -451,6 +550,11 @@ export default function App() {
           onSelect={(ev) => { setClusterEvents(null); setSelectedEvent(ev) }}
           onClose={() => setClusterEvents(null)}
         />
+      )}
+
+      {/* Events peek bar — снизу в режиме карты */}
+      {mode === 'map' && !selectedEvent && !clusterEvents && !showCreate && visibleEvents.length > 0 && (
+        <EventsPeek events={visibleEvents} location={location} onSelect={handleEventClick} />
       )}
 
       {selectedEvent && (

@@ -70,6 +70,13 @@ function makePinLayout(ymaps) {
           </radialGradient>
         </defs>
         <ellipse cx="24" cy="62" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+        <filter id="rp-gf-{{ properties.uid }}" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        <path d="M24 2 C12 2 3 11 3 23 C3 36 24 60 24 60 C24 60 45 36 45 23 C45 11 36 2 24 2 Z"
+              fill="{{ properties.color }}" opacity="0.18" filter="url(#rp-gf-{{ properties.uid }})"
+              transform="scale(1.15) translate(-3.1, -3)"/>
         <path d="M24 2 C12 2 3 11 3 23 C3 36 24 60 24 60 C24 60 45 36 45 23 C45 11 36 2 24 2 Z"
               fill="#111827" stroke="{{ properties.color }}" stroke-width="2.5"/>
         <path d="M24 2 C12 2 3 11 3 23 C3 36 24 60 24 60 C24 60 45 36 45 23 C45 11 36 2 24 2 Z"
