@@ -144,14 +144,14 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setAuthUser(session.user)
-        getProfile(session.user.id).then(setProfile)
+        getProfile(session.user.id).then(p => { if (p) setProfile(p) })
       }
       setAuthChecked(true)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       if (session?.user) {
         setAuthUser(session.user)
-        getProfile(session.user.id).then(setProfile)
+        getProfile(session.user.id).then(p => { if (p) setProfile(p) })
       } else {
         setAuthUser(null)
         setProfile(null)
@@ -622,7 +622,7 @@ export default function App() {
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
-          onAuth={(u) => { setAuthUser(u); setShowAuth(false); getProfile(u.id).then(setProfile) }}
+          onAuth={(u) => { setAuthUser(u); setShowAuth(false); getProfile(u.id).then(p => { if (p) setProfile(p) }) }}
         />
       )}
 
