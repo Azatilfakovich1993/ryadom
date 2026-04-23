@@ -129,29 +129,42 @@ function EventCard({ event, dist, onViewDetails }) {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0a0f1e' }}>
 
-      {/* Фон — фото на весь экран или городской паттерн */}
-      {hasPhoto ? (
-        <PhotoSlider photos={event.photos} />
-      ) : (
-        <CityBackground color={cfg.color} />
+      {/* Городская сетка всегда */}
+      <CityBackground color={cfg.color} />
+
+      {/* Большой прозрачный смайлик категории в центре */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 180, opacity: 0.07, pointerEvents: 'none',
+        userSelect: 'none',
+      }}>
+        {cfg.icon}
+      </div>
+
+      {/* Фото поверх — на весь экран */}
+      {hasPhoto && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+          <PhotoSlider photos={event.photos} />
+        </div>
       )}
 
       {/* Рамка по контуру */}
       <div style={{
-        position: 'absolute', inset: 0, zIndex: 2,
+        position: 'absolute', inset: 0, zIndex: 4,
         boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.15)',
-        borderRadius: 0, pointerEvents: 'none',
+        pointerEvents: 'none',
       }} />
 
       {/* Затемнение снизу для текста */}
       <div style={{
-        position: 'absolute', inset: 0, zIndex: 2,
+        position: 'absolute', inset: 0, zIndex: 3,
         background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 35%, transparent 45%, rgba(0,0,0,0.88) 100%)',
         pointerEvents: 'none',
       }} />
 
       {/* Категория */}
-      <div style={{ position: 'absolute', top: 72, left: 16, zIndex: 3 }}>
+      <div style={{ position: 'absolute', top: 72, left: 16, zIndex: 5 }}>
         <span style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
           color: cfg.color, background: cfg.color + '22',
@@ -164,7 +177,7 @@ function EventCard({ event, dist, onViewDetails }) {
       </div>
 
       {/* Инфо снизу */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3, padding: '0 16px 24px' }}>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 24px' }}>
         <h2 style={{
           fontSize: 20, fontWeight: 800, color: '#fff',
           lineHeight: 1.3, marginBottom: 10,
