@@ -31,7 +31,7 @@ const CHIPS = [
   { key: 'sport', icon: '⚽', label: 'Спорт',   color: '#3b82f6' },
   { key: 'food',  icon: '🍕', label: 'Еда',     color: '#f59e0b' },
   { key: 'chat',  icon: '💬', label: 'Общение', color: '#10b981' },
-  { key: 'help',  icon: '🤝', label: 'Помощь',  color: '#f43f5e' },
+  { key: 'help',  icon: '🆘', label: 'Помощь',  color: '#f43f5e' },
 ]
 
 export default function App() {
@@ -268,9 +268,8 @@ export default function App() {
       {/* Top bar — одна строка: лого + чипы + обновить */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 pt-3 pb-2">
 
-        {/* Лого (5 тапов = пасхалка) */}
-        <div className="flex items-center gap-1.5 rounded-2xl px-3 py-2 flex-shrink-0"
-             onClick={handleLogoTap}
+        {/* Лого + иконки категорий */}
+        <div className="flex-shrink-0 rounded-2xl px-3 py-2"
              style={{
                background: 'rgba(17,24,39,0.92)',
                backdropFilter: 'blur(20px)',
@@ -278,83 +277,37 @@ export default function App() {
                border: '1px solid var(--border)',
                boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
              }}>
-          <LogoIcon size={22} />
-          <span className="font-bold text-sm tracking-wide" style={{ color: 'var(--accent)' }}>RYADOM</span>
-          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ background: connected ? 'var(--success)' : 'var(--warning)',
-                         boxShadow: connected ? '0 0 5px #34d399' : '0 0 5px #fbbf24' }} />
-        </div>
-
-        {/* Кнопка фильтра */}
-        <div className="relative flex-1">
-          <button
-            onClick={() => { haptic('impact', 'light'); setShowFilterMenu(v => !v) }}
-            className="flex items-center gap-2 rounded-2xl px-3 py-2 transition active:scale-95"
-            style={{
-              background: activeFilter ? CHIPS.find(c => c.key === activeFilter)?.color : 'rgba(17,24,39,0.92)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: activeFilter ? `1px solid ${CHIPS.find(c => c.key === activeFilter)?.color}` : '1px solid var(--border)',
-              boxShadow: activeFilter ? `0 0 12px ${CHIPS.find(c => c.key === activeFilter)?.color}66` : '0 2px 12px rgba(0,0,0,0.35)',
-              color: activeFilter ? '#111827' : 'var(--accent)',
-            }}>
-            <span style={{ fontSize: 15 }}>
-              {activeFilter ? CHIPS.find(c => c.key === activeFilter)?.icon : '🎚️'}
-            </span>
-            <span className="text-xs font-semibold whitespace-nowrap">
-              {activeFilter ? CHIPS.find(c => c.key === activeFilter)?.label : 'Фильтр'}
-            </span>
-            {activeFilter && (
-              <span className="text-xs font-bold opacity-70">✕</span>
-            )}
-          </button>
-
-          {showFilterMenu && (
-            <>
-              <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setShowFilterMenu(false)} />
-              <div style={{
-                position: 'absolute', top: '110%', left: 0, zIndex: 50,
-                background: 'rgba(17,24,39,0.97)',
-                border: '1px solid var(--border)',
-                borderRadius: 16, padding: 8,
-                backdropFilter: 'blur(24px)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                minWidth: 160,
-              }}>
+          {/* Строка 1: лого */}
+          <div className="flex items-center gap-1.5 mb-1.5" onClick={handleLogoTap} style={{ cursor: 'pointer' }}>
+            <LogoIcon size={18} />
+            <span className="font-bold text-xs tracking-wide" style={{ color: 'var(--accent)' }}>RYADOM</span>
+            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: connected ? 'var(--success)' : 'var(--warning)',
+                           boxShadow: connected ? '0 0 5px #34d399' : '0 0 5px #fbbf24' }} />
+          </div>
+          {/* Строка 2: иконки категорий */}
+          <div className="flex gap-1">
+            {CHIPS.map(c => {
+              const active = activeFilter === c.key
+              return (
                 <button
-                  onClick={() => { setActiveFilter(null); setShowFilterMenu(false); haptic('impact', 'light') }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95"
+                  key={c.key}
+                  onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key) }}
+                  className="transition active:scale-90"
                   style={{
-                    background: !activeFilter ? 'rgba(34,211,238,0.15)' : 'transparent',
-                    color: !activeFilter ? 'var(--accent)' : 'var(--hint)',
-                    border: !activeFilter ? '1px solid rgba(34,211,238,0.3)' : '1px solid transparent',
-                    marginBottom: 4,
+                    width: 28, height: 28,
+                    borderRadius: 8,
+                    fontSize: 14,
+                    background: active ? c.color + '33' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${active ? c.color : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: active ? `0 0 8px ${c.color}55` : 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                  <span>🗺️</span><span>Все категории</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11 }}>{events.length}</span>
+                  {c.icon}
                 </button>
-                {CHIPS.map(c => {
-                  const count = events.filter(e => e.category === c.key).length
-                  const active = activeFilter === c.key
-                  return (
-                    <button
-                      key={c.key}
-                      onClick={() => { setActiveFilter(active ? null : c.key); setShowFilterMenu(false); haptic('impact', 'light') }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95"
-                      style={{
-                        background: active ? c.color + '22' : 'transparent',
-                        color: active ? c.color : 'var(--text)',
-                        border: active ? `1px solid ${c.color}44` : '1px solid transparent',
-                        marginBottom: 2,
-                      }}>
-                      <span>{c.icon}</span><span>{c.label}</span>
-                      <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--hint)' }}>{count}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </>
-          )}
+              )
+            })}
+          </div>
         </div>
 
         {/* Профиль */}
