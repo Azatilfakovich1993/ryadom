@@ -231,22 +231,6 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 px-5 pt-1">
 
-          {/* Category + title */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: cfg.color + '22', border: `1px solid ${cfg.color}44` }}>
-              {cfg.icon}
-            </span>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: cfg.color }}>
-                {cfg.label}
-              </p>
-              <h2 className="text-base font-semibold leading-tight" style={{ color: 'var(--text)' }}>
-                {event.title}
-              </h2>
-            </div>
-          </div>
-
           {/* Creator */}
           {creator && (
             <div className="flex items-center gap-3 mb-4 rounded-2xl px-3 py-2.5"
@@ -268,6 +252,22 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
               </div>
             </div>
           )}
+
+          {/* Category + title */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                  style={{ background: cfg.color + '22', border: `1px solid ${cfg.color}44` }}>
+              {cfg.icon}
+            </span>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: cfg.color }}>
+                {cfg.label}
+              </p>
+              <h2 className="text-base font-semibold leading-tight" style={{ color: 'var(--text)' }}>
+                {event.title}
+              </h2>
+            </div>
+          </div>
 
           {/* Photos */}
           {hasPhotos && (
