@@ -229,7 +229,8 @@ export default function App() {
       setShowCreateHint(false)
       showAchievement('first_spark')
       const cnt = (profile?.events_count ?? 0) + 1
-      if (cnt >= 10) showAchievement('ten_events')
+      if (cnt >= 3)  showAchievement('activist')
+      if (cnt >= 10) showAchievement('legend')
       await loadEvents()
     } catch (err) {
       console.error('createEvent failed:', err)

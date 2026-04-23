@@ -308,15 +308,15 @@ export default function ProfileSheet({ authUser, onClose, onSignOut }) {
                            style={{
                              background: got ? 'rgba(34,211,238,0.07)' : 'var(--bg-2)',
                              border: `1px solid ${got ? 'rgba(34,211,238,0.25)' : 'var(--bg-3)'}`,
-                             opacity: got ? 1 : 0.45,
+                             opacity: got ? 1 : 0.5,
                            }}>
                         <span style={{ fontSize: 22, filter: got ? 'none' : 'grayscale(1)' }}>{ach.icon}</span>
                         <div className="min-w-0">
                           <p className="text-xs font-bold truncate" style={{ color: got ? 'var(--text)' : 'var(--hint)' }}>
                             {ach.title}
                           </p>
-                          <p className="text-[10px] leading-tight mt-0.5" style={{ color: 'var(--hint)' }}>
-                            {got ? ach.desc : '???'}
+                          <p className="text-[10px] leading-tight mt-0.5" style={{ color: got ? 'var(--hint)' : 'var(--hint)' }}>
+                            {got ? ach.desc : `🔒 ${ach.hint}`}
                           </p>
                         </div>
                       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
 import { supabase, fetchMessages, sendMessage, deleteEvent, getProfile } from '../lib/supabase'
+import { tryUnlock, incrementMessageCount } from '../utils/achievements'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
@@ -71,6 +72,8 @@ function EventChat({ event, user }) {
     try {
       await sendMessage({ eventId: event.id, content: text, creatorId: myId })
       setInput('')
+      const msgCount = incrementMessageCount()
+      if (msgCount >= 20) tryUnlock('soul')
     } finally {
       setSending(false)
     }
