@@ -284,8 +284,8 @@ export default function App() {
 
         {/* Лого + иконки категорий — только в режиме карты */}
         <div className="flex-shrink-0 rounded-2xl px-3 py-2"
-             style={{ display: mode === 'feed' ? 'none' : undefined }}
              style={{
+               display: mode === 'feed' ? 'none' : undefined,
                background: 'rgba(17,24,39,0.92)',
                backdropFilter: 'blur(20px)',
                WebkitBackdropFilter: 'blur(20px)',
