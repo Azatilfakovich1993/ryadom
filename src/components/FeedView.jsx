@@ -166,37 +166,101 @@ function RadarCard({ onExpand, expanded }) {
   )
 }
 
-export default function FeedView({ events, location, onViewEvent }) {
+const RADII = [500, 1500, 3000]
+const RADIUS_LABELS = ['500 м', '1500 м', '3 км']
+
+function RadarCard({ hasEvents, radiusIdx, onExpand, onCreateEvent }) {
+  const isLast = radiusIdx >= RADII.length - 1
+  const label = RADIUS_LABELS[radiusIdx]
+
+  const title = hasEvents
+    ? `В радиусе ${label} больше активных событий нет`
+    : 'Активных событий не найдено'
+
+  const sub = hasEvents
+    ? isLast
+      ? 'Ты посмотрел все активные события в радиусе 3 км. Создай своё!'
+      : 'Хочешь поискать дальше?'
+    : 'В этом районе пока тихо. Стань первым, кто оживит его!'
+
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: 'radial-gradient(ellipse at 50% 50%, rgba(34,211,238,0.07), #0f172a 70%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '0 28px',
+    }}>
+      <style>{`
+        @keyframes radar-ring {
+          0%   { transform: scale(0.3); opacity: 0.7; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+      `}</style>
+      <div style={{ position: 'relative', width: 110, height: 110, marginBottom: 28 }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            border: '1.5px solid rgba(34,211,238,0.3)',
+            animation: `radar-ring 2s ease-out infinite`,
+            animationDelay: `${i * 0.55}s`,
+          }} />
+        ))}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 42 }}>
+          {hasEvents ? '🔇' : '📡'}
+        </div>
+      </div>
+
+      <p style={{ fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 8, textAlign: 'center' }}>
+        {title}
+      </p>
+      <p style={{ fontSize: 13, color: 'var(--hint)', textAlign: 'center', lineHeight: 1.6, marginBottom: 24 }}>
+        {sub}
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+        {!isLast && (
+          <button onClick={onExpand} style={{
+            width: '100%', padding: '13px 0', borderRadius: 16,
+            border: '1.5px solid rgba(34,211,238,0.4)',
+            background: 'rgba(34,211,238,0.1)', color: '#22d3ee',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          }}>
+            🔍 Расширить до {RADIUS_LABELS[radiusIdx + 1]}
+          </button>
+        )}
+        <button onClick={onCreateEvent} style={{
+          width: '100%', padding: '13px 0', borderRadius: 16,
+          border: 'none', background: 'var(--accent)', color: '#111827',
+          fontSize: 13, fontWeight: 800, cursor: 'pointer',
+        }}>
+          ✨ Создать событие первым
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default function FeedView({ events, location, onViewEvent, onCreateEvent }) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [radarExpanded, setRadarExpanded] = useState(false)
+  const [radiusIdx, setRadiusIdx] = useState(0)
   const touchStartY = useRef(0)
   const dragging = useRef(false)
 
   const sorted = useMemo(() => {
-    const withDist = events.map(ev => ({
-      ...ev,
-      dist: location ? distM(location.lat, location.lon, ev.lat, ev.lon) : null,
-    }))
-    const radius = radarExpanded ? 5000 : 500
-    return withDist
+    const radius = RADII[radiusIdx]
+    return events
+      .map(ev => ({ ...ev, dist: location ? distM(location.lat, location.lon, ev.lat, ev.lon) : null }))
       .filter(ev => ev.dist === null || ev.dist <= radius)
       .sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity))
-  }, [events, location, radarExpanded])
+  }, [events, location, radiusIdx])
 
-  const totalCards = sorted.length + 1 // +1 радар в конце
+  const totalCards = sorted.length + 1
 
-  const goTo = (index) => {
-    setCurrentIndex(Math.max(0, Math.min(index, totalCards - 1)))
-  }
+  const goTo = (index) => setCurrentIndex(Math.max(0, Math.min(index, totalCards - 1)))
 
-  // Сброс на первую карточку при смене списка
-  useEffect(() => { setCurrentIndex(0) }, [events.length])
+  useEffect(() => { setCurrentIndex(0) }, [radiusIdx])
 
-  const onTouchStart = (e) => {
-    touchStartY.current = e.touches[0].clientY
-    dragging.current = true
-  }
-
+  const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; dragging.current = true }
   const onTouchEnd = (e) => {
     if (!dragging.current) return
     dragging.current = false
@@ -222,17 +286,20 @@ export default function FeedView({ events, location, onViewEvent }) {
         </div>
       ))}
 
-      {/* Радар — последняя карточка */}
       <div style={{
         position: 'absolute', inset: 0,
         transform: `translateY(${(sorted.length - currentIndex) * 100}%)`,
         transition: 'transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         willChange: 'transform',
       }}>
-        <RadarCard onExpand={() => setRadarExpanded(true)} expanded={radarExpanded} />
+        <RadarCard
+          hasEvents={sorted.length > 0}
+          radiusIdx={radiusIdx}
+          onExpand={() => setRadiusIdx(i => Math.min(i + 1, RADII.length - 1))}
+          onCreateEvent={onCreateEvent}
+        />
       </div>
 
-      {/* Индикатор позиции */}
       {totalCards > 1 && (
         <div style={{
           position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',

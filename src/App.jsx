@@ -263,6 +263,7 @@ export default function App() {
             events={visibleEvents}
             location={location}
             onViewEvent={(ev) => { setMode('map'); handleEventClick(ev) }}
+            onCreateEvent={() => setShowCreate(true)}
           />
         </div>
       )}
