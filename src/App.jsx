@@ -386,18 +386,18 @@ export default function App() {
         )}
       </div>
 
-      {/* Кнопка "+" в режиме ленты */}
+      {/* Кнопка "+" в режиме ленты — над кнопкой ПОДРОБНЕЕ */}
       {mode === 'feed' && !showCreate && (
         <button
           onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
           className="absolute z-20 transition active:scale-90"
           style={{
-            bottom: 32, right: 16,
-            width: 52, height: 52, borderRadius: 16,
+            bottom: 110, right: 16,
+            width: 44, height: 44, borderRadius: 13,
             background: 'var(--accent)', color: '#111827',
             border: 'none', cursor: 'pointer',
-            fontSize: 26, fontWeight: 700,
-            boxShadow: '0 0 24px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
+            fontSize: 24, fontWeight: 700,
+            boxShadow: '0 0 20px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
           +
@@ -417,8 +417,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Create button */}
-      {!showCreate && !selectedEvent && !clusterEvents && (
+      {/* Create button — только в режиме карты */}
+      {mode === 'map' && !showCreate && !selectedEvent && !clusterEvents && (
         <div className="absolute bottom-8 right-4 z-10 flex flex-col items-end gap-2"
              style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           {/* Подсказка «долго не создавал» */}
