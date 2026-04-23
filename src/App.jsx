@@ -420,9 +420,8 @@ export default function App() {
 
       {/* Create button — только в режиме карты */}
       {mode === 'map' && !showCreate && !selectedEvent && !clusterEvents && (
-        <div className="absolute bottom-8 right-4 z-10 flex flex-col items-end gap-2"
-             style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-          {/* Подсказка «долго не создавал» */}
+        <div className="absolute z-10 flex flex-col items-end gap-2"
+             style={{ bottom: 32, right: 16, marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           {showCreateHint && (
             <div className="rounded-2xl px-3 py-2 text-xs font-semibold animate-pulse"
                  style={{ background: 'rgba(17,24,39,0.95)', color: 'var(--accent)', border: '1px solid var(--accent)', boxShadow: '0 0 12px var(--accent-glow)', whiteSpace: 'nowrap' }}>
@@ -431,17 +430,17 @@ export default function App() {
           )}
           <button
             onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
-            className="flex items-center gap-2 rounded-2xl px-5 py-3.5 transition active:scale-95"
+            className="transition active:scale-90"
             style={{
-              background: 'var(--accent)',
-              color: '#111827',
-              boxShadow: '0 0 24px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
-              fontWeight: 700,
+              width: 44, height: 44, borderRadius: 13,
+              background: 'var(--accent)', color: '#111827',
+              border: 'none', cursor: 'pointer',
+              boxShadow: '0 0 20px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
             </svg>
-            <span className="text-sm">Добавить событие</span>
           </button>
         </div>
       )}
