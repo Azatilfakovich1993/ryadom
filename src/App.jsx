@@ -121,7 +121,9 @@ export default function App() {
   const [showAuth, setShowAuth]         = useState(false)
   const [showProfile, setShowProfile]   = useState(false)
   const [authUser, setAuthUser]         = useState(null)
-  const [profile, setProfile]           = useState(null)
+  const [profile, setProfile]           = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ryadom_profile') || 'null') } catch { return null }
+  })
   const [authChecked, setAuthChecked]   = useState(false)
   const [skippedWelcome, setSkippedWelcome] = useState(false)
   const [creating, setCreating]         = useState(false)
@@ -144,14 +146,14 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setAuthUser(session.user)
-        getProfile(session.user.id).then(p => { if (p) setProfile(p) })
+        getProfile(session.user.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } })
       }
       setAuthChecked(true)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       if (session?.user) {
         setAuthUser(session.user)
-        getProfile(session.user.id).then(p => { if (p) setProfile(p) })
+        getProfile(session.user.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } })
       } else {
         setAuthUser(null)
         setProfile(null)
@@ -622,7 +624,7 @@ export default function App() {
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
-          onAuth={(u) => { setAuthUser(u); setShowAuth(false); getProfile(u.id).then(p => { if (p) setProfile(p) }) }}
+          onAuth={(u) => { setAuthUser(u); setShowAuth(false); getProfile(u.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } }) }}
         />
       )}
 
@@ -630,7 +632,7 @@ export default function App() {
         <ProfileSheet
           authUser={authUser}
           onClose={() => setShowProfile(false)}
-          onSignOut={() => { setAuthUser(null); setProfile(null); setShowProfile(false) }}
+          onSignOut={() => { setAuthUser(null); setProfile(null); localStorage.removeItem('ryadom_profile'); setShowProfile(false) }}
         />
       )}
 
