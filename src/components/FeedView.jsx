@@ -81,7 +81,20 @@ function PhotoSlider({ photos }) {
   const touchX = useRef(0)
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div style={{
+      position: 'relative', width: '100%',
+      borderRadius: 20, overflow: 'hidden',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+      border: '1.5px solid rgba(255,255,255,0.1)',
+      aspectRatio: '4/3',
+    }}
+      onTouchStart={e => { touchX.current = e.touches[0].clientX }}
+      onTouchEnd={e => {
+        const diff = touchX.current - e.changedTouches[0].clientX
+        if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
+        else if (diff < -40 && idx > 0) setIdx(i => i - 1)
+      }}
+    >
       {photos.map((url, i) => (
         <img key={i} src={url} alt="" style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -91,29 +104,18 @@ function PhotoSlider({ photos }) {
         }} />
       ))}
       {photos.length > 1 && (
-        <>
-          <div
-            style={{ position: 'absolute', inset: 0, zIndex: 2 }}
-            onTouchStart={e => { touchX.current = e.touches[0].clientX }}
-            onTouchEnd={e => {
-              const diff = touchX.current - e.changedTouches[0].clientX
-              if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
-              else if (diff < -40 && idx > 0) setIdx(i => i - 1)
-            }}
-          />
-          <div style={{
-            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', gap: 5, zIndex: 3,
-          }}>
-            {photos.map((_, i) => (
-              <div key={i} style={{
-                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-                background: i === idx ? '#fff' : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.3s',
-              }} />
-            ))}
-          </div>
-        </>
+        <div style={{
+          position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: 5, zIndex: 3,
+        }}>
+          {photos.map((_, i) => (
+            <div key={i} style={{
+              width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+              background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)',
+              transition: 'all 0.3s',
+            }} />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -125,75 +127,92 @@ function EventCard({ event, dist, onViewDetails }) {
   const hasPhoto = event.photos?.length > 0
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0a0f1e' }}>
+    <div style={{
+      width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
+      background: '#0a0f1e',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Фон всегда городской паттерн */}
+      <CityBackground color={cfg.color} />
 
-      {hasPhoto ? (
-        <PhotoSlider photos={event.photos} />
-      ) : (
-        <CityBackground color={cfg.color} />
-      )}
-
+      {/* Контент поверх */}
       <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 35%, transparent 50%, rgba(0,0,0,0.88) 100%)',
-      }} />
+        position: 'relative', zIndex: 1,
+        flex: 1, display: 'flex', flexDirection: 'column',
+        padding: '72px 16px 24px',
+        justifyContent: 'space-between',
+      }}>
 
-      {/* Категория */}
-      <div style={{ position: 'absolute', top: 72, left: 16 }}>
-        <span style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-          color: cfg.color, background: cfg.color + '22',
-          border: `1px solid ${cfg.color}44`,
-          borderRadius: 20, padding: '4px 10px',
-        }}>
-          {cfg.icon} {cfg.label}
-        </span>
-      </div>
+        {/* Фото в рамке */}
+        {hasPhoto && (
+          <div style={{ marginBottom: 16 }}>
+            <PhotoSlider photos={event.photos} />
+          </div>
+        )}
 
-      {/* Инфо снизу */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 32px' }}>
-        <h2 style={{
-          fontSize: 20, fontWeight: 800, color: '#fff',
-          lineHeight: 1.3, marginBottom: 12,
-          textShadow: '0 2px 12px rgba(0,0,0,0.6)',
-        }}>
-          {event.title}
-        </h2>
-
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-          {dist !== null && (
-            <span style={{
-              background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)',
-              borderRadius: 20, padding: '5px 11px',
-              fontSize: 12, color: '#fff', fontWeight: 600,
-            }}>
-              📍 {distLabel(dist)} от тебя
-            </span>
-          )}
-          <span style={{
-            background: urgency ? 'rgba(248,113,113,0.25)' : 'rgba(34,211,238,0.15)',
-            backdropFilter: 'blur(12px)',
-            border: `1px solid ${urgency ? 'rgba(248,113,113,0.4)' : 'rgba(34,211,238,0.3)'}`,
-            borderRadius: 20, padding: '5px 11px',
-            fontSize: 12, fontWeight: 600,
-            color: urgency ? '#f87171' : '#22d3ee',
+        {/* Если нет фото — большой эмодзи */}
+        {!hasPhoto && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flex: 1, fontSize: 90, opacity: 0.15,
+            marginBottom: 8,
           }}>
-            ⏱ {timeLabel}
-          </span>
-        </div>
+            {cfg.icon}
+          </div>
+        )}
 
-        <button
-          onClick={onViewDetails}
-          style={{
+        {/* Инфо блок */}
+        <div>
+          {/* Категория */}
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: cfg.color, background: cfg.color + '22',
+            border: `1px solid ${cfg.color}44`,
+            borderRadius: 20, padding: '4px 10px',
+            display: 'inline-block', marginBottom: 10,
+          }}>
+            {cfg.icon} {cfg.label}
+          </span>
+
+          <h2 style={{
+            fontSize: 20, fontWeight: 800, color: '#fff',
+            lineHeight: 1.3, marginBottom: 10,
+          }}>
+            {event.title}
+          </h2>
+
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+            {dist !== null && (
+              <span style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 20, padding: '5px 11px',
+                fontSize: 12, color: '#fff', fontWeight: 600,
+              }}>
+                📍 {distLabel(dist)} от тебя
+              </span>
+            )}
+            <span style={{
+              background: urgency ? 'rgba(248,113,113,0.2)' : 'rgba(34,211,238,0.12)',
+              border: `1px solid ${urgency ? 'rgba(248,113,113,0.4)' : 'rgba(34,211,238,0.3)'}`,
+              borderRadius: 20, padding: '5px 11px',
+              fontSize: 12, fontWeight: 600,
+              color: urgency ? '#f87171' : '#22d3ee',
+            }}>
+              ⏱ {timeLabel}
+            </span>
+          </div>
+
+          <button onClick={onViewDetails} style={{
             width: '100%', padding: '13px 0',
             borderRadius: 16, border: 'none', cursor: 'pointer',
             background: cfg.color, color: '#111827',
             fontSize: 14, fontWeight: 900, letterSpacing: '0.05em',
             boxShadow: `0 4px 20px ${cfg.color}55`,
-          }}
-        >
-          ПОДРОБНЕЕ →
-        </button>
+          }}>
+            ПОДРОБНЕЕ →
+          </button>
+        </div>
       </div>
     </div>
   )
