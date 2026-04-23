@@ -362,10 +362,10 @@ export default function App() {
             <div className="flex items-center gap-1.5 rounded-2xl px-3 py-2 flex-shrink-0"
                  onClick={handleLogoTap}
                  style={{
-                   background: 'rgba(17,24,39,0.85)',
+                   background: 'rgba(17,24,39,0.55)',
                    backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                   border: '1px solid var(--border)',
-                   boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+                   border: '1px solid rgba(255,255,255,0.1)',
+                   boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
                    cursor: 'pointer',
                  }}>
               <LogoIcon size={18} />
@@ -380,10 +380,10 @@ export default function App() {
             {/* Переключатель Лента / Карта */}
             <div style={{
               display: 'flex', borderRadius: 14, padding: 3, flexShrink: 0,
-              background: 'rgba(17,24,39,0.85)',
+              background: 'rgba(17,24,39,0.55)',
               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid var(--border)',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
             }}>
               {[{ key: 'feed', label: '▤ Лента' }, { key: 'map', label: '🗺 Карта' }].map(m => (
                 <button key={m.key} onClick={() => setMode(m.key)}
@@ -404,10 +404,10 @@ export default function App() {
             <button onClick={() => authUser ? setShowProfile(true) : setShowAuth(true)}
                     className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition active:scale-90"
                     style={{
-                      background: 'rgba(17,24,39,0.85)',
+                      background: 'rgba(17,24,39,0.55)',
                       backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                      border: authUser ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-                      boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.35)',
+                      border: authUser ? '1.5px solid var(--accent)' : '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.2)',
                     }}>
               {profile?.avatar_url
                 ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
@@ -427,10 +427,10 @@ export default function App() {
                         style={{
                           height: 32, borderRadius: 10, padding: '0 10px',
                           fontSize: 13,
-                          background: active ? c.color + '28' : 'rgba(17,24,39,0.75)',
+                          background: active ? c.color + '22' : 'rgba(17,24,39,0.55)',
                           backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                          border: `1px solid ${active ? c.color + '88' : 'rgba(255,255,255,0.1)'}`,
-                          boxShadow: active ? `0 0 10px ${c.color}44` : '0 1px 6px rgba(0,0,0,0.25)',
+                          border: `1.5px solid ${active ? c.color : c.color + '55'}`,
+                          boxShadow: active ? `0 0 12px ${c.color}55` : 'none',
                           color: active ? c.color : 'var(--hint)',
                           fontWeight: active ? 700 : 400,
                         }}>
@@ -493,7 +493,7 @@ export default function App() {
           className="absolute z-20 transition active:scale-90"
           style={{
             bottom: 110, right: 16,
-            width: 44, height: 44, borderRadius: 13,
+            width: 52, height: 52, borderRadius: 15,
             background: 'var(--accent)', color: '#111827',
             border: 'none', cursor: 'pointer',
             fontSize: 24, fontWeight: 700,
@@ -531,7 +531,7 @@ export default function App() {
             onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
             className="transition active:scale-90"
             style={{
-              width: 44, height: 44, borderRadius: 13,
+              width: 52, height: 52, borderRadius: 15,
               background: 'var(--accent)', color: '#111827',
               border: 'none', cursor: 'pointer',
               boxShadow: '0 0 20px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
