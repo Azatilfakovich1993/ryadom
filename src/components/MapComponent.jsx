@@ -155,7 +155,6 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
           controls: [],
           behaviors: ['drag', 'scrollZoom', 'multiTouch'],
         })
-        mapRef.current.controls.removeAll()
         window._ryadomMap = mapRef.current
         setMapReady(true)
       })
