@@ -413,17 +413,16 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
           )}
 
           {/* Premium */}
-          <button onClick={onPremium}
-                  className="w-full flex items-center justify-between rounded-2xl px-4 py-3 mb-3 transition active:scale-95"
-                  style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)' }}>
+          <div className="w-full flex items-center justify-between rounded-2xl px-4 py-3 mb-3"
+               style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)', opacity: 0.6 }}>
             <div>
               <p className="text-sm font-bold" style={{ color: '#c084fc' }}>⭐ Премиум-размещение</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>Telegram Stars или СБП</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>Скоро появится</p>
             </div>
-            <svg className="w-4 h-4" style={{ color: '#c084fc' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
-          </button>
+            <span className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(168,85,247,0.15)', color: '#c084fc' }}>
+              Скоро
+            </span>
+          </div>
 
           {/* Close */}
           <button onClick={onClose}
