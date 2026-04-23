@@ -105,7 +105,7 @@ export default function RadarScan({ location, events, onViewEvent, onCreateEvent
           /* ─── Событий нет ─── */
           <>
             <div style={{ textAlign: 'center', padding: '4px 0 16px' }}>
-              <p style={{ fontSize: 36, marginBottom: 10 }}>🔇</p>
+              <p style={{ fontSize: 36, marginBottom: 10 }}>📡</p>
               <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
                 В радиусе {RADIUS_LABELS[radiusIdx]} тихо
               </p>
