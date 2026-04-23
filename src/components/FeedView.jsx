@@ -116,56 +116,6 @@ function EventCard({ event, dist, onViewDetails }) {
   )
 }
 
-function RadarCard({ onExpand, expanded }) {
-  return (
-    <div style={{
-      width: '100%', height: '100%', position: 'relative',
-      background: 'radial-gradient(ellipse at 50% 50%, rgba(34,211,238,0.08), #0f172a 70%)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: '0 32px',
-    }}>
-      <style>{`
-        @keyframes radar-ring {
-          0%   { transform: scale(0.3); opacity: 0.7; }
-          100% { transform: scale(1.8); opacity: 0; }
-        }
-      `}</style>
-      <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 28 }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            border: '1.5px solid rgba(34,211,238,0.35)',
-            animation: `radar-ring 2s ease-out infinite`,
-            animationDelay: `${i * 0.55}s`,
-          }} />
-        ))}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>
-          📡
-        </div>
-      </div>
-
-      <p style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 8, textAlign: 'center' }}>
-        {expanded ? 'В радиусе 5 км тихо' : 'Рядом пока тихо'}
-      </p>
-      <p style={{ fontSize: 13, color: 'var(--hint)', textAlign: 'center', lineHeight: 1.6, marginBottom: 24 }}>
-        {expanded ? 'Событий не найдено. Будь первым!' : 'В 500м событий нет. Расширить поиск?'}
-      </p>
-
-      {!expanded && (
-        <button onClick={onExpand} style={{
-          padding: '13px 28px', borderRadius: 16,
-          border: '1.5px solid rgba(34,211,238,0.4)',
-          background: 'rgba(34,211,238,0.1)', color: '#22d3ee',
-          fontSize: 13, fontWeight: 700, cursor: 'pointer',
-          backdropFilter: 'blur(12px)',
-        }}>
-          🔍 Расширить до 5 км
-        </button>
-      )}
-    </div>
-  )
-}
-
 const RADII = [500, 1500, 3000]
 const RADIUS_LABELS = ['500 м', '1500 м', '3 км']
 
