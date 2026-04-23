@@ -35,6 +35,7 @@ function EventChat({ event, user }) {
   const [input, setInput]       = useState('')
   const [sending, setSending]   = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const inputRef = useRef(null)
   const endRef = useRef(null)
 
@@ -53,8 +54,8 @@ function EventChat({ event, user }) {
   }, [event.id])
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (expanded) endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, expanded])
 
   const myId = user?.id?.toString() ?? (() => {
     let id = localStorage.getItem('ryadom_uid')
@@ -85,13 +86,41 @@ function EventChat({ event, user }) {
     inputRef.current?.focus()
   }
 
+  const lastMsg = messages[messages.length - 1]
+
   return (
     <div className="mb-4" onClick={() => showEmoji && setShowEmoji(false)}>
-      <label className="text-[11px] font-bold uppercase tracking-wider mb-2 block"
-             style={{ color: 'var(--accent)' }}>💬 Чат события</label>
+
+      {/* Collapsed: tap to expand */}
+      {!expanded ? (
+        <button type="button" onClick={() => setExpanded(true)}
+                className="w-full flex items-center gap-3 rounded-2xl px-3 py-3 transition active:scale-95"
+                style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+          <span className="text-xl flex-shrink-0">💬</span>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'var(--accent)' }}>
+              Чат события · {messages.length}
+            </p>
+            <p className="text-sm truncate" style={{ color: lastMsg ? 'var(--text)' : 'var(--hint)' }}>
+              {lastMsg ? lastMsg.content : 'Напиши первым 👋'}
+            </p>
+          </div>
+          <span className="text-xs flex-shrink-0" style={{ color: 'var(--hint)' }}>▲ открыть</span>
+        </button>
+      ) : (
 
       <div className="rounded-2xl overflow-hidden"
            style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+
+        {/* Header with collapse button */}
+        <button type="button" onClick={() => setExpanded(false)}
+                className="w-full flex items-center justify-between px-3 py-2.5 transition active:opacity-70"
+                style={{ borderBottom: '1px solid var(--bg-3)' }}>
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+            💬 Чат события · {messages.length}
+          </span>
+          <span className="text-xs" style={{ color: 'var(--hint)' }}>▼ свернуть</span>
+        </button>
 
         {/* Messages */}
         <div className="overflow-y-auto p-3 flex flex-col gap-2" style={{ height: 200 }}>
@@ -163,6 +192,7 @@ function EventChat({ event, user }) {
           </button>
         </form>
       </div>
+      )}
     </div>
   )
 }
