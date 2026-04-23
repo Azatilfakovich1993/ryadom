@@ -33,7 +33,13 @@ function useCountdown(expiresAt) {
   }
 }
 
-function CityBackground({ color }) {
+// Узлы-точки на пересечениях сетки
+const NODES = [
+  [0,0],[60,0],[120,0],[0,60],[60,60],[120,60],[0,120],[60,120],[120,120],
+  [30,30],[90,30],[30,90],[90,90],[0,30],[60,30],[0,90],[30,0],[90,0],
+]
+
+function CityBackground({ color, parallaxY = 0 }) {
   const id = color.replace('#', '')
   const svgPattern = `
     <svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'>
@@ -61,7 +67,11 @@ function CityBackground({ color }) {
   const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgPattern)}")`
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
+    <div style={{
+      position: 'absolute', inset: '-20%',
+      transform: `translateY(${parallaxY}px)`,
+      transition: 'transform 0.38s cubic-bezier(0.25,0.46,0.45,0.94)',
+    }}>
       <div style={{ position: 'absolute', inset: 0, background: '#0a0f1e' }} />
       <div style={{
         position: 'absolute', inset: 0,
@@ -72,6 +82,27 @@ function CityBackground({ color }) {
         position: 'absolute', inset: 0,
         background: `radial-gradient(ellipse at 30% 25%, ${color}30 0%, transparent 50%), radial-gradient(ellipse at 70% 75%, ${color}18 0%, transparent 45%)`,
       }} />
+
+      {/* Светящиеся узлы на пересечениях */}
+      <style>{`
+        @keyframes node-pulse-${id} {
+          0%,100% { opacity: 0; }
+          50%      { opacity: 1; }
+        }
+      `}</style>
+      {NODES.map(([x, y], i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          left: `calc(${(x / 120) * 100}% - 2px)`,
+          top:  `calc(${(y / 120) * 100}% - 2px)`,
+          width: 4, height: 4,
+          borderRadius: '50%',
+          background: color,
+          boxShadow: `0 0 6px ${color}, 0 0 12px ${color}`,
+          animation: `node-pulse-${id} ${2.5 + (i % 5) * 0.7}s ease-in-out infinite`,
+          animationDelay: `${(i * 0.37) % 3}s`,
+        }} />
+      ))}
     </div>
   )
 }
@@ -121,7 +152,7 @@ function PhotoSlider({ photos }) {
   )
 }
 
-function EventCard({ event, dist, onViewDetails }) {
+function EventCard({ event, dist, onViewDetails, parallaxY }) {
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const { label: timeLabel, urgency } = useCountdown(event.expires_at)
   const hasPhoto = event.photos?.length > 0
@@ -129,17 +160,22 @@ function EventCard({ event, dist, onViewDetails }) {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0a0f1e' }}>
 
-      {/* Городская сетка всегда */}
-      <CityBackground color={cfg.color} />
+      {/* Городская сетка с параллаксом */}
+      <CityBackground color={cfg.color} parallaxY={parallaxY} />
 
-      {/* Большой прозрачный смайлик категории в центре */}
+      {/* Голограмма — иконка категории */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 180, opacity: 0.07, pointerEvents: 'none',
-        userSelect: 'none',
+        pointerEvents: 'none', userSelect: 'none',
       }}>
-        {cfg.icon}
+        <span style={{
+          fontSize: 220,
+          opacity: 0.13,
+          filter: `drop-shadow(0 0 30px ${cfg.color}) drop-shadow(0 0 60px ${cfg.color}) drop-shadow(0 0 100px ${cfg.color}88)`,
+        }}>
+          {cfg.icon}
+        </span>
       </div>
 
       {/* Фото поверх — на весь экран */}
@@ -210,10 +246,15 @@ function EventCard({ event, dist, onViewDetails }) {
 
         <button onClick={onViewDetails} style={{
           width: '100%', padding: '13px 0',
-          borderRadius: 16, border: 'none', cursor: 'pointer',
-          background: cfg.color, color: '#111827',
-          fontSize: 14, fontWeight: 900, letterSpacing: '0.05em',
-          boxShadow: `0 4px 20px ${cfg.color}55`,
+          borderRadius: 16, cursor: 'pointer',
+          background: 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: `1.5px solid ${cfg.color}`,
+          color: '#fff',
+          fontSize: 14, fontWeight: 900, letterSpacing: '0.08em',
+          boxShadow: `0 0 20px ${cfg.color}44, inset 0 1px 0 rgba(255,255,255,0.15)`,
+          textShadow: `0 0 12px ${cfg.color}`,
         }}>
           ПОДРОБНЕЕ →
         </button>
@@ -337,7 +378,11 @@ export default function FeedView({ events, location, onViewEvent, onCreateEvent 
           transition: 'transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           willChange: 'transform',
         }}>
-          <EventCard event={ev} dist={ev.dist} onViewDetails={() => onViewEvent(ev)} />
+          <EventCard
+            event={ev} dist={ev.dist}
+            onViewDetails={() => onViewEvent(ev)}
+            parallaxY={(i - currentIndex) * -40}
+          />
         </div>
       ))}
 
