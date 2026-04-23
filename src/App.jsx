@@ -12,6 +12,7 @@ import WelcomeScreen from './components/WelcomeScreen'
 import AchievementToast from './components/AchievementToast'
 import RadarScan from './components/RadarScan'
 import GeoPrompt from './components/GeoPrompt'
+import OnboardingScreen from './components/OnboardingScreen'
 import { useTelegram } from './hooks/useTelegram'
 import { useGeolocation } from './hooks/useGeolocation'
 import { supabase, fetchNearbyEvents, createEvent, getProfile } from './lib/supabase'
@@ -135,6 +136,7 @@ export default function App() {
   const [showRadarCard, setShowRadarCard]   = useState(false)
   const [showFilterMenu, setShowFilterMenu] = useState(false)
   const [mode, setMode]                     = useState('map') // 'map' | 'feed'
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('ryadom_onboarded'))
   const radarShown                          = useRef(false)
 
   // ── Auth state ────────────────────────────────────────────
@@ -634,6 +636,13 @@ export default function App() {
 
       {/* Геолокация отключена — полноэкранный промпт */}
       {geoDenied && <GeoPrompt onRetry={geoRefetch} />}
+
+      {showOnboarding && (
+        <OnboardingScreen onDone={() => {
+          localStorage.setItem('ryadom_onboarded', '1')
+          setShowOnboarding(false)
+        }} />
+      )}
 
       {/* Achievement toast */}
       {achievement && (

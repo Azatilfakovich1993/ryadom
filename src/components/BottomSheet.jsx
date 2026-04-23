@@ -400,6 +400,32 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             </div>
           </div>
 
+          {/* Добраться */}
+          {!expired && (
+            <div className="flex gap-2 mb-4">
+              <a href={`yandexnavi://build_route_on_map?lat_to=${event.lat}&lon_to=${event.lon}&app_id=ru.yandex.yandexnavi`}
+                 onClick={e => {
+                   setTimeout(() => {
+                     window.location.href = `https://yandex.ru/maps/?rtext=~${event.lat},${event.lon}&rtt=pd`
+                   }, 1500)
+                 }}
+                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
+                 style={{ background: 'rgba(252,211,77,0.15)', border: '1px solid rgba(252,211,77,0.4)', color: '#fcd34d', textDecoration: 'none' }}>
+                🚕 Яндекс Навигатор
+              </a>
+              <a href={`dgis://2gis.ru/routeSearch/rsType/pd/to/${event.lon},${event.lat}`}
+                 onClick={e => {
+                   setTimeout(() => {
+                     window.location.href = `https://2gis.ru/routeSearch/rsType/pd/to/${event.lon},${event.lat}`
+                   }, 1500)
+                 }}
+                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
+                 style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#4ade80', textDecoration: 'none' }}>
+                🗺 2ГИС
+              </a>
+            </div>
+          )}
+
           {/* Chat */}
           {event.chat_enabled && !expired && (
             <EventChat event={event} user={user} />
