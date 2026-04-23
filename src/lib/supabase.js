@@ -116,3 +116,25 @@ export async function deleteEvent(eventId) {
   const { error } = await supabase.from('events').delete().eq('id', eventId)
   if (error) throw error
 }
+
+export async function fetchReviews(targetId) {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('target_id', targetId)
+    .order('created_at', { ascending: false })
+    .limit(50)
+  if (error) { console.error('fetchReviews error:', error); return [] }
+  return data ?? []
+}
+
+export async function submitReview({ reviewerId, targetId, eventId, rating, comment }) {
+  const { error } = await supabase.from('reviews').upsert([{
+    reviewer_id: reviewerId,
+    target_id: targetId,
+    event_id: eventId,
+    rating,
+    comment: comment.trim(),
+  }], { onConflict: 'reviewer_id,event_id' })
+  if (error) throw error
+}

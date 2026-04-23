@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
 import { supabase, fetchMessages, sendMessage, deleteEvent, getProfile } from '../lib/supabase'
 import { tryUnlock, incrementMessageCount } from '../utils/achievements'
+import CreatorSheet from './CreatorSheet'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
@@ -207,6 +208,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [lightbox, setLightbox] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [creator, setCreator] = useState(null)
+  const [showCreator, setShowCreator] = useState(false)
   const isOwner = authUser && event.creator_id === authUser.id
 
   useEffect(() => {
@@ -266,8 +268,9 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
 
           {/* Creator */}
           {creator && (
-            <div className="flex items-center gap-3 mb-4 rounded-2xl px-3 py-2.5"
-                 style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+            <button type="button" onClick={() => setShowCreator(true)}
+                    className="w-full flex items-center gap-3 mb-4 rounded-2xl px-3 py-2.5 transition active:scale-95"
+                    style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
               <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 text-sm font-bold"
                    style={{ background: cfg.color + '33', border: `1.5px solid ${cfg.color}55` }}>
                 {creator.avatar_url
@@ -277,13 +280,23 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                     </span>
                 }
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1 text-left">
                 <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>Инициатор</p>
                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
                   {creator.display_name || creator.username || 'Аноним'}
                 </p>
               </div>
-            </div>
+              <span className="text-xs flex-shrink-0" style={{ color: 'var(--hint)' }}>★ профиль →</span>
+            </button>
+          )}
+
+          {showCreator && creator && (
+            <CreatorSheet
+              creator={creator}
+              event={event}
+              authUser={authUser}
+              onClose={() => setShowCreator(false)}
+            />
           )}
 
           {/* Category + title */}
