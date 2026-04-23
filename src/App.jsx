@@ -279,11 +279,12 @@ export default function App() {
         />
       )}
 
-      {/* Top bar — одна строка: лого + чипы + обновить */}
+      {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 pt-3 pb-2">
 
-        {/* Лого + иконки категорий */}
+        {/* Лого + иконки категорий — только в режиме карты */}
         <div className="flex-shrink-0 rounded-2xl px-3 py-2"
+             style={{ display: mode === 'feed' ? 'none' : undefined }}
              style={{
                background: 'rgba(17,24,39,0.92)',
                backdropFilter: 'blur(20px)',
@@ -350,36 +351,58 @@ export default function App() {
           ))}
         </div>
 
-        {/* Профиль */}
-        <button onClick={() => authUser ? setShowProfile(true) : setShowAuth(true)}
-                className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition active:scale-90"
-                style={{
-                  background: 'rgba(17,24,39,0.92)',
-                  border: authUser ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.35)',
-                }}>
-          {profile?.avatar_url
-            ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
-            : <span style={{ color: authUser ? 'var(--accent)' : 'var(--hint)', fontSize: 16 }}>👤</span>
-          }
-        </button>
+        {/* Профиль — только в режиме карты */}
+        {mode === 'map' && (
+          <button onClick={() => authUser ? setShowProfile(true) : setShowAuth(true)}
+                  className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition active:scale-90"
+                  style={{
+                    background: 'rgba(17,24,39,0.92)',
+                    border: authUser ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                    boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.35)',
+                  }}>
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
+              : <span style={{ color: authUser ? 'var(--accent)' : 'var(--hint)', fontSize: 16 }}>👤</span>
+            }
+          </button>
+        )}
 
-        {/* Обновить */}
-        <button onClick={loadEvents} disabled={loadingEvents}
-                className="w-9 h-9 flex items-center justify-center rounded-2xl flex-shrink-0 transition active:scale-90"
-                style={{
-                  background: 'rgba(17,24,39,0.92)',
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
-                }}>
-          <svg className={`w-4 h-4 ${loadingEvents ? 'animate-spin' : ''}`}
-               style={{ color: 'var(--accent)' }}
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-        </button>
+        {/* Обновить — только в режиме карты */}
+        {mode === 'map' && (
+          <button onClick={loadEvents} disabled={loadingEvents}
+                  className="w-9 h-9 flex items-center justify-center rounded-2xl flex-shrink-0 transition active:scale-90"
+                  style={{
+                    background: 'rgba(17,24,39,0.92)',
+                    border: '1px solid var(--border)',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+                  }}>
+            <svg className={`w-4 h-4 ${loadingEvents ? 'animate-spin' : ''}`}
+                 style={{ color: 'var(--accent)' }}
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        )}
       </div>
+
+      {/* Кнопка "+" в режиме ленты */}
+      {mode === 'feed' && !showCreate && (
+        <button
+          onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
+          className="absolute z-20 transition active:scale-90"
+          style={{
+            bottom: 32, right: 16,
+            width: 52, height: 52, borderRadius: 16,
+            background: 'var(--accent)', color: '#111827',
+            border: 'none', cursor: 'pointer',
+            fontSize: 26, fontWeight: 700,
+            boxShadow: '0 0 24px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+          +
+        </button>
+      )}
 
 
       {/* Подсказка первого визита */}

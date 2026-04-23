@@ -33,21 +33,104 @@ function useCountdown(expiresAt) {
   }
 }
 
+function CityBackground({ color }) {
+  const id = color.replace('#', '')
+  const svgPattern = `
+    <svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'>
+      <defs>
+        <filter id='noise-${id}'>
+          <feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/>
+          <feColorMatrix type='saturate' values='0'/>
+          <feBlend in='SourceGraphic' mode='multiply'/>
+        </filter>
+      </defs>
+      <rect width='120' height='120' fill='${color}08'/>
+      <line x1='0' y1='30' x2='120' y2='30' stroke='${color}' stroke-width='0.4' opacity='0.4'/>
+      <line x1='0' y1='60' x2='120' y2='60' stroke='${color}' stroke-width='0.8' opacity='0.5'/>
+      <line x1='0' y1='90' x2='120' y2='90' stroke='${color}' stroke-width='0.4' opacity='0.4'/>
+      <line x1='30' y1='0' x2='30' y2='120' stroke='${color}' stroke-width='0.4' opacity='0.4'/>
+      <line x1='60' y1='0' x2='60' y2='120' stroke='${color}' stroke-width='0.8' opacity='0.5'/>
+      <line x1='90' y1='0' x2='90' y2='120' stroke='${color}' stroke-width='0.4' opacity='0.4'/>
+      <line x1='0' y1='15' x2='45' y2='15' stroke='${color}' stroke-width='0.3' opacity='0.25'/>
+      <line x1='75' y1='45' x2='120' y2='45' stroke='${color}' stroke-width='0.3' opacity='0.25'/>
+      <line x1='20' y1='0' x2='20' y2='50' stroke='${color}' stroke-width='0.3' opacity='0.25'/>
+      <line x1='100' y1='70' x2='100' y2='120' stroke='${color}' stroke-width='0.3' opacity='0.25'/>
+      <rect width='120' height='120' filter='url(#noise-${id})' opacity='0.06'/>
+    </svg>
+  `
+  const encoded = `url("data:image/svg+xml,${encodeURIComponent(svgPattern)}")`
+
+  return (
+    <div style={{ position: 'absolute', inset: 0 }}>
+      <div style={{ position: 'absolute', inset: 0, background: '#0a0f1e' }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: encoded,
+        backgroundSize: '120px 120px',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `radial-gradient(ellipse at 30% 25%, ${color}30 0%, transparent 50%), radial-gradient(ellipse at 70% 75%, ${color}18 0%, transparent 45%)`,
+      }} />
+    </div>
+  )
+}
+
+function PhotoSlider({ photos }) {
+  const [idx, setIdx] = useState(0)
+  const touchX = useRef(0)
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      {photos.map((url, i) => (
+        <img key={i} src={url} alt="" style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          objectFit: 'cover',
+          transform: `translateX(${(i - idx) * 100}%)`,
+          transition: 'transform 0.3s ease',
+        }} />
+      ))}
+      {photos.length > 1 && (
+        <>
+          <div
+            style={{ position: 'absolute', inset: 0, zIndex: 2 }}
+            onTouchStart={e => { touchX.current = e.touches[0].clientX }}
+            onTouchEnd={e => {
+              const diff = touchX.current - e.changedTouches[0].clientX
+              if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
+              else if (diff < -40 && idx > 0) setIdx(i => i - 1)
+            }}
+          />
+          <div style={{
+            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 5, zIndex: 3,
+          }}>
+            {photos.map((_, i) => (
+              <div key={i} style={{
+                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+                background: i === idx ? '#fff' : 'rgba(255,255,255,0.4)',
+                transition: 'all 0.3s',
+              }} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function EventCard({ event, dist, onViewDetails }) {
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const { label: timeLabel, urgency } = useCountdown(event.expires_at)
   const hasPhoto = event.photos?.length > 0
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0f172a' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0a0f1e' }}>
 
       {hasPhoto ? (
-        <img src={event.photos[0]} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        <PhotoSlider photos={event.photos} />
       ) : (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `radial-gradient(ellipse at 25% 35%, ${cfg.color}55 0%, transparent 55%), radial-gradient(ellipse at 75% 65%, ${cfg.color}33 0%, transparent 55%), #0f172a`,
-        }} />
+        <CityBackground color={cfg.color} />
       )}
 
       <div style={{
