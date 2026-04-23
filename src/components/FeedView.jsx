@@ -127,92 +127,83 @@ function EventCard({ event, dist, onViewDetails }) {
   const hasPhoto = event.photos?.length > 0
 
   return (
-    <div style={{
-      width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
-      background: '#0a0f1e',
-      display: 'flex', flexDirection: 'column',
-    }}>
-      {/* Фон всегда городской паттерн */}
-      <CityBackground color={cfg.color} />
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0a0f1e' }}>
 
-      {/* Контент поверх */}
+      {/* Фон — фото на весь экран или городской паттерн */}
+      {hasPhoto ? (
+        <PhotoSlider photos={event.photos} />
+      ) : (
+        <CityBackground color={cfg.color} />
+      )}
+
+      {/* Рамка по контуру */}
       <div style={{
-        position: 'relative', zIndex: 1,
-        flex: 1, display: 'flex', flexDirection: 'column',
-        padding: '72px 16px 24px',
-        justifyContent: 'space-between',
-      }}>
+        position: 'absolute', inset: 0, zIndex: 2,
+        boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.15)',
+        borderRadius: 0, pointerEvents: 'none',
+      }} />
 
-        {/* Фото в рамке */}
-        {hasPhoto && (
-          <div style={{ marginBottom: 16 }}>
-            <PhotoSlider photos={event.photos} />
-          </div>
-        )}
+      {/* Затемнение снизу для текста */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 2,
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 35%, transparent 45%, rgba(0,0,0,0.88) 100%)',
+        pointerEvents: 'none',
+      }} />
 
-        {/* Если нет фото — большой эмодзи */}
-        {!hasPhoto && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flex: 1, fontSize: 90, opacity: 0.15,
-            marginBottom: 8,
-          }}>
-            {cfg.icon}
-          </div>
-        )}
+      {/* Категория */}
+      <div style={{ position: 'absolute', top: 72, left: 16, zIndex: 3 }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+          color: cfg.color, background: cfg.color + '22',
+          border: `1px solid ${cfg.color}44`,
+          borderRadius: 20, padding: '4px 10px',
+          backdropFilter: 'blur(8px)',
+        }}>
+          {cfg.icon} {cfg.label}
+        </span>
+      </div>
 
-        {/* Инфо блок */}
-        <div>
-          {/* Категория */}
-          <span style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-            color: cfg.color, background: cfg.color + '22',
-            border: `1px solid ${cfg.color}44`,
-            borderRadius: 20, padding: '4px 10px',
-            display: 'inline-block', marginBottom: 10,
-          }}>
-            {cfg.icon} {cfg.label}
-          </span>
+      {/* Инфо снизу */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3, padding: '0 16px 24px' }}>
+        <h2 style={{
+          fontSize: 20, fontWeight: 800, color: '#fff',
+          lineHeight: 1.3, marginBottom: 10,
+          textShadow: '0 2px 12px rgba(0,0,0,0.6)',
+        }}>
+          {event.title}
+        </h2>
 
-          <h2 style={{
-            fontSize: 20, fontWeight: 800, color: '#fff',
-            lineHeight: 1.3, marginBottom: 10,
-          }}>
-            {event.title}
-          </h2>
-
-          <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-            {dist !== null && (
-              <span style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 20, padding: '5px 11px',
-                fontSize: 12, color: '#fff', fontWeight: 600,
-              }}>
-                📍 {distLabel(dist)} от тебя
-              </span>
-            )}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+          {dist !== null && (
             <span style={{
-              background: urgency ? 'rgba(248,113,113,0.2)' : 'rgba(34,211,238,0.12)',
-              border: `1px solid ${urgency ? 'rgba(248,113,113,0.4)' : 'rgba(34,211,238,0.3)'}`,
+              background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)',
               borderRadius: 20, padding: '5px 11px',
-              fontSize: 12, fontWeight: 600,
-              color: urgency ? '#f87171' : '#22d3ee',
+              fontSize: 12, color: '#fff', fontWeight: 600,
             }}>
-              ⏱ {timeLabel}
+              📍 {distLabel(dist)} от тебя
             </span>
-          </div>
-
-          <button onClick={onViewDetails} style={{
-            width: '100%', padding: '13px 0',
-            borderRadius: 16, border: 'none', cursor: 'pointer',
-            background: cfg.color, color: '#111827',
-            fontSize: 14, fontWeight: 900, letterSpacing: '0.05em',
-            boxShadow: `0 4px 20px ${cfg.color}55`,
+          )}
+          <span style={{
+            background: urgency ? 'rgba(248,113,113,0.25)' : 'rgba(34,211,238,0.15)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${urgency ? 'rgba(248,113,113,0.4)' : 'rgba(34,211,238,0.3)'}`,
+            borderRadius: 20, padding: '5px 11px',
+            fontSize: 12, fontWeight: 600,
+            color: urgency ? '#f87171' : '#22d3ee',
           }}>
-            ПОДРОБНЕЕ →
-          </button>
+            ⏱ {timeLabel}
+          </span>
         </div>
+
+        <button onClick={onViewDetails} style={{
+          width: '100%', padding: '13px 0',
+          borderRadius: 16, border: 'none', cursor: 'pointer',
+          background: cfg.color, color: '#111827',
+          fontSize: 14, fontWeight: 900, letterSpacing: '0.05em',
+          boxShadow: `0 4px 20px ${cfg.color}55`,
+        }}>
+          ПОДРОБНЕЕ →
+        </button>
       </div>
     </div>
   )
