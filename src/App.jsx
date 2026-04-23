@@ -266,7 +266,7 @@ export default function App() {
         setEvents(prev => prev.filter(e => e.id !== ev.id))
         setSelectedEvent(s => s?.id === ev.id ? null : s)
       })
-      .subscribe(s => setConnected(s === 'SUBSCRIBED'))
+      .subscribe()
     channelRef.current = ch
     return () => supabase.removeChannel(ch)
   }, [showToast])
@@ -370,8 +370,7 @@ export default function App() {
               <LogoIcon size={18} />
               <span className="font-bold text-xs tracking-wide" style={{ color: 'var(--accent)' }}>RYADOM</span>
               <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: connected ? 'var(--success)' : 'var(--warning)',
-                             boxShadow: connected ? '0 0 5px #34d399' : '0 0 5px #fbbf24' }} />
+                    style={{ background: 'var(--success)', boxShadow: '0 0 5px #34d399' }} />
             </div>
 
             <div className="flex-1" />
