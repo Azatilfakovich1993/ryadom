@@ -16,10 +16,9 @@ import { useTelegram } from './hooks/useTelegram'
 import { useGeolocation } from './hooks/useGeolocation'
 import { supabase, fetchNearbyEvents, createEvent, getProfile } from './lib/supabase'
 import { tryUnlock } from './utils/achievements'
+import { CATEGORY_CONFIG } from './components/MapComponent'
 
 const RADIUS_M = 15000
-
-import { CATEGORY_CONFIG } from './components/MapComponent'
 
 function EventsPeek({ events, location, onSelect }) {
   const [open, setOpen] = useState(false)
