@@ -40,8 +40,9 @@ const PIN_STYLES = `
     transform: translate(-24px, -62px);
   }
   .rp-pin { position:absolute; top:0; left:0; overflow:visible; }
-  [class*="ymaps"][class*="zoom"],
-  [class*="ymaps"][class*="-zoom"] { display: none !important; }
+  [class*="ymaps-"][class*="-zoom"] { display: none !important; }
+  [class*="ymaps-"][class*="-controls__control"] { display: none !important; }
+  [class*="ymaps-"][class*="-float-button"] { display: none !important; }
 `
 
 function injectStyles() {
