@@ -519,7 +519,7 @@ export default function App() {
 
       {/* FAB кнопки — только в режиме карты */}
       {mode === 'map' && !showCreate && !selectedEvent && !clusterEvents && (
-        <div className="absolute z-10 flex flex-col items-end gap-3"
+        <div className="absolute z-10 flex flex-col items-center gap-3"
              style={{ bottom: 100, right: 16 }}>
           {showCreateHint && (
             <div className="rounded-2xl px-3 py-2 text-xs font-semibold animate-pulse"
