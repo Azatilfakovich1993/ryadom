@@ -492,14 +492,15 @@ export default function App() {
           className="absolute z-20 transition active:scale-90"
           style={{
             bottom: 110, right: 16,
-            width: 52, height: 52, borderRadius: 15,
+            width: 60, height: 60, borderRadius: 18,
             background: 'var(--accent)', color: '#111827',
             border: 'none', cursor: 'pointer',
-            fontSize: 24, fontWeight: 700,
-            boxShadow: '0 0 20px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
+            boxShadow: '0 0 24px var(--accent-glow), 0 4px 16px rgba(0,0,0,0.5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-          +
+          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
         </button>
       )}
 
@@ -536,7 +537,7 @@ export default function App() {
             }}
             className="transition active:scale-90"
             style={{
-              width: 52, height: 52, borderRadius: 15,
+              width: 44, height: 44, borderRadius: 13,
               background: 'rgba(17,24,39,0.82)',
               backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
               border: '1px solid rgba(255,255,255,0.12)',
@@ -544,7 +545,7 @@ export default function App() {
               boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--accent)' }}>
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--accent)' }}>
               <circle cx="12" cy="12" r="3" fill="var(--accent)" stroke="none"/>
               <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
               <circle cx="12" cy="12" r="7" strokeOpacity="0.4"/>
@@ -555,13 +556,13 @@ export default function App() {
             onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
             className="transition active:scale-90"
             style={{
-              width: 52, height: 52, borderRadius: 15,
+              width: 60, height: 60, borderRadius: 18,
               background: 'var(--accent)', color: '#111827',
               border: 'none', cursor: 'pointer',
-              boxShadow: '0 0 20px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.4)',
+              boxShadow: '0 0 24px var(--accent-glow), 0 4px 16px rgba(0,0,0,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
             </svg>
           </button>
