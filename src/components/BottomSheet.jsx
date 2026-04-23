@@ -445,13 +445,6 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                     </div>
                   )}
                 </div>
-                <button onClick={() => {
-                            window.open(`https://2gis.ru/directions/pedestrian/to/${event.lon},${event.lat}`, '_blank')
-                          }}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
-                        style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#4ade80' }}>
-                  🗺 2ГИС
-                </button>
               </div>
             </div>
           )}
