@@ -244,9 +244,17 @@ export default function App() {
   const loadEvents = useCallback(async () => {
     if (!location) return
     setLoadingEvents(true)
-    const data = await fetchNearbyEvents(location.lat, location.lon, RADIUS_M)
-    setEvents(data)
-    setLoadingEvents(false)
+    try {
+      const data = await Promise.race([
+        fetchNearbyEvents(location.lat, location.lon, RADIUS_M),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000)),
+      ])
+      setEvents(data)
+    } catch (e) {
+      console.warn('loadEvents:', e.message)
+    } finally {
+      setLoadingEvents(false)
+    }
   }, [location])
 
   useEffect(() => { loadEvents() }, [loadEvents])
