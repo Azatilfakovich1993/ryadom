@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import MapComponent from './components/MapComponent'
+import FeedView from './components/FeedView'
 import BottomSheet from './components/BottomSheet'
 import ClusterSheet from './components/ClusterSheet'
 import CreateEventForm from './components/CreateEventForm'
@@ -61,6 +62,7 @@ export default function App() {
   const [radarActive, setRadarActive]       = useState(false)
   const [showRadarCard, setShowRadarCard]   = useState(false)
   const [showFilterMenu, setShowFilterMenu] = useState(false)
+  const [mode, setMode]                     = useState('map') // 'map' | 'feed'
   const radarShown                          = useRef(false)
 
   // ── Auth state ────────────────────────────────────────────
@@ -244,7 +246,7 @@ export default function App() {
     <div className="relative w-full h-full overflow-hidden" style={{ background: 'var(--bg)' }}>
 
       {/* Map */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" style={{ display: mode === 'map' ? 'block' : 'none' }}>
         <MapComponent
           events={visibleEvents}
           onEventClick={handleEventClick}
@@ -253,6 +255,17 @@ export default function App() {
           onRadarDone={handleRadarDone}
         />
       </div>
+
+      {/* Feed */}
+      {mode === 'feed' && (
+        <div className="absolute inset-0" style={{ top: 0 }}>
+          <FeedView
+            events={visibleEvents}
+            location={location}
+            onViewEvent={(ev) => { setMode('map'); handleEventClick(ev) }}
+          />
+        </div>
+      )}
 
       {/* Карточка результата радара */}
       {showRadarCard && (
@@ -308,6 +321,32 @@ export default function App() {
               )
             })}
           </div>
+        </div>
+
+        {/* Переключатель Лента / Карта */}
+        <div style={{
+          display: 'flex', borderRadius: 14, padding: 3,
+          background: 'rgba(17,24,39,0.92)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+          flexShrink: 0,
+        }}>
+          {[{ key: 'feed', label: '▤ Лента' }, { key: 'map', label: '🗺 Карта' }].map(m => (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              style={{
+                padding: '6px 12px', borderRadius: 11,
+                fontSize: 12, fontWeight: 700,
+                border: 'none', cursor: 'pointer',
+                background: mode === m.key ? 'var(--accent)' : 'transparent',
+                color: mode === m.key ? '#111827' : 'var(--hint)',
+                transition: 'all 0.2s',
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
 
         {/* Профиль */}
