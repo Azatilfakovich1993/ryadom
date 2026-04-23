@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { supabase, fetchMessages, sendMessage, deleteEvent, getProfile } from '../lib/supabase'
+import { supabase, fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile } from '../lib/supabase'
 import { tryUnlock, incrementMessageCount } from '../utils/achievements'
 import CreatorSheet from './CreatorSheet'
 import Picker from '@emoji-mart/react'
@@ -205,10 +205,14 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const { label, urgency, critical, expired } = useCountdown(event.expires_at)
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const hasPhotos = event.photos?.length > 0
-  const [lightbox, setLightbox] = useState(null)
-  const [deleting, setDeleting] = useState(false)
-  const [creator, setCreator] = useState(null)
+  const [lightbox, setLightbox]       = useState(null)
+  const [deleting, setDeleting]       = useState(false)
+  const [confirmDelete, setConfirm]   = useState(false)
+  const [creator, setCreator]         = useState(null)
   const [showCreator, setShowCreator] = useState(false)
+  const [editing, setEditing]         = useState(false)
+  const [editTitle, setEditTitle]     = useState(event.title)
+  const [saving, setSaving]           = useState(false)
   const isOwner = authUser && event.creator_id === authUser.id
 
   useEffect(() => {
@@ -219,6 +223,21 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const handleDelete = async () => {
     setDeleting(true)
     try { await deleteEvent(event.id); onDelete?.() } finally { setDeleting(false) }
+  }
+
+  const handleSaveEdit = async () => {
+    const title = editTitle.trim()
+    if (!title || saving) return
+    setSaving(true)
+    try {
+      await updateEvent(event.id, { title })
+      event.title = title
+      setEditing(false)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -305,14 +324,46 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                   style={{ background: cfg.color + '22', border: `1px solid ${cfg.color}44` }}>
               {cfg.icon}
             </span>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: cfg.color }}>
                 {cfg.label}
               </p>
-              <h2 className="text-base font-semibold leading-tight" style={{ color: 'var(--text)' }}>
-                {event.title}
-              </h2>
+              {editing ? (
+                <input
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value.slice(0, 80))}
+                  autoFocus
+                  className="w-full rounded-xl px-2 py-1 text-sm font-semibold outline-none"
+                  style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${cfg.color}66` }}
+                />
+              ) : (
+                <h2 className="text-base font-semibold leading-tight" style={{ color: 'var(--text)' }}>
+                  {event.title}
+                </h2>
+              )}
             </div>
+            {isOwner && !expired && (
+              editing ? (
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={() => { setEditing(false); setEditTitle(event.title) }}
+                          className="px-2 py-1 rounded-lg text-xs transition active:scale-90"
+                          style={{ background: 'var(--bg-3)', color: 'var(--hint)' }}>
+                    Отмена
+                  </button>
+                  <button onClick={handleSaveEdit} disabled={!editTitle.trim() || saving}
+                          className="px-2 py-1 rounded-lg text-xs font-bold transition active:scale-90 disabled:opacity-40"
+                          style={{ background: cfg.color, color: '#111827' }}>
+                    {saving ? '…' : 'Сохранить'}
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setEditing(true)}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition active:scale-90"
+                        style={{ background: 'var(--bg-2)', border: '1px solid var(--bg-3)', color: 'var(--hint)', fontSize: 14 }}>
+                  ✏️
+                </button>
+              )
+            )}
           </div>
 
           {/* Photos */}
@@ -361,15 +412,6 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             </div>
           )}
 
-          {/* Delete own event */}
-          {isOwner && !expired && (
-            <button onClick={handleDelete} disabled={deleting}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold mb-3 transition active:scale-95 disabled:opacity-40"
-                    style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.2)' }}>
-              {deleting ? '⏳ Удаляю…' : '🗑 Удалить событие'}
-            </button>
-          )}
-
           {/* Premium */}
           <button onClick={onPremium}
                   className="w-full flex items-center justify-between rounded-2xl px-4 py-3 mb-3 transition active:scale-95"
@@ -385,10 +427,40 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
 
           {/* Close */}
           <button onClick={onClose}
-                  className="w-full py-3 rounded-2xl text-sm font-semibold transition active:scale-95 mb-2"
+                  className="w-full py-3 rounded-2xl text-sm font-semibold transition active:scale-95 mb-3"
                   style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--bg-3)' }}>
             Закрыть
           </button>
+
+          {/* Delete own event — bottom, with confirmation */}
+          {isOwner && !expired && (
+            confirmDelete ? (
+              <div className="rounded-2xl px-4 py-3 mb-2"
+                   style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)' }}>
+                <p className="text-sm font-semibold text-center mb-3" style={{ color: 'var(--danger)' }}>
+                  Удалить событие? Это нельзя отменить
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirm(false)}
+                          className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
+                          style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--bg-3)' }}>
+                    Отмена
+                  </button>
+                  <button onClick={handleDelete} disabled={deleting}
+                          className="flex-1 py-2.5 rounded-xl text-sm font-bold transition active:scale-95 disabled:opacity-40"
+                          style={{ background: 'var(--danger)', color: '#fff' }}>
+                    {deleting ? '⏳ Удаляю…' : '🗑 Да, удалить'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setConfirm(true)}
+                      className="w-full py-3 rounded-2xl text-sm font-semibold mb-2 transition active:scale-95"
+                      style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.2)' }}>
+                🗑 Удалить событие
+              </button>
+            )
+          )}
         </div>
       </div>
     </>

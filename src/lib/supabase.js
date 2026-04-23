@@ -117,6 +117,11 @@ export async function deleteEvent(eventId) {
   if (error) throw error
 }
 
+export async function updateEvent(eventId, updates) {
+  const { error } = await supabase.from('events').update(updates).eq('id', eventId)
+  if (error) throw error
+}
+
 export async function fetchReviews(targetId) {
   const { data, error } = await supabase
     .from('reviews')
