@@ -216,6 +216,7 @@ function SwipeableSheet({ onClose, children }) {
   const isDragging = useRef(false)
 
   const onTouchStart = (e) => {
+    if (e.target.closest('button,a,input,textarea,select')) return
     startY.current = e.touches[0].clientY
     isDragging.current = true
   }

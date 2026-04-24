@@ -7,6 +7,7 @@ import emailjs from '@emailjs/browser'
 const EMAILJS_SERVICE  = 'service_e9rq08l'
 const EMAILJS_TEMPLATE = 'template_yly49oh'
 const EMAILJS_KEY      = 'yeMBepFqVCzgEH0Si'
+const PROXY_URL        = 'https://ryadom-proxy.azatilfakovich1993.workers.dev'
 
 function FeedbackForm({ profile, onClose }) {
   const [type, setType]       = useState('💡 Идея')
@@ -37,11 +38,29 @@ function FeedbackForm({ profile, onClose }) {
         from_email: params.from_email, phone: params.phone,
         from_name: params.from_name, username: params.username,
       }])
-      // EmailJS — пробуем, но не блокируем если нет VPN
+      // EmailJS через прокси — работает без VPN
       try {
-        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_KEY)
-      } catch (emailErr) {
-        console.warn('EmailJS failed (no VPN?):', emailErr)
+        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, {
+          publicKey: EMAILJS_KEY,
+          blockHeadless: false,
+          limitRate: { throttle: 0 },
+        })
+      } catch {
+        // fallback: прямой запрос через прокси
+        try {
+          await fetch(`${PROXY_URL}/emailjs/api/v1.0/email/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_id: EMAILJS_SERVICE,
+              template_id: EMAILJS_TEMPLATE,
+              user_id: EMAILJS_KEY,
+              template_params: params,
+            }),
+          })
+        } catch (e2) {
+          console.warn('EmailJS proxy also failed:', e2)
+        }
       }
       setDone(true)
     } catch (e) {
@@ -525,7 +544,7 @@ function ProfileSwipe({ onClose, children }) {
   const [ty, setTy] = useState(0)
   const startY = useRef(null)
   return (
-    <div onTouchStart={e => { startY.current = e.touches[0].clientY }}
+    <div onTouchStart={e => { if (e.target.closest('button,a,input,textarea')) return; startY.current = e.touches[0].clientY }}
          onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
          onTouchEnd={() => { ty > 100 ? onClose() : setTy(0) }}
          className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"

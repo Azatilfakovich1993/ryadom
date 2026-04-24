@@ -533,7 +533,7 @@ function SwipeToClose({ onClose, children }) {
   const startY = useRef(0)
 
   return (
-    <div onTouchStart={e => { startY.current = e.touches[0].clientY }}
+    <div onTouchStart={e => { if (e.target.closest('button,a,input,textarea')) return; startY.current = e.touches[0].clientY }}
          onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
          onTouchEnd={() => { ty > 100 ? onClose() : setTy(0) }}
          style={{
