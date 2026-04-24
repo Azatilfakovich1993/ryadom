@@ -212,10 +212,14 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
       </div>
 
       {/* Название — выше остального */}
-      <div style={{ position: 'absolute', bottom: 160, left: 0, right: 0, zIndex: 5, padding: '0 16px' }}>
+      <div style={{
+        position: 'absolute', bottom: 160, left: 0, right: 0, zIndex: 5,
+        padding: '0 16px', maxHeight: '45%', overflowY: 'auto',
+        scrollbarWidth: 'none',
+      }}>
         <h2 style={{
           fontSize: 20, fontWeight: 800, color: '#fff',
-          lineHeight: 1.3,
+          lineHeight: 1.4,
           textShadow: '0 2px 12px rgba(0,0,0,0.6)',
         }}>
           {event.title}

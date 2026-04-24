@@ -118,10 +118,10 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   // ── Emoji ──────────────────────────────────────────────────
   const insertEmoji = (emoji) => {
     const ta = textareaRef.current
-    if (!ta) { setTitle(prev => (prev + emoji).slice(0, 100)); setShowEmoji(false); return }
+    if (!ta) { setTitle(prev => (prev + emoji).slice(0, 200)); setShowEmoji(false); return }
     const start = ta.selectionStart
     const end   = ta.selectionEnd
-    const next  = (title.slice(0, start) + emoji + title.slice(end)).slice(0, 100)
+    const next  = (title.slice(0, start) + emoji + title.slice(end)).slice(0, 200)
     setTitle(next)
     setShowEmoji(false)
     setTimeout(() => {
@@ -294,7 +294,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             <textarea
               ref={textareaRef}
               value={title}
-              onChange={e => setTitle(e.target.value.slice(0, 100))}
+              onChange={e => setTitle(e.target.value.slice(0, 200))}
               placeholder="Играем в волейбол на поляне…"
               rows={2} autoFocus
               className="w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none"
@@ -304,7 +304,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             />
             <div className="flex justify-end mt-1">
               <span className="text-xs" style={{ color: title.length > 80 ? 'var(--warning)' : 'var(--hint)' }}>
-                {title.length}/100
+                {title.length}/200
               </span>
             </div>
           </div>
