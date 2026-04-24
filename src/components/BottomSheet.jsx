@@ -244,6 +244,8 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   }
   const [editing, setEditing]         = useState(false)
   const [editTitle, setEditTitle]     = useState(event.title)
+  const [editAddress, setEditAddress] = useState('')
+  const [geocoding, setGeocoding]     = useState(false)
   const [saving, setSaving]           = useState(false)
   const isOwner = authUser && event.creator_id === authUser.id
 
@@ -262,8 +264,30 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
     if (!title || saving) return
     setSaving(true)
     try {
-      await updateEvent(event.id, { title })
+      const updates = { title }
+      if (editAddress.trim()) {
+        setGeocoding(true)
+        await new Promise((resolve) => {
+          window.ymaps.ready(() => {
+            window.ymaps.geocode(editAddress.trim(), { results: 1 }).then(res => {
+              const obj = res.geoObjects.get(0)
+              if (obj) {
+                const [lat, lon] = obj.geometry.getCoordinates()
+                updates.lat = lat
+                updates.lon = lon
+                event.lat = lat
+                event.lon = lon
+                setAddress(obj.getAddressLine())
+              }
+              setGeocoding(false)
+              resolve()
+            }).catch(() => { setGeocoding(false); resolve() })
+          })
+        })
+      }
+      await updateEvent(event.id, updates)
       event.title = title
+      setEditAddress('')
       setEditing(false)
     } catch (e) {
       console.error(e)
@@ -387,19 +411,29 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                     value={editTitle}
                     onChange={e => setEditTitle(e.target.value.slice(0, 200))}
                     autoFocus
+                    placeholder="Название события"
                     className="w-full rounded-xl px-2 py-1 text-base font-bold outline-none mb-2"
                     style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${cfg.color}66` }}
                   />
+                  <input
+                    value={editAddress}
+                    onChange={e => setEditAddress(e.target.value)}
+                    placeholder={`Новый адрес (сейчас: ${address || 'загружается...'})`}
+                    className="w-full rounded-xl px-2 py-1 text-sm outline-none mb-2"
+                    style={{ background: 'var(--bg-3)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
+                    onFocus={e => e.target.style.borderColor = cfg.color + '66'}
+                    onBlur={e => e.target.style.borderColor = 'var(--bg-3)'}
+                  />
                   <div className="flex gap-2">
-                    <button onClick={() => { setEditing(false); setEditTitle(event.title) }}
+                    <button onClick={() => { setEditing(false); setEditTitle(event.title); setEditAddress('') }}
                             className="flex-1 py-1.5 rounded-lg text-xs transition active:scale-90"
                             style={{ background: 'var(--bg-3)', color: 'var(--hint)' }}>
                       Отмена
                     </button>
-                    <button onClick={handleSaveEdit} disabled={!editTitle.trim() || saving}
+                    <button onClick={handleSaveEdit} disabled={!editTitle.trim() || saving || geocoding}
                             className="flex-1 py-1.5 rounded-lg text-xs font-bold transition active:scale-90 disabled:opacity-40"
                             style={{ background: cfg.color, color: '#111827' }}>
-                      {saving ? '…' : 'Сохранить'}
+                      {geocoding ? '📍...' : saving ? '⏳' : 'Сохранить'}
                     </button>
                   </div>
                 </div>
