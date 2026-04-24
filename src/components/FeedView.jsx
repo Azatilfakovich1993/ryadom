@@ -213,7 +213,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
 
       {/* Название — выше остального */}
       <div style={{
-        position: 'absolute', bottom: 160, left: 0, right: 0, zIndex: 5,
+        position: 'absolute', bottom: 220, left: 0, right: 0, zIndex: 5,
         padding: '0 16px', maxHeight: '45%', overflowY: 'auto',
         scrollbarWidth: 'none',
       }}>
