@@ -454,44 +454,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* Строка 2: фильтры + обновить */}
-          <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {CHIPS.map(c => {
-              const active = activeFilter === c.key
-              return (
-                <button key={c.key}
-                        onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key) }}
-                        className="flex items-center gap-1.5 flex-shrink-0 transition active:scale-90"
-                        style={{
-                          height: 32, borderRadius: 10, padding: '0 10px',
-                          fontSize: 13,
-                          background: active ? c.color + '22' : 'rgba(17,24,39,0.93)',
-                          border: `1.5px solid ${active ? c.color : c.color + '55'}`,
-                          boxShadow: active ? `0 0 12px ${c.color}55` : 'none',
-                          color: active ? c.color : 'var(--hint)',
-                          fontWeight: active ? 700 : 400,
-                        }}>
-                  <span>{c.icon}</span>
-                  <span style={{ fontSize: 11 }}>{c.label}</span>
-                </button>
-              )
-            })}
-
-            <button onClick={loadEvents} disabled={loadingEvents}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 transition active:scale-90"
-                    style={{
-                      background: 'rgba(17,24,39,0.93)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: '0 1px 6px rgba(0,0,0,0.25)',
-                    }}>
-              <svg className={`w-3.5 h-3.5 ${loadingEvents ? 'animate-spin' : ''}`}
-                   style={{ color: 'var(--accent)' }}
-                   fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-            </button>
-          </div>
         </div>
       )}
 
@@ -558,6 +520,53 @@ export default function App() {
       {mode === 'map' && !showCreate && !selectedEvent && !clusterEvents && (
         <div className="absolute z-10 flex flex-col items-center gap-3"
              style={{ bottom: 100, right: 16 }}>
+
+          {/* Категории — раскрываются вверх */}
+          {showFilterMenu && (
+            <div className="flex flex-col items-center gap-2">
+              {CHIPS.map(c => {
+                const active = activeFilter === c.key
+                return (
+                  <button key={c.key}
+                          onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key); setShowFilterMenu(false) }}
+                          className="flex flex-col items-center gap-0.5 transition active:scale-90"
+                          style={{
+                            width: 44, height: 44, borderRadius: 13,
+                            background: active ? c.color + '33' : 'rgba(17,24,39,0.93)',
+                            border: `1.5px solid ${active ? c.color : c.color + '66'}`,
+                            boxShadow: active ? `0 0 14px ${c.color}66` : '0 2px 8px rgba(0,0,0,0.3)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
+                            cursor: 'pointer',
+                          }}>
+                    <span style={{ fontSize: 16 }}>{c.icon}</span>
+                    <span style={{ fontSize: 8, color: active ? c.color : 'var(--hint)', fontWeight: 700 }}>{c.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Кнопка фильтра */}
+          <button onClick={() => { haptic('impact', 'light'); setShowFilterMenu(v => !v) }}
+                  className="transition active:scale-90"
+                  style={{
+                    width: 44, height: 44, borderRadius: 13,
+                    background: activeFilter ? (CHIPS.find(c => c.key === activeFilter)?.color + '33') : 'rgba(17,24,39,0.93)',
+                    border: `1.5px solid ${activeFilter ? CHIPS.find(c => c.key === activeFilter)?.color : 'rgba(255,255,255,0.12)'}`,
+                    boxShadow: activeFilter ? `0 0 14px ${CHIPS.find(c => c.key === activeFilter)?.color}55` : '0 4px 16px rgba(0,0,0,0.4)',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+            {activeFilter
+              ? <span style={{ fontSize: 20 }}>{CHIPS.find(c => c.key === activeFilter)?.icon}</span>
+              : <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                     style={{ color: 'var(--accent)' }}>
+                  <line x1="4" y1="6" x2="20" y2="6"/>
+                  <line x1="7" y1="12" x2="17" y2="12"/>
+                  <line x1="10" y1="18" x2="14" y2="18"/>
+                </svg>
+            }
+          </button>
           {showCreateHint && (
             <div className="rounded-2xl px-3 py-2 text-xs font-semibold animate-pulse"
                  style={{ background: 'rgba(17,24,39,0.95)', color: 'var(--accent)', border: '1px solid var(--accent)', boxShadow: '0 0 12px var(--accent-glow)', whiteSpace: 'nowrap' }}>
