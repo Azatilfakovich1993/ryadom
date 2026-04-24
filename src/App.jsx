@@ -319,7 +319,7 @@ export default function App() {
     setSelectedEvent(event)
   }, [haptic])
 
-  const handleCreateSubmit = async ({ title, category, durationHours, lat, lon, photos, chatEnabled }) => {
+  const handleCreateSubmit = async ({ title, category, durationHours, lat, lon, photos, chatEnabled, useBusinessPin }) => {
     if (profile?.is_banned) {
       showToast('Ваш аккаунт заблокирован', 'error')
       return
@@ -337,7 +337,7 @@ export default function App() {
       }
       const uid = authUser.id
       const event = await Promise.race([
-        createEvent({ title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [] }),
+        createEvent({ title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [], creatorIsBusiness: !!useBusinessPin }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('Превышено время ожидания. Попробуй ещё раз.')), 15000)),
       ])
       haptic('notification', 'success')
@@ -643,6 +643,7 @@ export default function App() {
           onClose={() => setShowCreate(false)}
           loading={creating}
           userLocation={location}
+          isBusiness={!!profile?.is_business}
         />
       )}
 

@@ -20,11 +20,11 @@ export async function fetchNearbyEvents(lat, lon, radiusMeters = 5000) {
   return data ?? []
 }
 
-export async function createEvent({ title, category, lat, lon, durationHours, creatorId, chatEnabled = true, photos = [] }) {
+export async function createEvent({ title, category, lat, lon, durationHours, creatorId, chatEnabled = true, photos = [], creatorIsBusiness = false }) {
   const expiresAt = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
   const { data, error } = await supabase
     .from('events')
-    .insert([{ title, category, lat, lon, expires_at: expiresAt, creator_id: creatorId, chat_enabled: chatEnabled, photos }])
+    .insert([{ title, category, lat, lon, expires_at: expiresAt, creator_id: creatorId, chat_enabled: chatEnabled, photos, creator_is_business: creatorIsBusiness }])
     .select()
     .single()
   if (error) { console.error('createEvent error:', error); throw error }

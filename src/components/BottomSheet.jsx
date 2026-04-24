@@ -331,10 +331,19 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             />
           )}
 
+          {/* Business badge */}
+          {event.creator_is_business && (
+            <div className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-xl self-start"
+                 style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)' }}>
+              <span style={{ fontSize: 13 }}>⭐</span>
+              <span className="text-xs font-bold" style={{ color: '#f59e0b' }}>Партнёр RYADOM</span>
+            </div>
+          )}
+
           {/* Category + title */}
           <div className="flex items-center gap-3 mb-4">
             <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: cfg.color + '22', border: `1px solid ${cfg.color}44` }}>
+                  style={{ background: (event.creator_is_business ? '#f59e0b' : cfg.color) + '22', border: `1px solid ${(event.creator_is_business ? '#f59e0b' : cfg.color)}44` }}>
               {cfg.icon}
             </span>
             <div className="flex-1 min-w-0">

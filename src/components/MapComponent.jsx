@@ -45,6 +45,8 @@ const PIN_STYLES = `
   [class*="ymaps-"][class*="-float-button"] { display: none !important; }
   [class*="ymaps-"][class*="-geolocation"] { display: none !important; }
   [class*="ymaps-"][class*="-location"] { display: none !important; }
+  @keyframes rp-pulse { 0% { r: 22; opacity: 0.6; } 100% { r: 38; opacity: 0; } }
+  .rp-biz-pulse { animation: rp-pulse 2s ease-out infinite; }
 `
 
 function injectStyles() {
@@ -67,7 +69,7 @@ const YA_ICON_URL = `data:image/svg+xml,${YA_ICON_SVG}`
 function makePinLayout(ymaps) {
   return ymaps.templateLayoutFactory.createClass(`
     <div class="rp-wrap">
-      <svg class="rp-pin" width="48" height="64" viewBox="0 0 48 64">
+      <svg class="rp-pin" width="48" height="72" viewBox="0 0 48 72">
         <defs>
           <radialGradient id="rp-glow-{{ properties.uid }}" cx="50%" cy="45%" r="55%">
             <stop offset="0%" stop-color="{{ properties.color }}" stop-opacity="0.25"/>
@@ -75,6 +77,9 @@ function makePinLayout(ymaps) {
           </radialGradient>
         </defs>
         <ellipse cx="24" cy="62" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+        {% if properties.isBusiness %}
+        <circle class="rp-biz-pulse" cx="24" cy="23" r="22" fill="none" stroke="#f59e0b" stroke-width="2"/>
+        {% endif %}
         <filter id="rp-gf-{{ properties.uid }}" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="4" result="blur"/>
           <feComposite in="SourceGraphic" in2="blur" operator="over"/>
@@ -96,6 +101,10 @@ function makePinLayout(ymaps) {
                 stroke-linecap="round"
                 stroke-dasharray="{{ properties.dash }} {{ properties.gap }}"
                 transform="rotate(-90 24 23)"/>
+        {% if properties.isBusiness %}
+        <circle cx="38" cy="10" r="8" fill="#111827" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="38" y="14" font-size="9" text-anchor="middle" style="user-select:none">⭐</text>
+        {% endif %}
       </svg>
     </div>
   `, {
@@ -278,15 +287,17 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
     const R = 19, circum = 2 * Math.PI * R
 
     spread.forEach((event, i) => {
-      const cfg      = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
-      const progress = calcProgress(event)
-      const dash     = (circum * progress).toFixed(2)
-      const gap      = (circum * (1 - progress)).toFixed(2)
-      const ringColor = progress > 0.5 ? '#34d399' : progress > 0.25 ? '#fbbf24' : '#f87171'
+      const cfg        = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
+      const isBusiness = !!event.creator_is_business
+      const pinColor   = isBusiness ? '#f59e0b' : cfg.color
+      const progress   = calcProgress(event)
+      const dash       = (circum * progress).toFixed(2)
+      const gap        = (circum * (1 - progress)).toFixed(2)
+      const ringColor  = isBusiness ? '#f59e0b' : progress > 0.5 ? '#34d399' : progress > 0.25 ? '#fbbf24' : '#f87171'
 
       const pm = new window.ymaps.Placemark(
         [event.lat, event.lon],
-        { color: cfg.color, icon: cfg.icon, uid: event.id.replace(/-/g, '').slice(0, 8), dash, gap, ringColor },
+        { color: pinColor, icon: cfg.icon, uid: event.id.replace(/-/g, '').slice(0, 8), dash, gap, ringColor, isBusiness: isBusiness ? 1 : 0 },
         { iconLayout: pinLayoutRef.current }
       )
       pm.events.add('click', () => onEventClick(events[i]))

@@ -31,7 +31,7 @@ function geocodeAddress(address, userLocation) {
   })
 }
 
-export default function CreateEventForm({ onSubmit, onClose, loading, userLocation }) {
+export default function CreateEventForm({ onSubmit, onClose, loading, userLocation, isBusiness = false }) {
   const [title, setTitle]       = useState('')
   const [category, setCategory] = useState('chat')
   const [duration, setDuration] = useState(1)
@@ -41,6 +41,8 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   // Photos
   const [photos, setPhotos]           = useState([])
   const [photoPreviews, setPhotoPreviews] = useState([])
+  const [useBusinessPin, setUseBusinessPin] = useState(false)
+  const maxPhotos = isBusiness ? 5 : 3
   const galleryInputRef = useRef(null)
   const cameraInputRef  = useRef(null)
 
@@ -84,7 +86,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   })
 
   const addPhoto = async (file) => {
-    if (!file || photos.length >= 3) return
+    if (!file || photos.length >= maxPhotos) return
     const dataUrl = await compressImage(file)
     setPhotos(prev => [...prev, dataUrl])
     setPhotoPreviews(prev => [...prev, dataUrl])
@@ -202,6 +204,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       lon: coords.lon,
       photos,
       chatEnabled,
+      useBusinessPin: isBusiness && useBusinessPin,
     })
   }
 
@@ -309,7 +312,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                   </button>
                 </div>
               ))}
-              {photos.length < 3 && (
+              {photos.length < maxPhotos && (
                 <button type="button" onClick={() => galleryInputRef.current?.click()}
                         className="flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-2xl transition active:scale-95"
                         style={{ width: 80, height: 80, background: 'var(--bg-2)', border: '1.5px dashed var(--bg-3)', color: 'var(--hint)' }}>
@@ -319,13 +322,30 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
               )}
             </div>
 
-            {photos.length < 3 && (
+            {photos.length < maxPhotos && (
               <button type="button" onClick={() => cameraInputRef.current?.click()}
                       className="flex items-center gap-2 text-sm py-2.5 px-4 rounded-2xl transition active:scale-95"
                       style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--bg-3)' }}>
                 <span>📸</span>
                 <span>Сделать снимок сейчас</span>
               </button>
+            )}
+
+            {/* Бизнес: выбор типа пина */}
+            {isBusiness && (
+              <div className="flex items-center justify-between rounded-2xl px-4 py-3 mt-1"
+                   style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#f59e0b' }}>⭐ Золотой пин партнёра</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>С пульсацией и бейджем</p>
+                </div>
+                <button type="button" onClick={() => setUseBusinessPin(v => !v)}
+                        className="w-12 h-6 rounded-full flex items-center transition-all duration-200 flex-shrink-0"
+                        style={{ background: useBusinessPin ? '#f59e0b' : 'var(--bg-3)', padding: '2px' }}>
+                  <div className="w-5 h-5 rounded-full bg-white transition-all duration-200"
+                       style={{ transform: useBusinessPin ? 'translateX(24px)' : 'translateX(0)' }} />
+                </button>
+              </div>
             )}
           </div>
 

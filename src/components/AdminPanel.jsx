@@ -190,6 +190,13 @@ function Users() {
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_banned: newVal } : u))
   }
 
+  const toggleBusiness = async (user) => {
+    const newVal = !user.is_business
+    if (!confirm(newVal ? `Выдать бизнес-доступ ${user.username}?` : `Убрать бизнес-доступ у ${user.username}?`)) return
+    await supabase.from('profiles').update({ is_business: newVal }).eq('id', user.id)
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_business: newVal } : u))
+  }
+
   if (loading) return <Loader />
 
   return (
@@ -213,15 +220,26 @@ function Users() {
               @{u.username} {u.is_banned ? '· 🚫 Заблокирован' : ''}
             </p>
           </div>
-          <button onClick={() => toggleBan(u)}
-                  className="px-2 py-1 rounded-xl text-[10px] font-bold flex-shrink-0 transition active:scale-90"
-                  style={{
-                    background: u.is_banned ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)',
-                    color: u.is_banned ? 'var(--success)' : 'var(--danger)',
-                    border: u.is_banned ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(248,113,113,0.3)',
-                  }}>
-            {u.is_banned ? 'Разбан' : 'Бан'}
-          </button>
+          <div className="flex flex-col gap-1 flex-shrink-0">
+            <button onClick={() => toggleBusiness(u)}
+                    className="px-2 py-1 rounded-xl text-[10px] font-bold transition active:scale-90"
+                    style={{
+                      background: u.is_business ? 'rgba(245,158,11,0.2)' : 'var(--bg-3)',
+                      color: u.is_business ? '#f59e0b' : 'var(--hint)',
+                      border: u.is_business ? '1px solid rgba(245,158,11,0.4)' : '1px solid transparent',
+                    }}>
+              {u.is_business ? '⭐ Бизнес' : '⭐'}
+            </button>
+            <button onClick={() => toggleBan(u)}
+                    className="px-2 py-1 rounded-xl text-[10px] font-bold transition active:scale-90"
+                    style={{
+                      background: u.is_banned ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)',
+                      color: u.is_banned ? 'var(--success)' : 'var(--danger)',
+                      border: u.is_banned ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(248,113,113,0.3)',
+                    }}>
+              {u.is_banned ? 'Разбан' : 'Бан'}
+            </button>
+          </div>
         </div>
       ))}
     </div>
