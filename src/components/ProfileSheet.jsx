@@ -1,7 +1,112 @@
 import { useState, useEffect, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut } from '../lib/supabase'
+import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, supabase } from '../lib/supabase'
 import { ACHIEVEMENTS, getAllUnlocked } from '../utils/achievements'
+import emailjs from '@emailjs/browser'
+
+const EMAILJS_SERVICE  = 'service_e9rq08l'
+const EMAILJS_TEMPLATE = 'template_yly49oh'
+const EMAILJS_KEY      = 'yeMBepFqVCzgEH0Si'
+
+function FeedbackForm({ profile, onClose }) {
+  const [type, setType]       = useState('💡 Идея')
+  const [message, setMessage] = useState('')
+  const [email, setEmail]     = useState('')
+  const [phone, setPhone]     = useState('')
+  const [sending, setSending] = useState(false)
+  const [done, setDone]       = useState(false)
+
+  const handleSend = async () => {
+    if (!message.trim() || !email.trim() || sending) return
+    setSending(true)
+    try {
+      const params = {
+        type,
+        message: message.trim(),
+        from_email: email.trim(),
+        phone: phone.trim() || 'не указан',
+        from_name: profile?.display_name || 'Аноним',
+        username: profile?.username || '—',
+        date: new Date().toLocaleString('ru-RU'),
+      }
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_KEY)
+      await supabase.from('feedback').insert([{
+        type, message: params.message,
+        from_email: params.from_email, phone: params.phone,
+        from_name: params.from_name, username: params.username,
+      }])
+      setDone(true)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const TYPES = ['💡 Идея', '🐛 Баг', '📣 Предложение']
+
+  if (done) return (
+    <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <p className="text-2xl mb-3">🙌</p>
+      <p className="text-sm font-semibold leading-relaxed" style={{ color: 'var(--text)' }}>
+        Спасибо, что написал! Мы обязательно всё прочитаем и если нужно — свяжемся с тобой. Ты помогаешь RYADOM становиться лучше 🙌
+      </p>
+      <button onClick={onClose} className="mt-4 px-6 py-2 rounded-xl text-sm font-bold transition active:scale-95"
+              style={{ background: 'var(--accent)', color: '#111827' }}>Закрыть</button>
+    </div>
+  )
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Тип обращения</p>
+      <div className="flex gap-2">
+        {TYPES.map(t => (
+          <button key={t} onClick={() => setType(t)}
+                  className="flex-1 py-2 rounded-xl text-xs font-bold transition active:scale-95"
+                  style={{
+                    background: type === t ? 'var(--accent)22' : 'var(--bg-2)',
+                    border: `1px solid ${type === t ? 'var(--accent)' : 'var(--bg-3)'}`,
+                    color: type === t ? 'var(--accent)' : 'var(--hint)',
+                  }}>{t}</button>
+        ))}
+      </div>
+
+      <textarea value={message} onChange={e => setMessage(e.target.value.slice(0, 1000))}
+                placeholder="Опиши подробнее…"
+                rows={4} className="w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none"
+                style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
+      <div className="text-right text-xs" style={{ color: 'var(--hint)', marginTop: -8 }}>{message.length}/1000</div>
+
+      <input value={email} onChange={e => setEmail(e.target.value)}
+             placeholder="Твой email *"
+             type="email" className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+             style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
+             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+             onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
+
+      <input value={phone} onChange={e => setPhone(e.target.value)}
+             placeholder="Телефон (необязательно)"
+             type="tel" className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+             style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
+             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+             onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
+
+      <div className="flex gap-2">
+        <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95"
+                style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--bg-3)' }}>
+          Отмена
+        </button>
+        <button onClick={handleSend} disabled={!message.trim() || !email.trim() || sending}
+                className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--accent)', color: '#111827' }}>
+          {sending ? '⏳ Отправляю…' : 'Отправить'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 const KARMA_LEVELS = [
   { min: 0,  label: 'Искра',           icon: '🌱', color: '#6b7280' },
@@ -38,6 +143,7 @@ function compressAvatar(file) {
 export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) {
   const [profile, setProfile]         = useState(null)
   const [myEvents, setMyEvents]       = useState([])
+  const [showFeedback, setShowFeedback] = useState(false)
   const [editing, setEditing]         = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio]                 = useState('')
@@ -386,15 +492,21 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) 
             </button>
           )}
 
-          <button onClick={() => window.open('mailto:feedback@ryadom.app', '_blank')}
-                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 transition active:scale-95"
-                  style={{ background: 'var(--bg-2)', border: '1px solid var(--bg-3)' }}>
-            <span className="text-xl">💡</span>
-            <div className="text-left">
-              <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Предложить идею / сообщить о баге</p>
-              <p className="text-xs" style={{ color: 'var(--hint)' }}>Пиши — слушаем каждого</p>
+          {showFeedback ? (
+            <div className="mb-3">
+              <FeedbackForm profile={profile} onClose={() => setShowFeedback(false)} />
             </div>
-          </button>
+          ) : (
+            <button onClick={() => setShowFeedback(true)}
+                    className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 transition active:scale-95"
+                    style={{ background: 'var(--bg-2)', border: '1px solid var(--bg-3)' }}>
+              <span className="text-xl">💡</span>
+              <div className="text-left">
+                <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Предложить идею / сообщить о баге</p>
+                <p className="text-xs" style={{ color: 'var(--hint)' }}>Пиши — слушаем каждого</p>
+              </div>
+            </button>
+          )}
 
           {/* Logout */}
           <button onClick={handleSignOut}

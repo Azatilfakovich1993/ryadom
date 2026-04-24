@@ -8,6 +8,7 @@ const TABS = [
   { key: 'users',     label: '👥 Пользователи' },
   { key: 'reviews',   label: '⭐ Отзывы' },
   { key: 'reports',   label: '🚩 Жалобы' },
+  { key: 'feedback',  label: '💡 Обращения' },
   { key: 'broadcast', label: '📢 Рассылка' },
 ]
 
@@ -489,6 +490,38 @@ function Broadcast() {
   )
 }
 
+// ── Feedback ─────────────────────────────────────────────────
+function FeedbackList() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.from('feedback').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { setItems(data ?? []); setLoading(false) })
+  }, [])
+
+  if (loading) return <Loader />
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs mb-1" style={{ color: 'var(--hint)' }}>Всего обращений: {items.length}</p>
+      {items.length === 0 && <p className="text-sm text-center py-8" style={{ color: 'var(--hint)' }}>Обращений пока нет</p>}
+      {items.map(f => (
+        <div key={f.id} className="rounded-2xl px-4 py-3" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{f.type}</span>
+            <span className="text-[10px]" style={{ color: 'var(--hint)' }}>{new Date(f.created_at).toLocaleDateString('ru-RU')}</span>
+          </div>
+          <p className="text-sm mb-2 leading-relaxed" style={{ color: 'var(--text)' }}>{f.message}</p>
+          <p className="text-[10px]" style={{ color: 'var(--hint)' }}>
+            {f.from_name} · {f.from_email} {f.phone !== 'не указан' ? `· ${f.phone}` : ''}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Reports ──────────────────────────────────────────────────
 function Reports() {
   const [reports, setReports] = useState([])
@@ -588,6 +621,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'users'     && <Users />}
           {tab === 'reviews'   && <Reviews />}
           {tab === 'reports'   && <Reports />}
+          {tab === 'feedback'  && <FeedbackList />}
           {tab === 'broadcast' && <Broadcast />}
         </div>
       </div>
