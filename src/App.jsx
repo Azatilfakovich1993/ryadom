@@ -285,25 +285,7 @@ export default function App() {
 
   useEffect(() => { loadEvents() }, [loadEvents])
 
-  // ── Realtime ─────────────────────────────────────────────
-  useEffect(() => {
-    if (channelRef.current) supabase.removeChannel(channelRef.current)
-    const ch = supabase.channel('events-live')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, ({ new: ev }) => {
-        if (new Date(ev.expires_at) <= new Date()) return
-        const loc = locationRef.current
-        if (loc && distanceM(loc.lat, loc.lon, ev.lat, ev.lon) > RADIUS_M) return
-        setEvents(prev => prev.find(e => e.id === ev.id) ? prev : [ev, ...prev])
-        showToast(`📍 ${ev.title}`, 'info')
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'events' }, ({ old: ev }) => {
-        setEvents(prev => prev.filter(e => e.id !== ev.id))
-        setSelectedEvent(s => s?.id === ev.id ? null : s)
-      })
-      .subscribe()
-    channelRef.current = ch
-    return () => supabase.removeChannel(ch)
-  }, [showToast])
+  // Realtime отключён — WebSocket заблокирован провайдерами РФ, вызывает тормоза
 
   // ── Auto-expire ───────────────────────────────────────────
   useEffect(() => {
@@ -415,10 +397,9 @@ export default function App() {
             <div className="flex items-center gap-1.5 rounded-2xl px-3 py-2 flex-shrink-0"
                  onClick={handleLogoTap}
                  style={{
-                   background: 'rgba(17,24,39,0.55)',
-                   backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                   border: '1px solid rgba(255,255,255,0.1)',
-                   boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                   background: 'rgba(17,24,39,0.93)',
+                   border: '1px solid rgba(255,255,255,0.08)',
+                   boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
                    cursor: 'pointer',
                  }}>
               <LogoIcon size={18} />
@@ -432,10 +413,9 @@ export default function App() {
             {/* Переключатель Лента / Карта */}
             <div style={{
               display: 'flex', borderRadius: 14, padding: 3, flexShrink: 0,
-              background: 'rgba(17,24,39,0.55)',
-              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+              background: 'rgba(17,24,39,0.93)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
             }}>
               {[{ key: 'feed', label: '▤ Лента' }, { key: 'map', label: '🗺 Карта' }].map(m => (
                 <button key={m.key} onClick={() => setMode(m.key)}
@@ -456,10 +436,9 @@ export default function App() {
             <button onClick={() => authUser ? setShowProfile(true) : setShowAuth(true)}
                     className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition active:scale-90"
                     style={{
-                      background: 'rgba(17,24,39,0.55)',
-                      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                      border: authUser ? '1.5px solid var(--accent)' : '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.2)',
+                      background: 'rgba(17,24,39,0.93)',
+                      border: authUser ? '1.5px solid var(--accent)' : '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: authUser ? '0 0 10px var(--accent-glow)' : '0 2px 12px rgba(0,0,0,0.3)',
                     }}>
               {profile?.avatar_url
                 ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
@@ -479,8 +458,7 @@ export default function App() {
                         style={{
                           height: 32, borderRadius: 10, padding: '0 10px',
                           fontSize: 13,
-                          background: active ? c.color + '22' : 'rgba(17,24,39,0.55)',
-                          backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                          background: active ? c.color + '22' : 'rgba(17,24,39,0.93)',
                           border: `1.5px solid ${active ? c.color : c.color + '55'}`,
                           boxShadow: active ? `0 0 12px ${c.color}55` : 'none',
                           color: active ? c.color : 'var(--hint)',
@@ -495,8 +473,7 @@ export default function App() {
             <button onClick={loadEvents} disabled={loadingEvents}
                     className="w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 transition active:scale-90"
                     style={{
-                      background: 'rgba(17,24,39,0.75)',
-                      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                      background: 'rgba(17,24,39,0.93)',
                       border: '1px solid rgba(255,255,255,0.1)',
                       boxShadow: '0 1px 6px rgba(0,0,0,0.25)',
                     }}>
@@ -591,8 +568,7 @@ export default function App() {
             className="transition active:scale-90"
             style={{
               width: 44, height: 44, borderRadius: 13,
-              background: 'rgba(17,24,39,0.82)',
-              backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+              background: 'rgba(17,24,39,0.93)',
               border: '1px solid rgba(255,255,255,0.12)',
               cursor: 'pointer',
               boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
