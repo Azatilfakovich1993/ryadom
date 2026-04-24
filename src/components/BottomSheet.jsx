@@ -32,7 +32,7 @@ const CHAT_EMOJIS = [
   '🍕','⚽','🎮','🎵','🏃','☕','🍺','🌊','🌳','🎯',
 ]
 
-function EventChat({ event, user }) {
+function EventChat({ event, user, authUser }) {
   const [messages, setMessages] = useState([])
   const [input, setInput]       = useState('')
   const [sending, setSending]   = useState(false)
@@ -59,11 +59,7 @@ function EventChat({ event, user }) {
     if (expanded) endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, expanded])
 
-  const myId = user?.id?.toString() ?? (() => {
-    let id = localStorage.getItem('ryadom_uid')
-    if (!id) { id = crypto.randomUUID(); localStorage.setItem('ryadom_uid', id) }
-    return id
-  })()
+  const myId = authUser?.id?.toString() ?? user?.id?.toString() ?? null
 
   const handleSend = async (e) => {
     e?.preventDefault()
@@ -171,30 +167,36 @@ function EventChat({ event, user }) {
         )}
 
         {/* Input */}
-        <form onSubmit={handleSend} className="flex gap-2 p-2"
-              style={{ borderTop: '1px solid var(--bg-3)' }}>
-          <button type="button" onClick={() => setShowEmoji(v => !v)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg transition active:scale-90"
-                  style={{ background: showEmoji ? 'var(--accent)22' : 'var(--bg-3)', border: showEmoji ? '1px solid var(--accent)44' : 'none' }}>
-            😊
-          </button>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value.slice(0, 500))}
-            onKeyDown={handleKey}
-            placeholder="Написать…"
-            className="flex-1 text-sm px-3 py-2 rounded-xl outline-none"
-            style={{ background: 'var(--bg-3)', color: 'var(--text)', border: 'none' }}
-          />
-          <button type="submit" disabled={!input.trim() || sending}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition active:scale-90 disabled:opacity-40"
-                  style={{ background: 'var(--accent)', color: '#111827' }}>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
-        </form>
+        {!myId ? (
+          <div className="p-3 text-center text-xs" style={{ borderTop: '1px solid var(--bg-3)', color: 'var(--hint)' }}>
+            🔒 Войдите в аккаунт чтобы написать
+          </div>
+        ) : (
+          <form onSubmit={handleSend} className="flex gap-2 p-2"
+                style={{ borderTop: '1px solid var(--bg-3)' }}>
+            <button type="button" onClick={() => setShowEmoji(v => !v)}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg transition active:scale-90"
+                    style={{ background: showEmoji ? 'var(--accent)22' : 'var(--bg-3)', border: showEmoji ? '1px solid var(--accent)44' : 'none' }}>
+              😊
+            </button>
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value.slice(0, 500))}
+              onKeyDown={handleKey}
+              placeholder="Написать…"
+              className="flex-1 text-sm px-3 py-2 rounded-xl outline-none"
+              style={{ background: 'var(--bg-3)', color: 'var(--text)', border: 'none' }}
+            />
+            <button type="submit" disabled={!input.trim() || sending}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition active:scale-90 disabled:opacity-40"
+                    style={{ background: 'var(--accent)', color: '#111827' }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </form>
+        )}
       </div>
       )}
     </div>
@@ -457,7 +459,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                 🚫 Ваш аккаунт заблокирован
               </div>
             ) : (
-              <EventChat event={event} user={user} />
+              <EventChat event={event} user={user} authUser={authUser} />
             )
           )}
 

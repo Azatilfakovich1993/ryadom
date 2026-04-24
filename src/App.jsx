@@ -330,7 +330,12 @@ export default function App() {
     }
     setCreating(true)
     try {
-      const uid = authUser?.id ?? user?.id?.toString() ?? localStorage.getItem('ryadom_uid') ?? 'anonymous'
+      if (!authUser) {
+        showToast('Войдите в аккаунт чтобы создавать события', 'error')
+        setCreating(false)
+        return
+      }
+      const uid = authUser.id
       const event = await Promise.race([
         createEvent({ title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [] }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('Превышено время ожидания. Попробуй ещё раз.')), 15000)),
