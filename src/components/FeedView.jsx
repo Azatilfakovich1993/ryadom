@@ -211,16 +211,20 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
         </span>
       </div>
 
-      {/* Текст — чуть выше кнопки */}
-      <div style={{ position: 'absolute', bottom: 90, left: 0, right: 0, zIndex: 5, padding: '0 16px' }}>
+      {/* Название — выше остального */}
+      <div style={{ position: 'absolute', bottom: 160, left: 0, right: 0, zIndex: 5, padding: '0 16px' }}>
         <h2 style={{
           fontSize: 20, fontWeight: 800, color: '#fff',
-          lineHeight: 1.3, marginBottom: 10,
+          lineHeight: 1.3,
           textShadow: '0 2px 12px rgba(0,0,0,0.6)',
         }}>
           {event.title}
         </h2>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      </div>
+
+      {/* Бейджи + кнопка — внизу вместе */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 24px' }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
           {dist !== null && (
             <span style={{
               background: 'rgba(255,255,255,0.15)',
@@ -240,10 +244,6 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
             ⏱ {timeLabel}
           </span>
         </div>
-      </div>
-
-      {/* Кнопка — внизу */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 24px' }}>
         <button onClick={onViewDetails} style={{
           width: '100%', padding: '13px 0',
           borderRadius: 16, cursor: 'pointer',
