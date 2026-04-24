@@ -5,7 +5,7 @@ import { ACHIEVEMENTS, getAllUnlocked } from '../utils/achievements'
 import emailjs from '@emailjs/browser'
 
 const EMAILJS_SERVICE  = 'service_e9rq08l'
-const EMAILJS_TEMPLATE = 'template_yly49oh'
+const EMAILJS_TEMPLATE = 'template_sv3vhnv'
 const EMAILJS_KEY      = 'yeMBepFqVCzgEH0Si'
 const PROXY_URL        = 'https://ryadom-proxy.azatilfakovich1993.workers.dev'
 
