@@ -68,6 +68,13 @@ function EventChat({ event, user, authUser }) {
     setSending(true)
     try {
       await sendMessage({ eventId: event.id, content: text, creatorId: myId })
+      setMessages(prev => [...prev, {
+        id: `tmp-${Date.now()}`,
+        event_id: event.id,
+        content: text,
+        creator_id: myId,
+        created_at: new Date().toISOString(),
+      }])
       setInput('')
       const msgCount = incrementMessageCount()
       if (msgCount >= 20) tryUnlock('soul')
