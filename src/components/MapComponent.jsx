@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 export const CATEGORY_CONFIG = {
   sport: { color: '#3b82f6', icon: '⚽', label: 'Спорт' },
-  food:  { color: '#f59e0b', icon: '🍽️', label: 'Еда'   },
+  food:  { color: '#FFD700', icon: '🍽️', label: 'Еда'   },
   chat:  { color: '#10b981', icon: '💬', label: 'Общение'},
   help:  { color: '#f43f5e', icon: '🆘', label: 'Помощь' },
 }
@@ -78,7 +78,7 @@ function makePinLayout(ymaps) {
         </defs>
         <ellipse cx="24" cy="62" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)"/>
         {% if properties.isBusiness %}
-        <circle class="rp-biz-pulse" cx="24" cy="23" r="22" fill="none" stroke="#f59e0b" stroke-width="2"/>
+        <circle class="rp-biz-pulse" cx="24" cy="23" r="22" fill="none" stroke="#FFD700" stroke-width="2"/>
         {% endif %}
         <filter id="rp-gf-{{ properties.uid }}" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="4" result="blur"/>
@@ -102,7 +102,7 @@ function makePinLayout(ymaps) {
                 stroke-dasharray="{{ properties.dash }} {{ properties.gap }}"
                 transform="rotate(-90 24 23)"/>
         {% if properties.isBusiness %}
-        <circle cx="38" cy="10" r="8" fill="#111827" stroke="#f59e0b" stroke-width="1.5"/>
+        <circle cx="38" cy="10" r="8" fill="#111827" stroke="#FFD700" stroke-width="1.5"/>
         <text x="38" y="14" font-size="9" text-anchor="middle" style="user-select:none">⭐</text>
         {% endif %}
       </svg>
@@ -289,11 +289,11 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
     spread.forEach((event, i) => {
       const cfg        = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
       const isBusiness = !!event.creator_is_business
-      const pinColor   = isBusiness ? '#f59e0b' : cfg.color
+      const pinColor   = isBusiness ? '#FFD700' : cfg.color
       const progress   = calcProgress(event)
       const dash       = (circum * progress).toFixed(2)
       const gap        = (circum * (1 - progress)).toFixed(2)
-      const ringColor  = isBusiness ? '#f59e0b' : progress > 0.5 ? '#34d399' : progress > 0.25 ? '#fbbf24' : '#f87171'
+      const ringColor  = isBusiness ? '#FFD700' : progress > 0.5 ? '#34d399' : progress > 0.25 ? '#fbbf24' : '#f87171'
 
       const pm = new window.ymaps.Placemark(
         [event.lat, event.lon],

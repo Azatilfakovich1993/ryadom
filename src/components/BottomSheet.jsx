@@ -334,9 +334,9 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
           {/* Business badge */}
           {event.creator_is_business && (
             <div className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-xl self-start"
-                 style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)' }}>
+                 style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.35)' }}>
               <span style={{ fontSize: 13 }}>⭐</span>
-              <span className="text-xs font-bold" style={{ color: '#f59e0b' }}>Партнёр RYADOM</span>
+              <span className="text-xs font-bold" style={{ color: '#FFD700' }}>Партнёр RYADOM</span>
             </div>
           )}
 
@@ -398,6 +398,13 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                   <img src={url} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Video */}
+          {event.video_url && (
+            <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+              <video src={event.video_url} controls className="w-full" style={{ maxHeight: 220, background: '#000' }} />
             </div>
           )}
 

@@ -16,7 +16,7 @@ import OnboardingScreen from './components/OnboardingScreen'
 import AdminPanel from './components/AdminPanel'
 import { useTelegram } from './hooks/useTelegram'
 import { useGeolocation } from './hooks/useGeolocation'
-import { supabase, fetchNearbyEvents, createEvent, getProfile } from './lib/supabase'
+import { supabase, fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo } from './lib/supabase'
 import { tryUnlock } from './utils/achievements'
 import { CATEGORY_CONFIG } from './components/MapComponent'
 
@@ -319,7 +319,7 @@ export default function App() {
     setSelectedEvent(event)
   }, [haptic])
 
-  const handleCreateSubmit = async ({ title, category, durationHours, lat, lon, photos, chatEnabled, useBusinessPin }) => {
+  const handleCreateSubmit = async ({ title, category, durationHours, lat, lon, photos, video, chatEnabled, useBusinessPin }) => {
     if (profile?.is_banned) {
       showToast('Ваш аккаунт заблокирован', 'error')
       return
@@ -349,6 +349,13 @@ export default function App() {
       const cnt = (profile?.events_count ?? 0) + 1
       if (cnt >= 3)  showAchievement('activist')
       if (cnt >= 10) showAchievement('legend')
+      if (video) {
+        try {
+          const videoUrl = await uploadEventVideo(video, event.id)
+          await updateEventVideo(event.id, videoUrl)
+          event.video_url = videoUrl
+        } catch (e) { console.warn('video upload failed:', e) }
+      }
       setEvents(prev => prev.find(e => e.id === event.id) ? prev : [event, ...prev])
       loadEvents()
     } catch (err) {

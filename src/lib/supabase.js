@@ -45,6 +45,20 @@ export async function updateEventPhotos(eventId, photoUrls) {
   if (error) throw error
 }
 
+export async function uploadEventVideo(file, eventId) {
+  const ext = file.name?.split('.').pop() || 'mp4'
+  const path = `${eventId}/video.${ext}`
+  const { error } = await supabase.storage.from('event-photos').upload(path, file, { upsert: true })
+  if (error) throw error
+  const { data } = supabase.storage.from('event-photos').getPublicUrl(path)
+  return data.publicUrl
+}
+
+export async function updateEventVideo(eventId, videoUrl) {
+  const { error } = await supabase.from('events').update({ video_url: videoUrl }).eq('id', eventId)
+  if (error) throw error
+}
+
 export async function fetchMessages(eventId) {
   const { data, error } = await supabase
     .from('messages')

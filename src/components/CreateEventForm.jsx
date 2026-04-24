@@ -8,6 +8,13 @@ const DURATIONS = [
   { value: 2, label: '2 ч' },
   { value: 3, label: '3 ч' },
 ]
+const DURATIONS_BUSINESS = [
+  { value: 1, label: '1 ч' },
+  { value: 2, label: '2 ч' },
+  { value: 3, label: '3 ч' },
+  { value: 4, label: '4 ч' },
+  { value: 5, label: '5 ч' },
+]
 
 function geocodeAddress(address, userLocation) {
   return new Promise((resolve, reject) => {
@@ -38,13 +45,17 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [chatEnabled, setChatEnabled] = useState(true)
   const [showEmoji, setShowEmoji] = useState(false)
 
-  // Photos
+  // Photos & video
   const [photos, setPhotos]           = useState([])
   const [photoPreviews, setPhotoPreviews] = useState([])
+  const [video, setVideo]             = useState(null)
+  const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
   const maxPhotos = isBusiness ? 5 : 3
+  const durations = isBusiness ? DURATIONS_BUSINESS : DURATIONS
   const galleryInputRef = useRef(null)
   const cameraInputRef  = useRef(null)
+  const videoInputRef   = useRef(null)
 
   // Address
   const [query, setQuery]             = useState('')
@@ -95,6 +106,13 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const removePhoto = (i) => {
     setPhotos(prev => prev.filter((_, idx) => idx !== i))
     setPhotoPreviews(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  const addVideo = (file) => {
+    if (!file) return
+    if (file.size > 50 * 1024 * 1024) { alert('Видео не более 50 МБ'); return }
+    setVideo(file)
+    setVideoPreview(URL.createObjectURL(file))
   }
 
   // ── Emoji ──────────────────────────────────────────────────
@@ -203,6 +221,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       lat: coords.lat,
       lon: coords.lon,
       photos,
+      video: isBusiness ? video : null,
       chatEnabled,
       useBusinessPin: isBusiness && useBusinessPin,
     })
@@ -331,20 +350,44 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
               </button>
             )}
 
-            {/* Бизнес: выбор типа пина */}
+            {/* Бизнес: видео */}
             {isBusiness && (
-              <div className="flex items-center justify-between rounded-2xl px-4 py-3 mt-1"
-                   style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
-                <div>
-                  <p className="text-sm font-bold" style={{ color: '#f59e0b' }}>⭐ Золотой пин партнёра</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>С пульсацией и бейджем</p>
+              <div className="mt-1">
+                {!videoPreview ? (
+                  <button type="button" onClick={() => videoInputRef.current?.click()}
+                          className="flex items-center gap-2 text-sm py-2.5 px-4 rounded-2xl transition active:scale-95"
+                          style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--bg-3)' }}>
+                    <span>🎬</span><span>Добавить видео (до 50 МБ)</span>
+                  </button>
+                ) : (
+                  <div className="relative rounded-2xl overflow-hidden" style={{ height: 140 }}>
+                    <video src={videoPreview} className="w-full h-full object-cover" controls />
+                    <button type="button" onClick={() => { setVideo(null); setVideoPreview(null) }}
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                            style={{ background: 'rgba(0,0,0,0.75)', color: '#fff' }}>✕</button>
+                  </div>
+                )}
+                <input ref={videoInputRef} type="file" accept="video/*" className="hidden"
+                       onChange={e => addVideo(e.target.files[0])} />
+              </div>
+            )}
+
+            {/* Бизнес: золотой пин */}
+            {isBusiness && (
+              <div className="rounded-2xl px-4 py-3 mt-1"
+                   style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-bold" style={{ color: '#FFD700' }}>⭐ Вам доступен золотой пин партнёра</p>
+                  <button type="button" onClick={() => setUseBusinessPin(v => !v)}
+                          className="w-12 h-6 rounded-full flex items-center transition-all duration-200 flex-shrink-0"
+                          style={{ background: useBusinessPin ? '#FFD700' : 'var(--bg-3)', padding: '2px' }}>
+                    <div className="w-5 h-5 rounded-full bg-white transition-all duration-200"
+                         style={{ transform: useBusinessPin ? 'translateX(24px)' : 'translateX(0)' }} />
+                  </button>
                 </div>
-                <button type="button" onClick={() => setUseBusinessPin(v => !v)}
-                        className="w-12 h-6 rounded-full flex items-center transition-all duration-200 flex-shrink-0"
-                        style={{ background: useBusinessPin ? '#f59e0b' : 'var(--bg-3)', padding: '2px' }}>
-                  <div className="w-5 h-5 rounded-full bg-white transition-all duration-200"
-                       style={{ transform: useBusinessPin ? 'translateX(24px)' : 'translateX(0)' }} />
-                </button>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--hint)' }}>
+                  Что это даёт: пин выделяется золотистым цветом и пульсацией на карте, до 5 фото и 1 видео в событии, продолжительность события до 5 часов.
+                </p>
               </div>
             )}
           </div>
@@ -438,7 +481,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             <label className="text-[11px] font-bold uppercase tracking-wider mb-2 block"
                    style={{ color: 'var(--accent)' }}>Продолжительность</label>
             <div className="grid grid-cols-3 gap-2">
-              {DURATIONS.map(d => (
+              {durations.map(d => (
                 <button key={d.value} type="button" onClick={() => setDuration(d.value)}
                         className="py-3 rounded-2xl text-sm font-bold transition active:scale-95"
                         style={{
