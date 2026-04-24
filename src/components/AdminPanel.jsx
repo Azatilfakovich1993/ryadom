@@ -279,25 +279,34 @@ function Reviews() {
 
 // ── Broadcast ────────────────────────────────────────────────
 function Broadcast() {
-  const [message, setMessage] = useState('')
-  const [type, setType] = useState('info')
-  const [hours, setHours] = useState(24)
-  const [sending, setSending] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [message, setMessage]       = useState('')
+  const [type, setType]             = useState('info')
+  const [hours, setHours]           = useState(24)
+  const [sending, setSending]       = useState(false)
+  const [sent, setSent]             = useState(false)
   const [announcements, setAnnouncements] = useState([])
+  const [users, setUsers]           = useState([])
+  const [targetId, setTargetId]     = useState(null) // null = всем
+  const [userSearch, setUserSearch] = useState('')
 
   useEffect(() => {
     supabase.from('announcements').select('*').order('created_at', { ascending: false })
       .then(({ data }) => setAnnouncements(data ?? []))
+    supabase.from('profiles').select('id,username,display_name,avatar_url')
+      .order('username').then(({ data }) => setUsers(data ?? []))
   }, [])
 
   const handleSend = async () => {
     if (!message.trim() || sending) return
     setSending(true)
     const expires_at = new Date(Date.now() + hours * 3600000).toISOString()
-    const { data } = await supabase.from('announcements').insert([{ message: message.trim(), type, expires_at }]).select().single()
+    const payload = { message: message.trim(), type, expires_at }
+    if (targetId) payload.target_user_id = targetId
+    const { data } = await supabase.from('announcements').insert([payload]).select().single()
     if (data) setAnnouncements(prev => [data, ...prev])
     setMessage('')
+    setTargetId(null)
+    setUserSearch('')
     setSent(true)
     setSending(false)
     setTimeout(() => setSent(false), 3000)
@@ -309,10 +318,16 @@ function Broadcast() {
   }
 
   const TYPES = [
-    { key: 'info', label: 'ℹ️ Инфо', color: 'var(--accent)' },
-    { key: 'success', label: '✅ Успех', color: 'var(--success)' },
-    { key: 'warning', label: '⚠️ Важно', color: '#f59e0b' },
+    { key: 'info',    label: 'ℹ️ Инфо',  color: 'var(--accent)' },
+    { key: 'success', label: '✅ Обновление', color: 'var(--success)' },
+    { key: 'warning', label: '❗ Важно',  color: '#f59e0b' },
   ]
+
+  const filteredUsers = userSearch
+    ? users.filter(u => u.username?.includes(userSearch) || u.display_name?.toLowerCase().includes(userSearch.toLowerCase()))
+    : users
+
+  const selectedUser = users.find(u => u.id === targetId)
 
   return (
     <div className="flex flex-col gap-4">
@@ -321,6 +336,52 @@ function Broadcast() {
           Новое сообщение
         </p>
 
+        {/* Кому */}
+        <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--hint)' }}>Кому</p>
+        <div className="flex gap-2 mb-3">
+          <button onClick={() => { setTargetId(null); setUserSearch('') }}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-90"
+                  style={{
+                    background: !targetId ? 'var(--accent)22' : 'var(--bg-3)',
+                    border: `1px solid ${!targetId ? 'var(--accent)' : 'transparent'}`,
+                    color: !targetId ? 'var(--accent)' : 'var(--hint)',
+                  }}>
+            📢 Всем
+          </button>
+          <input value={userSearch} onChange={e => setUserSearch(e.target.value)}
+                 placeholder="Найти пользователя…"
+                 className="flex-1 rounded-xl px-3 py-1.5 text-xs outline-none"
+                 style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${targetId ? 'var(--accent)44' : 'transparent'}` }} />
+        </div>
+
+        {/* User list */}
+        {userSearch && (
+          <div className="rounded-xl overflow-hidden mb-3" style={{ border: '1px solid var(--bg-3)', maxHeight: 140, overflowY: 'auto' }}>
+            {filteredUsers.map(u => (
+              <button key={u.id} onClick={() => { setTargetId(u.id); setUserSearch('') }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left transition"
+                      style={{ background: targetId === u.id ? 'var(--accent)11' : 'var(--bg-2)', borderBottom: '1px solid var(--bg-3)' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>
+                  {u.display_name || u.username}
+                </span>
+                <span className="text-[10px]" style={{ color: 'var(--hint)' }}>@{u.username}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {selectedUser && (
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl"
+               style={{ background: 'var(--accent)11', border: '1px solid var(--accent)33' }}>
+            <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>
+              → {selectedUser.display_name || selectedUser.username}
+            </span>
+            <button onClick={() => setTargetId(null)} className="ml-auto text-xs" style={{ color: 'var(--hint)' }}>✕</button>
+          </div>
+        )}
+
+        {/* Тип */}
+        <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--hint)' }}>Тип</p>
         <div className="flex gap-2 mb-3">
           {TYPES.map(t => (
             <button key={t.key} onClick={() => setType(t.key)}
@@ -336,7 +397,7 @@ function Broadcast() {
         </div>
 
         <textarea value={message} onChange={e => setMessage(e.target.value.slice(0, 200))}
-                  placeholder="Текст сообщения для всех пользователей…"
+                  placeholder="Текст сообщения…"
                   rows={3}
                   className="w-full rounded-xl px-3 py-2 text-sm resize-none outline-none mb-3"
                   style={{ background: 'var(--bg-3)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
@@ -361,7 +422,7 @@ function Broadcast() {
         <button onClick={handleSend} disabled={!message.trim() || sending}
                 className="w-full py-3 rounded-xl text-sm font-bold transition active:scale-95 disabled:opacity-40"
                 style={{ background: sent ? 'var(--success)' : 'var(--accent)', color: '#111827' }}>
-          {sent ? '✓ Отправлено!' : sending ? '⏳ Отправляю…' : '📢 Отправить всем'}
+          {sent ? '✓ Отправлено!' : sending ? '⏳ Отправляю…' : targetId ? '✉️ Отправить пользователю' : '📢 Отправить всем'}
         </button>
       </div>
 
@@ -374,7 +435,12 @@ function Broadcast() {
             {announcements.map(a => (
               <div key={a.id} className="flex items-start gap-2 rounded-2xl px-3 py-2.5"
                    style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-                <p className="flex-1 text-sm" style={{ color: 'var(--text)' }}>{a.message}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] mb-0.5" style={{ color: 'var(--hint)' }}>
+                    {a.target_user_id ? '✉️ Личное' : '📢 Всем'} · {a.type}
+                  </p>
+                  <p className="text-sm" style={{ color: 'var(--text)' }}>{a.message}</p>
+                </div>
                 <button onClick={() => handleDelete(a.id)}
                         className="w-6 h-6 rounded-lg flex items-center justify-center text-xs flex-shrink-0"
                         style={{ color: 'var(--danger)' }}>🗑</button>

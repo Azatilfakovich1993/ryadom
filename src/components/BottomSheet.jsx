@@ -451,7 +451,14 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
 
           {/* Chat */}
           {event.chat_enabled && !expired && (
-            <EventChat event={event} user={user} />
+            authUser?.is_banned || user?.is_banned ? (
+              <div className="rounded-2xl px-4 py-3 mb-4 text-sm text-center"
+                   style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.2)' }}>
+                🚫 Ваш аккаунт заблокирован
+              </div>
+            ) : (
+              <EventChat event={event} user={user} />
+            )
           )}
 
           {expired && event.chat_enabled && (

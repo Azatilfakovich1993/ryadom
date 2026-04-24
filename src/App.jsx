@@ -148,12 +148,17 @@ export default function App() {
 
   // ── Announcements ─────────────────────────────────────────
   useEffect(() => {
-    supabase.from('announcements').select('*')
-      .gte('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .then(({ data }) => { if (data?.[0]) setAnnouncement(data[0]) })
-  }, [])
+    const loadAnnouncement = async () => {
+      const uid = authUser?.id ?? null
+      const { data } = await supabase.from('announcements').select('*')
+        .gte('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10)
+      const relevant = (data ?? []).find(a => !a.target_user_id || a.target_user_id === uid)
+      if (relevant) setAnnouncement(relevant)
+    }
+    loadAnnouncement()
+  }, [authUser])
 
   // ── Auth state ────────────────────────────────────────────
   useEffect(() => {
@@ -315,6 +320,10 @@ export default function App() {
   }, [haptic])
 
   const handleCreateSubmit = async ({ title, category, durationHours, lat, lon, photos, chatEnabled }) => {
+    if (profile?.is_banned) {
+      showToast('Ваш аккаунт заблокирован', 'error')
+      return
+    }
     if (lat == null || lon == null) {
       showToast('Не удалось определить координаты', 'error')
       return
@@ -662,17 +671,24 @@ export default function App() {
 
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
-      {announcement && (
-        <div className="absolute top-20 left-4 right-4 z-30 rounded-2xl px-4 py-3 flex items-start gap-3"
-             style={{
-               background: announcement.type === 'warning' ? 'rgba(245,158,11,0.15)' : announcement.type === 'success' ? 'rgba(52,211,153,0.15)' : 'rgba(34,211,238,0.15)',
-               border: `1px solid ${announcement.type === 'warning' ? 'rgba(245,158,11,0.4)' : announcement.type === 'success' ? 'rgba(52,211,153,0.4)' : 'rgba(34,211,238,0.4)'}`,
-               backdropFilter: 'blur(16px)',
-             }}>
-          <p className="flex-1 text-sm" style={{ color: 'var(--text)' }}>{announcement.message}</p>
-          <button onClick={() => setAnnouncement(null)} style={{ color: 'var(--hint)', fontSize: 14, flexShrink: 0 }}>✕</button>
-        </div>
-      )}}
+      {announcement && (() => {
+        const colors = { warning: ['rgba(245,158,11,0.15)', 'rgba(245,158,11,0.4)'], success: ['rgba(52,211,153,0.15)', 'rgba(52,211,153,0.4)'], info: ['rgba(34,211,238,0.15)', 'rgba(34,211,238,0.4)'] }
+        const icons  = { warning: '❗', success: '✅', info: 'ℹ️' }
+        const [bg, border] = colors[announcement.type] ?? colors.info
+        return (
+          <div className="absolute top-20 left-4 right-4 z-30 rounded-2xl px-4 py-3"
+               style={{ background: bg, border: `1px solid ${border}`, backdropFilter: 'blur(16px)' }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span style={{ fontSize: 14 }}>{icons[announcement.type] ?? 'ℹ️'}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>
+                Сообщение от администратора
+              </span>
+              <button onClick={() => setAnnouncement(null)} className="ml-auto" style={{ color: 'var(--hint)', fontSize: 14 }}>✕</button>
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text)' }}>{announcement.message}</p>
+          </div>
+        )
+      })()}}
 
       {showOnboarding && (
         <OnboardingScreen onDone={() => {
