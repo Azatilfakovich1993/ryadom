@@ -20,7 +20,7 @@ import { supabase, fetchNearbyEvents, createEvent, getProfile, uploadEventVideo,
 import { tryUnlock } from './utils/achievements'
 import { CATEGORY_CONFIG } from './components/MapComponent'
 
-const RADIUS_M = 15000
+const RADIUS_M = 100000
 
 function EventsPeek({ events, location, onSelect }) {
   const [open, setOpen] = useState(false)
@@ -309,6 +309,13 @@ export default function App() {
     if (lat == null || lon == null) {
       showToast('Не удалось определить координаты', 'error')
       return
+    }
+    if (location) {
+      const dist = distanceM(location.lat, location.lon, lat, lon)
+      if (dist > 5000) {
+        const ok = window.confirm(`Событие находится в ${Math.round(dist / 1000)} км от тебя. Это далеко — уверен?`)
+        if (!ok) return
+      }
     }
     setCreating(true)
     try {

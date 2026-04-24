@@ -265,8 +265,8 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
   )
 }
 
-const RADII = [500, 1500, 3000]
-const RADIUS_LABELS = ['500 м', '1500 м', '3 км']
+const RADII = [500, 1500, 3000, 5000]
+const RADIUS_LABELS = ['500 м', '1.5 км', '3 км', '5 км']
 
 function RadarCard({ hasEvents, radiusIdx, onExpand, onCreateEvent }) {
   const isLast = radiusIdx >= RADII.length - 1
