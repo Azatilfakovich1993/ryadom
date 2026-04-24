@@ -211,8 +211,8 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
         </span>
       </div>
 
-      {/* Инфо снизу */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 90px' }}>
+      {/* Текст — чуть выше кнопки */}
+      <div style={{ position: 'absolute', bottom: 90, left: 0, right: 0, zIndex: 5, padding: '0 16px' }}>
         <h2 style={{
           fontSize: 20, fontWeight: 800, color: '#fff',
           lineHeight: 1.3, marginBottom: 10,
@@ -220,8 +220,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
         }}>
           {event.title}
         </h2>
-
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {dist !== null && (
             <span style={{
               background: 'rgba(255,255,255,0.15)',
@@ -241,7 +240,10 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
             ⏱ {timeLabel}
           </span>
         </div>
+      </div>
 
+      {/* Кнопка — внизу */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 24px' }}>
         <button onClick={onViewDetails} style={{
           width: '100%', padding: '13px 0',
           borderRadius: 16, cursor: 'pointer',
