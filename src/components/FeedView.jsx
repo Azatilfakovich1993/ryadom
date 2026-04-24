@@ -202,11 +202,10 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
       {/* Категория */}
       <div style={{ position: 'absolute', top: 72, left: 16, zIndex: 5 }}>
         <span style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+          fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
           color: cfg.color, background: cfg.color + '22',
-          border: `1px solid ${cfg.color}44`,
-          borderRadius: 20, padding: '4px 10px',
-          backdropFilter: 'blur(8px)',
+          border: `1px solid ${cfg.color}55`,
+          borderRadius: 20, padding: '6px 14px',
         }}>
           {cfg.icon} {cfg.label}
         </span>
