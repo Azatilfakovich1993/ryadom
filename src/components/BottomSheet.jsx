@@ -670,19 +670,21 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
 
           {/* Поделиться + Пожаловаться */}
           <div className="flex gap-2 mb-4">
-            <button type="button" onClick={() => {
-                      const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
-                      const el = document.createElement('textarea')
-                      el.value = url
-                      el.style.position = 'fixed'
-                      el.style.opacity = '0'
-                      document.body.appendChild(el)
-                      el.focus()
-                      el.select()
-                      document.execCommand('copy')
-                      document.body.removeChild(el)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
+            <button type="button" onClick={async () => {
+                      const url = `https://azatilfakovich1993.github.io/ryadom/?event=${event.id}`
+                      try {
+                        if (navigator.share) {
+                          await navigator.share({ title: event.title, text: event.title, url })
+                        } else {
+                          await navigator.clipboard.writeText(url)
+                          setCopied(true)
+                          setTimeout(() => setCopied(false), 2000)
+                        }
+                      } catch {
+                        await navigator.clipboard.writeText(url).catch(() => {})
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }
                     }}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
                     style={{ background: copied ? 'rgba(34,211,238,0.15)' : 'var(--bg-2)', color: 'var(--accent)', border: `1px solid ${copied ? 'var(--accent)' : 'var(--border)'}` }}>
