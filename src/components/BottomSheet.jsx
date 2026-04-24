@@ -245,8 +245,11 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [editing, setEditing]         = useState(false)
   const [editTitle, setEditTitle]     = useState(event.title)
   const [editAddress, setEditAddress] = useState('')
+  const [addrSuggestions, setAddrSuggestions] = useState([])
+  const [showAddrSug, setShowAddrSug] = useState(false)
   const [geocoding, setGeocoding]     = useState(false)
   const [saving, setSaving]           = useState(false)
+  const addrDebounce                  = useRef(null)
   const isOwner = authUser && event.creator_id === authUser.id
 
   useEffect(() => {
@@ -257,6 +260,31 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const handleDelete = async () => {
     setDeleting(true)
     try { await deleteEvent(event.id); onDelete?.() } finally { setDeleting(false) }
+  }
+
+  const handleAddrChange = (val) => {
+    setEditAddress(val)
+    clearTimeout(addrDebounce.current)
+    if (!val.trim() || val.length < 2) { setShowAddrSug(false); return }
+    addrDebounce.current = setTimeout(() => {
+      if (!window.ymaps) return
+      window.ymaps.geocode(val, { results: 5, kind: 'house' })
+        .then(res => {
+          const list = []
+          res.geoObjects.each(obj => {
+            const a = obj.getAddressLine?.()
+            if (a && !list.includes(a)) list.push(a)
+          })
+          setAddrSuggestions(list)
+          setShowAddrSug(list.length > 0)
+        }).catch(() => {})
+    }, 400)
+  }
+
+  const handleAddrPick = (s) => {
+    setEditAddress(s)
+    setAddrSuggestions([])
+    setShowAddrSug(false)
   }
 
   const handleSaveEdit = async () => {
@@ -415,15 +443,28 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                     className="w-full rounded-xl px-2 py-1 text-base font-bold outline-none mb-2"
                     style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${cfg.color}66` }}
                   />
-                  <input
-                    value={editAddress}
-                    onChange={e => setEditAddress(e.target.value)}
-                    placeholder={`Новый адрес (сейчас: ${address || 'загружается...'})`}
-                    className="w-full rounded-xl px-2 py-1 text-sm outline-none mb-2"
-                    style={{ background: 'var(--bg-3)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
-                    onFocus={e => e.target.style.borderColor = cfg.color + '66'}
-                    onBlur={e => e.target.style.borderColor = 'var(--bg-3)'}
-                  />
+                  <div className="relative mb-2">
+                    <input
+                      value={editAddress}
+                      onChange={e => handleAddrChange(e.target.value)}
+                      placeholder={`Новый адрес (сейчас: ${address || '...'})`}
+                      className="w-full rounded-xl px-2 py-1 text-sm outline-none"
+                      style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${showAddrSug ? cfg.color + '66' : 'var(--bg-3)'}` }}
+                      onFocus={() => addrSuggestions.length > 0 && setShowAddrSug(true)}
+                    />
+                    {showAddrSug && addrSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full z-50 rounded-xl overflow-hidden mt-1"
+                           style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                        {addrSuggestions.map((s, i) => (
+                          <button key={i} type="button" onMouseDown={() => handleAddrPick(s)}
+                                  className="w-full text-left px-3 py-2 text-xs transition active:opacity-70"
+                                  style={{ color: 'var(--text)', borderBottom: i < addrSuggestions.length - 1 ? '1px solid var(--bg-3)' : 'none' }}>
+                            📍 {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={() => { setEditing(false); setEditTitle(event.title); setEditAddress('') }}
                             className="flex-1 py-1.5 rounded-lg text-xs transition active:scale-90"

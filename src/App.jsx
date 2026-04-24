@@ -526,10 +526,11 @@ export default function App() {
             <div className="flex flex-col items-center gap-2">
               {CHIPS.map(c => {
                 const active = activeFilter === c.key
+                const count = events.filter(e => e.category === c.key).length
                 return (
                   <button key={c.key}
                           onClick={() => { haptic('impact', 'light'); setActiveFilter(active ? null : c.key); setShowFilterMenu(false) }}
-                          className="flex flex-col items-center gap-0.5 transition active:scale-90"
+                          className="flex flex-col items-center gap-0.5 transition active:scale-90 relative"
                           style={{
                             width: 44, height: 44, borderRadius: 13,
                             background: active ? c.color + '33' : 'rgba(17,24,39,0.93)',
@@ -539,7 +540,14 @@ export default function App() {
                             cursor: 'pointer',
                           }}>
                     <span style={{ fontSize: 16 }}>{c.icon}</span>
-                    <span style={{ fontSize: 8, color: active ? c.color : 'var(--hint)', fontWeight: 700 }}>{c.label}</span>
+                    {count > 0 && (
+                      <span style={{
+                        position: 'absolute', top: -4, right: -4,
+                        background: c.color, color: '#111827',
+                        fontSize: 9, fontWeight: 900,
+                        borderRadius: 10, padding: '1px 4px', minWidth: 16, textAlign: 'center',
+                      }}>{count}</span>
+                    )}
                   </button>
                 )
               })}
