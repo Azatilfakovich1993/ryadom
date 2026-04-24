@@ -159,6 +159,17 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         })
         window._ryadomMap = mapRef.current
         setMapReady(true)
+        // Скрываем все Яндекс-контролы через DOM после рендера
+        setTimeout(() => {
+          const container = containerRef.current
+          if (!container) return
+          container.querySelectorAll('*').forEach(el => {
+            const cls = typeof el.className === 'string' ? el.className : ''
+            if (cls.match(/ymaps-.*-(geolocation|zoom|float-button|controls__control|location)/)) {
+              el.style.setProperty('display', 'none', 'important')
+            }
+          })
+        }, 1500)
       })
       return true
     }
