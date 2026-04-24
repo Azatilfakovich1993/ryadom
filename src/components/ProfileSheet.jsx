@@ -15,10 +15,12 @@ function FeedbackForm({ profile, onClose }) {
   const [phone, setPhone]     = useState('')
   const [sending, setSending] = useState(false)
   const [done, setDone]       = useState(false)
+  const [error, setError]     = useState('')
 
   const handleSend = async () => {
     if (!message.trim() || !email.trim() || sending) return
     setSending(true)
+    setError('')
     try {
       const params = {
         type,
@@ -29,15 +31,22 @@ function FeedbackForm({ profile, onClose }) {
         username: profile?.username || '—',
         date: new Date().toLocaleString('ru-RU'),
       }
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_KEY)
+      // Сохраняем в Supabase всегда
       await supabase.from('feedback').insert([{
         type, message: params.message,
         from_email: params.from_email, phone: params.phone,
         from_name: params.from_name, username: params.username,
       }])
+      // EmailJS — пробуем, но не блокируем если нет VPN
+      try {
+        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_KEY)
+      } catch (emailErr) {
+        console.warn('EmailJS failed (no VPN?):', emailErr)
+      }
       setDone(true)
     } catch (e) {
       console.error(e)
+      setError('Ошибка отправки. Проверь подключение.')
     } finally {
       setSending(false)
     }
@@ -93,6 +102,7 @@ function FeedbackForm({ profile, onClose }) {
              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
              onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
 
+      {error && <p className="text-xs text-center" style={{ color: 'var(--danger)' }}>{error}</p>}
       <div className="flex gap-2">
         <button onClick={onClose} className="flex-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95"
                 style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--bg-3)' }}>

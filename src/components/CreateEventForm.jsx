@@ -231,17 +231,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   return (
     <>
       <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl"
-           style={{
-             background: 'rgba(17,24,39,0.98)',
-             backdropFilter: 'blur(24px)',
-             border: '1px solid var(--border)',
-             borderBottom: 'none',
-             boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
-             paddingBottom: 'env(safe-area-inset-bottom, 20px)',
-             maxHeight: '92vh', overflowY: 'auto',
-           }}>
-
+      <SwipeToClose onClose={onClose}>
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-9 h-[3px] rounded-full" style={{ background: 'var(--bg-3)' }} />
         </div>
@@ -533,7 +523,31 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             {geocoding ? '🔍 Определяю адрес…' : loading ? '⏳ Публикую…' : '🚀 Опубликовать'}
           </button>
         </form>
-      </div>
+      </SwipeToClose>
     </>
+  )
+}
+
+function SwipeToClose({ onClose, children }) {
+  const [ty, setTy] = useState(0)
+  const startY = useRef(0)
+
+  return (
+    <div onTouchStart={e => { startY.current = e.touches[0].clientY }}
+         onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
+         onTouchEnd={() => { ty > 100 ? onClose() : setTy(0) }}
+         style={{
+           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
+           borderRadius: '24px 24px 0 0',
+           background: 'rgba(17,24,39,0.98)',
+           border: '1px solid var(--border)', borderBottom: 'none',
+           boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+           paddingBottom: 'env(safe-area-inset-bottom, 20px)',
+           maxHeight: '92vh', overflowY: 'auto',
+           transform: `translateY(${ty}px)`,
+           transition: ty === 0 ? 'transform 0.3s ease' : 'none',
+         }}>
+      {children}
+    </div>
   )
 }

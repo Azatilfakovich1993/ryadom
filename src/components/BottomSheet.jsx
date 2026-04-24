@@ -644,6 +644,55 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             </div>
           )}
 
+          {/* Реакции на событие */}
+          <div className="mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--hint)' }}>Реакции на событие</p>
+            <div className="flex gap-2">
+              {['👍','🔥','❤️'].map(type => {
+                const count = reactionCounts[type] ?? 0
+                const active = reactions.some(r => r.user_id === myId && r.type === type)
+                return (
+                  <button key={type} onClick={() => handleReact(type)}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-2xl transition active:scale-95 flex-1 justify-center"
+                          style={{
+                            background: active ? cfg.color + '22' : 'var(--bg-2)',
+                            border: `1px solid ${active ? cfg.color + '66' : 'var(--border)'}`,
+                          }}>
+                    <span style={{ fontSize: 18 }}>{type}</span>
+                    {count > 0 && <span className="text-xs font-bold" style={{ color: active ? cfg.color : 'var(--hint)' }}>{count}</span>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Поделиться + Пожаловаться */}
+          <div className="flex gap-2 mb-4">
+            <button type="button" onClick={() => {
+                      try {
+                        const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
+                        if (navigator.share) {
+                          navigator.share({ title: event.title, text: `Событие рядом: ${event.title}`, url }).catch(() => {
+                            navigator.clipboard?.writeText(url)
+                          })
+                        } else {
+                          navigator.clipboard?.writeText(url)
+                        }
+                      } catch(e) {}
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
+                    style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--border)' }}>
+              🔗 Поделиться
+            </button>
+            {!isOwner && (
+              <button type="button" onClick={() => setShowReport(v => !v)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
+                      style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--border)' }}>
+                🚩 Пожаловаться
+              </button>
+            )}
+          </div>
+
           {/* Chat */}
           {event.chat_enabled && !expired && (
             authUser?.is_banned || user?.is_banned ? (
@@ -663,47 +712,6 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             </div>
           )}
 
-          {/* Реакции */}
-          <div className="flex gap-2 mb-4">
-            {['👍','🔥','❤️'].map(type => {
-              const count = reactionCounts[type] ?? 0
-              const active = reactions.some(r => r.user_id === myId && r.type === type)
-              return (
-                <button key={type} onClick={() => handleReact(type)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-2xl transition active:scale-95 flex-1 justify-center"
-                        style={{
-                          background: active ? cfg.color + '22' : 'var(--bg-2)',
-                          border: `1px solid ${active ? cfg.color + '66' : 'var(--border)'}`,
-                        }}>
-                  <span style={{ fontSize: 18 }}>{type}</span>
-                  {count > 0 && <span className="text-xs font-bold" style={{ color: active ? cfg.color : 'var(--hint)' }}>{count}</span>}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Поделиться + Пожаловаться */}
-          <div className="flex gap-2 mb-4">
-            <button onClick={() => {
-                      const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
-                      if (navigator.share) {
-                        navigator.share({ title: event.title, text: `Событие рядом: ${event.title}`, url })
-                      } else {
-                        navigator.clipboard.writeText(url)
-                      }
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
-                    style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--border)' }}>
-              🔗 Поделиться
-            </button>
-            {!isOwner && (
-              <button onClick={() => setShowReport(v => !v)}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
-                      style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--border)' }}>
-                🚩 Пожаловаться
-              </button>
-            )}
-          </div>
 
           {/* Форма жалобы */}
           {showReport && !isOwner && (
