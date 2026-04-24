@@ -120,11 +120,18 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
             </div>
           </div>
 
-          {/* Bio */}
-          {creator.bio && (
-            <div className="rounded-2xl px-4 py-3 mb-4"
+          {/* City + Bio */}
+          {(creator.city || creator.bio) && (
+            <div className="rounded-2xl px-4 py-3 mb-4 flex flex-col gap-2"
                  style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--text)' }}>{creator.bio}</p>
+              {creator.city && (
+                <p className="text-sm font-semibold" style={{ color: 'var(--hint)' }}>
+                  📍 {creator.city}
+                </p>
+              )}
+              {creator.bio && (
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text)' }}>{creator.bio}</p>
+              )}
             </div>
           )}
 
