@@ -35,7 +35,7 @@ function compressAvatar(file) {
   })
 }
 
-export default function ProfileSheet({ authUser, onClose, onSignOut }) {
+export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) {
   const [profile, setProfile]         = useState(null)
   const [myEvents, setMyEvents]       = useState([])
   const [editing, setEditing]         = useState(false)
@@ -377,6 +377,15 @@ export default function ProfileSheet({ authUser, onClose, onSignOut }) {
           </div>
 
           {/* Feedback */}
+          {profile?.is_admin && (
+            <button onClick={onAdmin}
+                    className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 transition active:scale-95"
+                    style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.25)' }}>
+              <span className="text-xl">⚙️</span>
+              <p className="text-sm font-bold" style={{ color: 'var(--accent)' }}>Админ панель</p>
+            </button>
+          )}
+
           <button onClick={() => window.open('mailto:feedback@ryadom.app', '_blank')}
                   className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 transition active:scale-95"
                   style={{ background: 'var(--bg-2)', border: '1px solid var(--bg-3)' }}>

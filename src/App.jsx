@@ -13,6 +13,7 @@ import AchievementToast from './components/AchievementToast'
 import RadarScan from './components/RadarScan'
 import GeoPrompt from './components/GeoPrompt'
 import OnboardingScreen from './components/OnboardingScreen'
+import AdminPanel from './components/AdminPanel'
 import { useTelegram } from './hooks/useTelegram'
 import { useGeolocation } from './hooks/useGeolocation'
 import { supabase, fetchNearbyEvents, createEvent, getProfile } from './lib/supabase'
@@ -141,7 +142,18 @@ export default function App() {
   const [showFilterMenu, setShowFilterMenu] = useState(false)
   const [mode, setMode]                     = useState('map') // 'map' | 'feed'
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('ryadom_onboarded'))
+  const [showAdmin, setShowAdmin]           = useState(false)
+  const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
+
+  // ── Announcements ─────────────────────────────────────────
+  useEffect(() => {
+    supabase.from('announcements').select('*')
+      .gte('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => { if (data?.[0]) setAnnouncement(data[0]) })
+  }, [])
 
   // ── Auth state ────────────────────────────────────────────
   useEffect(() => {
@@ -641,11 +653,26 @@ export default function App() {
           authUser={authUser}
           onClose={() => setShowProfile(false)}
           onSignOut={() => { setAuthUser(null); setProfile(null); localStorage.removeItem('ryadom_profile'); setShowProfile(false) }}
+          onAdmin={() => { setShowProfile(false); setShowAdmin(true) }}
         />
       )}
 
       {/* Геолокация отключена — полноэкранный промпт */}
       {geoDenied && <GeoPrompt onRetry={geoRefetch} />}
+
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+
+      {announcement && (
+        <div className="absolute top-20 left-4 right-4 z-30 rounded-2xl px-4 py-3 flex items-start gap-3"
+             style={{
+               background: announcement.type === 'warning' ? 'rgba(245,158,11,0.15)' : announcement.type === 'success' ? 'rgba(52,211,153,0.15)' : 'rgba(34,211,238,0.15)',
+               border: `1px solid ${announcement.type === 'warning' ? 'rgba(245,158,11,0.4)' : announcement.type === 'success' ? 'rgba(52,211,153,0.4)' : 'rgba(34,211,238,0.4)'}`,
+               backdropFilter: 'blur(16px)',
+             }}>
+          <p className="flex-1 text-sm" style={{ color: 'var(--text)' }}>{announcement.message}</p>
+          <button onClick={() => setAnnouncement(null)} style={{ color: 'var(--hint)', fontSize: 14, flexShrink: 0 }}>✕</button>
+        </div>
+      )}}
 
       {showOnboarding && (
         <OnboardingScreen onDone={() => {
