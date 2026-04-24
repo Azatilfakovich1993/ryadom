@@ -7,6 +7,7 @@ const TABS = [
   { key: 'events',    label: '📍 События' },
   { key: 'users',     label: '👥 Пользователи' },
   { key: 'reviews',   label: '⭐ Отзывы' },
+  { key: 'reports',   label: '🚩 Жалобы' },
   { key: 'broadcast', label: '📢 Рассылка' },
 ]
 
@@ -488,6 +489,47 @@ function Broadcast() {
   )
 }
 
+// ── Reports ──────────────────────────────────────────────────
+function Reports() {
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.from('reports').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { setReports(data ?? []); setLoading(false) })
+  }, [])
+
+  const handleDelete = async (id) => {
+    await supabase.from('reports').delete().eq('id', id)
+    setReports(prev => prev.filter(r => r.id !== id))
+  }
+
+  if (loading) return <Loader />
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs mb-1" style={{ color: 'var(--hint)' }}>Всего жалоб: {reports.length}</p>
+      {reports.length === 0 && (
+        <p className="text-sm text-center py-8" style={{ color: 'var(--hint)' }}>Жалоб нет 🎉</p>
+      )}
+      {reports.map(r => (
+        <div key={r.id} className="flex items-start gap-3 rounded-2xl px-3 py-2.5"
+             style={{ background: 'var(--bg-2)', border: '1px solid rgba(248,113,113,0.25)' }}>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold mb-0.5" style={{ color: 'var(--danger)' }}>🚩 {r.reason}</p>
+            <p className="text-[10px]" style={{ color: 'var(--hint)' }}>
+              Событие: {r.event_id?.slice(0,8)}… · {new Date(r.created_at).toLocaleDateString('ru-RU')}
+            </p>
+          </div>
+          <button onClick={() => handleDelete(r.id)}
+                  className="w-7 h-7 rounded-xl flex items-center justify-center text-xs flex-shrink-0 transition active:scale-90"
+                  style={{ background: 'rgba(248,113,113,0.15)', color: 'var(--danger)' }}>🗑</button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Loader ───────────────────────────────────────────────────
 function Loader() {
   return (
@@ -545,6 +587,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'events'    && <Events />}
           {tab === 'users'     && <Users />}
           {tab === 'reviews'   && <Reviews />}
+          {tab === 'reports'   && <Reports />}
           {tab === 'broadcast' && <Broadcast />}
         </div>
       </div>

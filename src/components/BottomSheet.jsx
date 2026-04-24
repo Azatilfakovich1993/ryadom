@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { supabase, fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile } from '../lib/supabase'
+import { supabase, fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile, fetchReactions, toggleReaction, submitReport } from '../lib/supabase'
 import { tryUnlock, incrementMessageCount } from '../utils/achievements'
 import CreatorSheet from './CreatorSheet'
 import Picker from '@emoji-mart/react'
@@ -217,6 +217,40 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [lightbox, setLightbox]       = useState(null)
   const [deleting, setDeleting]       = useState(false)
   const [confirmDelete, setConfirm]   = useState(false)
+  const [reactions, setReactions]     = useState([])
+  const [showReport, setShowReport]   = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSent, setReportSent]   = useState(false)
+
+  const myId = authUser?.id?.toString() ?? null
+
+  useEffect(() => {
+    fetchReactions(event.id).then(setReactions)
+  }, [event.id])
+
+  const handleReact = async (type) => {
+    if (!myId) return
+    const counts = { ...reactionCounts }
+    const hadIt = reactions.some(r => r.user_id === myId && r.type === type)
+    if (hadIt) {
+      setReactions(prev => prev.filter(r => !(r.user_id === myId && r.type === type)))
+    } else {
+      setReactions(prev => [...prev, { user_id: myId, type }])
+    }
+    await toggleReaction(event.id, myId, type)
+  }
+
+  const handleReport = async () => {
+    if (!reportReason.trim()) return
+    const rid = myId ?? 'anonymous'
+    await submitReport(event.id, rid, reportReason)
+    setReportSent(true)
+  }
+
+  const reactionCounts = ['👍','🔥','❤️'].reduce((acc, t) => {
+    acc[t] = reactions.filter(r => r.type === t).length
+    return acc
+  }, {})
   const [creator, setCreator]         = useState(null)
   const [showCreator, setShowCreator] = useState(false)
   const [showYaMode, setShowYaMode]   = useState(false)
@@ -590,6 +624,79 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             <div className="rounded-2xl px-4 py-3 mb-4 text-sm text-center"
                  style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--bg-3)' }}>
               💬 Чат сгорел вместе с событием
+            </div>
+          )}
+
+          {/* Реакции */}
+          <div className="flex gap-2 mb-4">
+            {['👍','🔥','❤️'].map(type => {
+              const count = reactionCounts[type] ?? 0
+              const active = reactions.some(r => r.user_id === myId && r.type === type)
+              return (
+                <button key={type} onClick={() => handleReact(type)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-2xl transition active:scale-95 flex-1 justify-center"
+                        style={{
+                          background: active ? cfg.color + '22' : 'var(--bg-2)',
+                          border: `1px solid ${active ? cfg.color + '66' : 'var(--border)'}`,
+                        }}>
+                  <span style={{ fontSize: 18 }}>{type}</span>
+                  {count > 0 && <span className="text-xs font-bold" style={{ color: active ? cfg.color : 'var(--hint)' }}>{count}</span>}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Поделиться + Пожаловаться */}
+          <div className="flex gap-2 mb-4">
+            <button onClick={() => {
+                      const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
+                      if (navigator.share) {
+                        navigator.share({ title: event.title, text: `Событие рядом: ${event.title}`, url })
+                      } else {
+                        navigator.clipboard.writeText(url)
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
+                    style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--border)' }}>
+              🔗 Поделиться
+            </button>
+            {!isOwner && (
+              <button onClick={() => setShowReport(v => !v)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
+                      style={{ background: 'var(--bg-2)', color: 'var(--hint)', border: '1px solid var(--border)' }}>
+                🚩 Пожаловаться
+              </button>
+            )}
+          </div>
+
+          {/* Форма жалобы */}
+          {showReport && !isOwner && (
+            <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--bg-2)', border: '1px solid rgba(248,113,113,0.3)' }}>
+              {reportSent ? (
+                <p className="text-sm text-center" style={{ color: 'var(--success)' }}>✅ Жалоба отправлена, разберёмся!</p>
+              ) : (
+                <>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--danger)' }}>Причина жалобы</p>
+                  <div className="flex flex-col gap-2 mb-3">
+                    {['Спам', 'Неуместный контент', 'Ложная информация', 'Другое'].map(r => (
+                      <button key={r} onClick={() => setReportReason(r)}
+                              className="py-2 px-3 rounded-xl text-sm text-left transition active:scale-95"
+                              style={{
+                                background: reportReason === r ? 'rgba(248,113,113,0.15)' : 'var(--bg-3)',
+                                border: `1px solid ${reportReason === r ? 'rgba(248,113,113,0.4)' : 'transparent'}`,
+                                color: reportReason === r ? 'var(--danger)' : 'var(--text)',
+                              }}>
+                        {reportReason === r ? '✓ ' : ''}{r}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={handleReport} disabled={!reportReason}
+                          className="w-full py-2.5 rounded-xl text-sm font-bold transition active:scale-95 disabled:opacity-40"
+                          style={{ background: 'var(--danger)', color: '#fff' }}>
+                    Отправить жалобу
+                  </button>
+                </>
+              )}
             </div>
           )}
 

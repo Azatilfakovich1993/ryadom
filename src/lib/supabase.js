@@ -137,6 +137,28 @@ export async function updateEvent(eventId, updates) {
   if (error) throw error
 }
 
+export async function fetchReactions(eventId) {
+  const { data } = await supabase.from('reactions').select('type, user_id').eq('event_id', eventId)
+  return data ?? []
+}
+
+export async function toggleReaction(eventId, userId, type) {
+  const { data } = await supabase.from('reactions').select('id')
+    .eq('event_id', eventId).eq('user_id', userId).eq('type', type).maybeSingle()
+  if (data) {
+    await supabase.from('reactions').delete().eq('id', data.id)
+    return false
+  } else {
+    await supabase.from('reactions').insert([{ event_id: eventId, user_id: userId, type }])
+    return true
+  }
+}
+
+export async function submitReport(eventId, reporterId, reason) {
+  const { error } = await supabase.from('reports').insert([{ event_id: eventId, reporter_id: reporterId, reason }])
+  if (error) throw error
+}
+
 export async function fetchReviews(targetId) {
   const { data, error } = await supabase
     .from('reviews')
