@@ -353,51 +353,55 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
           )}
 
           {/* Category + title */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: (event.creator_is_business ? '#f59e0b' : cfg.color) + '22', border: `1px solid ${(event.creator_is_business ? '#f59e0b' : cfg.color)}44` }}>
-              {cfg.icon}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: cfg.color }}>
+          <div className="mb-4">
+            {/* Категория */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                    style={{ background: (event.creator_is_business ? '#FFD700' : cfg.color) + '22', border: `1px solid ${(event.creator_is_business ? '#FFD700' : cfg.color)}44` }}>
+                {cfg.icon}
+              </span>
+              <p className="text-xs font-bold uppercase tracking-wider flex-1" style={{ color: event.creator_is_business ? '#FFD700' : cfg.color }}>
                 {cfg.label}
               </p>
+              {isOwner && !expired && !editing && (
+                <button onClick={() => setEditing(true)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center transition active:scale-90"
+                        style={{ background: 'var(--bg-2)', border: '1px solid var(--bg-3)', color: 'var(--hint)', fontSize: 13 }}>
+                  ✏️
+                </button>
+              )}
+            </div>
+            {/* Название в рамке */}
+            <div className="rounded-2xl px-4 py-3"
+                 style={{ background: 'var(--bg-2)', border: `1px solid ${event.creator_is_business ? 'rgba(255,215,0,0.25)' : cfg.color + '33'}` }}>
               {editing ? (
-                <input
-                  value={editTitle}
-                  onChange={e => setEditTitle(e.target.value.slice(0, 80))}
-                  autoFocus
-                  className="w-full rounded-xl px-2 py-1 text-sm font-semibold outline-none"
-                  style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${cfg.color}66` }}
-                />
+                <div>
+                  <input
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value.slice(0, 200))}
+                    autoFocus
+                    className="w-full rounded-xl px-2 py-1 text-base font-bold outline-none mb-2"
+                    style={{ background: 'var(--bg-3)', color: 'var(--text)', border: `1px solid ${cfg.color}66` }}
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditing(false); setEditTitle(event.title) }}
+                            className="flex-1 py-1.5 rounded-lg text-xs transition active:scale-90"
+                            style={{ background: 'var(--bg-3)', color: 'var(--hint)' }}>
+                      Отмена
+                    </button>
+                    <button onClick={handleSaveEdit} disabled={!editTitle.trim() || saving}
+                            className="flex-1 py-1.5 rounded-lg text-xs font-bold transition active:scale-90 disabled:opacity-40"
+                            style={{ background: cfg.color, color: '#111827' }}>
+                      {saving ? '…' : 'Сохранить'}
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <h2 className="text-base font-semibold leading-tight" style={{ color: 'var(--text)' }}>
+                <h2 className="text-base font-bold leading-snug" style={{ color: 'var(--text)' }}>
                   {event.title}
                 </h2>
               )}
             </div>
-            {isOwner && !expired && (
-              editing ? (
-                <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => { setEditing(false); setEditTitle(event.title) }}
-                          className="px-2 py-1 rounded-lg text-xs transition active:scale-90"
-                          style={{ background: 'var(--bg-3)', color: 'var(--hint)' }}>
-                    Отмена
-                  </button>
-                  <button onClick={handleSaveEdit} disabled={!editTitle.trim() || saving}
-                          className="px-2 py-1 rounded-lg text-xs font-bold transition active:scale-90 disabled:opacity-40"
-                          style={{ background: cfg.color, color: '#111827' }}>
-                    {saving ? '…' : 'Сохранить'}
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setEditing(true)}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition active:scale-90"
-                        style={{ background: 'var(--bg-2)', border: '1px solid var(--bg-3)', color: 'var(--hint)', fontSize: 14 }}>
-                  ✏️
-                </button>
-              )
-            )}
           </div>
 
           {/* Photos */}
