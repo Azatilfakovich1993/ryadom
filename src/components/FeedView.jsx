@@ -213,7 +213,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
       </div>
 
       {/* Инфо снизу */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 24px' }}>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5, padding: '0 16px 90px' }}>
         <h2 style={{
           fontSize: 20, fontWeight: 800, color: '#fff',
           lineHeight: 1.3, marginBottom: 10,
@@ -225,7 +225,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
           {dist !== null && (
             <span style={{
-              background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)',
+              background: 'rgba(255,255,255,0.15)',
               borderRadius: 20, padding: '5px 11px',
               fontSize: 12, color: '#fff', fontWeight: 600,
             }}>
@@ -234,7 +234,6 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
           )}
           <span style={{
             background: urgency ? 'rgba(248,113,113,0.25)' : 'rgba(34,211,238,0.15)',
-            backdropFilter: 'blur(12px)',
             border: `1px solid ${urgency ? 'rgba(248,113,113,0.4)' : 'rgba(34,211,238,0.3)'}`,
             borderRadius: 20, padding: '5px 11px',
             fontSize: 12, fontWeight: 600,
@@ -247,13 +246,11 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
         <button onClick={onViewDetails} style={{
           width: '100%', padding: '13px 0',
           borderRadius: 16, cursor: 'pointer',
-          background: 'rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: 'rgba(17,24,39,0.75)',
           border: `1.5px solid ${cfg.color}`,
           color: '#fff',
           fontSize: 14, fontWeight: 900, letterSpacing: '0.08em',
-          boxShadow: `0 0 20px ${cfg.color}44, inset 0 1px 0 rgba(255,255,255,0.15)`,
+          boxShadow: `0 0 20px ${cfg.color}44`,
           textShadow: `0 0 12px ${cfg.color}`,
         }}>
           ПОДРОБНЕЕ →

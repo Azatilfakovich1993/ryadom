@@ -213,6 +213,18 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [creator, setCreator]         = useState(null)
   const [showCreator, setShowCreator] = useState(false)
   const [showYaMode, setShowYaMode]   = useState(false)
+  const [address, setAddress]         = useState('')
+
+  useEffect(() => {
+    if (!event.lat || !event.lon) return
+    if (!window.ymaps) return
+    window.ymaps.ready(() => {
+      window.ymaps.geocode([event.lat, event.lon], { results: 1 }).then(res => {
+        const obj = res.geoObjects.get(0)
+        if (obj) setAddress(obj.getAddressLine())
+      }).catch(() => {})
+    })
+  }, [event.lat, event.lon])
 
   const openYandex = (mode) => {
     const schemes = { auto: 'yandexnavi', pd: 'yandexmaps', mt: 'yandexmaps' }
@@ -435,6 +447,15 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
               <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--hint)' }}>
                 🧭 Добраться
               </p>
+              {address ? (
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
+                     style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 14 }}>📍</span>
+                  <p className="text-xs leading-snug" style={{ color: 'var(--text)' }}>{address}</p>
+                </div>
+              ) : (
+                <div className="h-7 mb-2 rounded-xl animate-pulse" style={{ background: 'var(--bg-2)' }} />
+              )}
               <div className="flex gap-2">
                 <div className="flex-1 flex flex-col gap-1.5">
                   {!showYaMode ? (
