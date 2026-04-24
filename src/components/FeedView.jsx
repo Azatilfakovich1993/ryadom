@@ -219,7 +219,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
       }}>
         <h2 style={{
           fontSize: 20, fontWeight: 800, color: '#fff',
-          lineHeight: 1.4,
+          lineHeight: 1.4, wordBreak: 'break-word', overflowWrap: 'break-word',
           textShadow: '0 2px 12px rgba(0,0,0,0.6)',
         }}>
           {event.title}

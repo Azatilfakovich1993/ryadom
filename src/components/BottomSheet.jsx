@@ -513,7 +513,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                   </div>
                 </div>
               ) : (
-                <h2 className="text-base font-bold leading-snug" style={{ color: 'var(--text)' }}>
+                <h2 className="text-base font-bold leading-snug" style={{ color: 'var(--text)', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                   {event.title}
                 </h2>
               )}
