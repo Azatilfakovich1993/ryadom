@@ -133,8 +133,9 @@ function Events() {
   const handleDelete = async (id) => {
     if (!confirm('Удалить событие?')) return
     setDeletingId(id)
-    await supabase.from('events').delete().eq('id', id)
-    setEvents(prev => prev.filter(e => e.id !== id))
+    const { error } = await supabase.rpc('admin_delete_event', { event_id: id })
+    if (!error) setEvents(prev => prev.filter(e => e.id !== id))
+    else console.error('delete error:', error)
     setDeletingId(null)
   }
 
@@ -175,13 +176,21 @@ function Events() {
 
 // ── Users ────────────────────────────────────────────────────
 function Users() {
-  const [users, setUsers] = useState([])
+  const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     supabase.from('profiles').select('*').order('created_at', { ascending: false })
       .then(({ data }) => { setUsers(data ?? []); setLoading(false) })
   }, [])
+
+  const filtered = search.trim()
+    ? users.filter(u =>
+        u.username?.toLowerCase().includes(search.toLowerCase()) ||
+        u.display_name?.toLowerCase().includes(search.toLowerCase())
+      )
+    : users
 
   const toggleBan = async (user) => {
     const newVal = !user.is_banned
@@ -201,8 +210,16 @@ function Users() {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs mb-1" style={{ color: 'var(--hint)' }}>Всего: {users.length}</p>
-      {users.map(u => (
+      <input value={search} onChange={e => setSearch(e.target.value)}
+             placeholder="Поиск по имени или @username…"
+             className="w-full rounded-2xl px-4 py-2.5 text-sm outline-none mb-1"
+             style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}
+             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+             onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+      <p className="text-xs" style={{ color: 'var(--hint)' }}>
+        {search ? `Найдено: ${filtered.length}` : `Всего: ${users.length}`}
+      </p>
+      {filtered.map(u => (
         <div key={u.id} className="flex items-center gap-3 rounded-2xl px-3 py-2.5"
              style={{ background: 'var(--bg-2)', border: `1px solid ${u.is_banned ? 'rgba(248,113,113,0.3)' : 'var(--border)'}`, opacity: u.is_banned ? 0.7 : 1 }}>
           <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 font-bold text-sm"
