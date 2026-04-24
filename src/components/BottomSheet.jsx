@@ -89,7 +89,6 @@ function EventChat({ event, user, authUser }) {
 
   const insertEmoji = (emoji) => {
     setInput(prev => (prev + emoji).slice(0, 500))
-    setShowEmoji(false)
     inputRef.current?.focus()
   }
 

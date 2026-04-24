@@ -118,12 +118,11 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   // ── Emoji ──────────────────────────────────────────────────
   const insertEmoji = (emoji) => {
     const ta = textareaRef.current
-    if (!ta) { setTitle(prev => (prev + emoji).slice(0, 200)); setShowEmoji(false); return }
+    if (!ta) { setTitle(prev => (prev + emoji).slice(0, 200)); return }
     const start = ta.selectionStart
     const end   = ta.selectionEnd
     const next  = (title.slice(0, start) + emoji + title.slice(end)).slice(0, 200)
     setTitle(next)
-    setShowEmoji(false)
     setTimeout(() => {
       ta.focus()
       const pos = Math.min(start + emoji.length, next.length)
