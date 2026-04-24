@@ -43,6 +43,8 @@ const PIN_STYLES = `
   [class*="ymaps-"][class*="-zoom"] { display: none !important; }
   [class*="ymaps-"][class*="-controls__control"] { display: none !important; }
   [class*="ymaps-"][class*="-float-button"] { display: none !important; }
+  [class*="ymaps-"][class*="-geolocation"] { display: none !important; }
+  [class*="ymaps-"][class*="-location"] { display: none !important; }
 `
 
 function injectStyles() {
