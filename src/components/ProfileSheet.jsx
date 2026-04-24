@@ -38,29 +38,20 @@ function FeedbackForm({ profile, onClose }) {
         from_email: params.from_email, phone: params.phone,
         from_name: params.from_name, username: params.username,
       }])
-      // EmailJS через прокси — работает без VPN
+      // EmailJS через Cloudflare прокси — прямой fetch без SDK
       try {
-        await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, {
-          publicKey: EMAILJS_KEY,
-          blockHeadless: false,
-          limitRate: { throttle: 0 },
+        await fetch(`${PROXY_URL}/emailjs/api/v1.0/email/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service_id: EMAILJS_SERVICE,
+            template_id: EMAILJS_TEMPLATE,
+            user_id: EMAILJS_KEY,
+            template_params: params,
+          }),
         })
-      } catch {
-        // fallback: прямой запрос через прокси
-        try {
-          await fetch(`${PROXY_URL}/emailjs/api/v1.0/email/send`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              service_id: EMAILJS_SERVICE,
-              template_id: EMAILJS_TEMPLATE,
-              user_id: EMAILJS_KEY,
-              template_params: params,
-            }),
-          })
-        } catch (e2) {
-          console.warn('EmailJS proxy also failed:', e2)
-        }
+      } catch (e) {
+        console.warn('EmailJS failed:', e)
       }
       setDone(true)
     } catch (e) {

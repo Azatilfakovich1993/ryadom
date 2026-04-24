@@ -264,6 +264,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [lightbox, setLightbox]       = useState(null)
   const [deleting, setDeleting]       = useState(false)
   const [confirmDelete, setConfirm]   = useState(false)
+  const [copied, setCopied]           = useState(false)
   const [reactions, setReactions]     = useState([])
   const [showReport, setShowReport]   = useState(false)
   const [reportReason, setReportReason] = useState('')
@@ -670,20 +671,22 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
           {/* Поделиться + Пожаловаться */}
           <div className="flex gap-2 mb-4">
             <button type="button" onClick={() => {
-                      try {
-                        const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
-                        if (navigator.share) {
-                          navigator.share({ title: event.title, text: `Событие рядом: ${event.title}`, url }).catch(() => {
-                            navigator.clipboard?.writeText(url)
-                          })
-                        } else {
-                          navigator.clipboard?.writeText(url)
-                        }
-                      } catch(e) {}
+                      const url = `${window.location.origin}${window.location.pathname}?event=${event.id}`
+                      const el = document.createElement('textarea')
+                      el.value = url
+                      el.style.position = 'fixed'
+                      el.style.opacity = '0'
+                      document.body.appendChild(el)
+                      el.focus()
+                      el.select()
+                      document.execCommand('copy')
+                      document.body.removeChild(el)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
                     }}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold transition active:scale-95"
-                    style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--border)' }}>
-              🔗 Поделиться
+                    style={{ background: copied ? 'rgba(34,211,238,0.15)' : 'var(--bg-2)', color: 'var(--accent)', border: `1px solid ${copied ? 'var(--accent)' : 'var(--border)'}` }}>
+              {copied ? '✓ Скопировано!' : '🔗 Поделиться'}
             </button>
             {!isOwner && (
               <button type="button" onClick={() => setShowReport(v => !v)}
