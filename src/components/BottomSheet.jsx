@@ -209,6 +209,53 @@ function EventChat({ event, user, authUser }) {
   )
 }
 
+function SwipeableSheet({ onClose, children }) {
+  const ref = useRef(null)
+  const startY = useRef(0)
+  const [translateY, setTranslateY] = useState(0)
+  const isDragging = useRef(false)
+
+  const onTouchStart = (e) => {
+    startY.current = e.touches[0].clientY
+    isDragging.current = true
+  }
+
+  const onTouchMove = (e) => {
+    if (!isDragging.current) return
+    const dy = e.touches[0].clientY - startY.current
+    if (dy > 0) setTranslateY(dy)
+  }
+
+  const onTouchEnd = () => {
+    isDragging.current = false
+    if (translateY > 100) {
+      onClose()
+    } else {
+      setTranslateY(0)
+    }
+  }
+
+  return (
+    <div ref={ref}
+         onTouchStart={onTouchStart}
+         onTouchMove={onTouchMove}
+         onTouchEnd={onTouchEnd}
+         className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
+         style={{
+           background: 'rgba(17,24,39,0.97)',
+           border: '1px solid var(--border)',
+           borderBottom: 'none',
+           boxShadow: '0 -8px 40px rgba(0,0,0,0.6), 0 0 40px rgba(34,211,238,0.06)',
+           paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+           maxHeight: '88vh',
+           transform: `translateY(${translateY}px)`,
+           transition: translateY === 0 ? 'transform 0.3s ease' : 'none',
+         }}>
+      {children}
+    </div>
+  )
+}
+
 export default function BottomSheet({ event, onClose, onPremium, user, authUser, onDelete }) {
   const { label, urgency, critical, expired } = useCountdown(event.expires_at)
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
@@ -383,17 +430,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
       )}
 
       <div className="absolute inset-0 z-40" onClick={onClose} />
-      <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
-           style={{
-             background: 'rgba(17,24,39,0.97)',
-             backdropFilter: 'blur(24px)',
-             border: '1px solid var(--border)',
-             borderBottom: 'none',
-             boxShadow: '0 -8px 40px rgba(0,0,0,0.6), 0 0 40px rgba(34,211,238,0.06)',
-             paddingBottom: 'env(safe-area-inset-bottom, 16px)',
-             maxHeight: '88vh',
-           }}>
-
+      <SwipeableSheet onClose={onClose}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
           <div className="w-9 h-[3px] rounded-full" style={{ background: 'var(--bg-3)' }} />
@@ -748,7 +785,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             )
           )}
         </div>
-      </div>
+      </SwipeableSheet>
     </>
   )
 }
