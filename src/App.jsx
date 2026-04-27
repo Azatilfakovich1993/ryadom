@@ -152,10 +152,11 @@ export default function App() {
 
   // ── VK insets ────────────────────────────────────────────
   useEffect(() => {
-    bridge.send('VKWebAppGetConfig').then(data => {
-      const top = data?.insets?.top ?? 0
-      if (top > 0) setVkInsetTop(top)
-    }).catch(() => {})
+    // Определяем VK по наличию vk_* параметров в URL или bridge
+    const isVK = window.location.search.includes('vk_') ||
+                 document.referrer.includes('vk.com') ||
+                 bridge.supports('VKWebAppGetConfig')
+    if (isVK) setVkInsetTop(56)
   }, [])
 
   // ── Proxy warm-up ────────────────────────────────────────
