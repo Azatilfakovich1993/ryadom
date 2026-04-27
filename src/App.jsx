@@ -123,11 +123,13 @@ export default function App() {
   const [showPremium, setShowPremium]   = useState(false)
   const [showAuth, setShowAuth]         = useState(false)
   const [showProfile, setShowProfile]   = useState(false)
-  const [authUser, setAuthUser]         = useState(null)
+  const [authUser, setAuthUser]         = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ryadom_auth_user') || 'null') } catch { return null }
+  })
   const [profile, setProfile]           = useState(() => {
     try { return JSON.parse(localStorage.getItem('ryadom_profile') || 'null') } catch { return null }
   })
-  const [authChecked, setAuthChecked]   = useState(false)
+  const [authChecked, setAuthChecked]   = useState(() => !!localStorage.getItem('ryadom_auth_user'))
   const [skippedWelcome, setSkippedWelcome] = useState(false)
   const [creating, setCreating]         = useState(false)
   const [loadingEvents, setLoadingEvents] = useState(false)
@@ -165,6 +167,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setAuthUser(session.user)
+        localStorage.setItem('ryadom_auth_user', JSON.stringify(session.user))
         getProfile(session.user.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } })
       }
       setAuthChecked(true)
@@ -172,11 +175,11 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       if (session?.user) {
         setAuthUser(session.user)
+        localStorage.setItem('ryadom_auth_user', JSON.stringify(session.user))
         getProfile(session.user.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } })
-      } else {
-        setAuthUser(null)
-        setProfile(null)
       }
+      // Не очищаем при null — это может быть временный сбой прокси
+      // Данные очищаются только при явном выходе (onSignOut)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -674,7 +677,13 @@ export default function App() {
         <ProfileSheet
           authUser={authUser}
           onClose={() => setShowProfile(false)}
-          onSignOut={() => { setAuthUser(null); setProfile(null); localStorage.removeItem('ryadom_profile'); setShowProfile(false) }}
+          onSignOut={() => {
+            setAuthUser(null); setProfile(null)
+            localStorage.removeItem('ryadom_auth_user')
+            localStorage.removeItem('ryadom_profile')
+            localStorage.removeItem('ryadom_events')
+            setShowProfile(false)
+          }}
           onAdmin={() => { setShowProfile(false); setShowAdmin(true) }}
         />
       )}
