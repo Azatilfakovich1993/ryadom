@@ -148,6 +148,11 @@ export default function App() {
   const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
 
+  // ── Proxy warm-up ────────────────────────────────────────
+  useEffect(() => {
+    fetch('https://ryadom-proxy.azatilfakovich1993.workers.dev/', { method: 'HEAD' }).catch(() => {})
+  }, [])
+
   // ── Announcements ─────────────────────────────────────────
   useEffect(() => {
     const loadAnnouncement = async () => {
@@ -270,20 +275,21 @@ export default function App() {
   const loadEvents = useCallback(async () => {
     if (!location) return
     setLoadingEvents(true)
-    try {
-      const data = await Promise.race([
-        fetchNearbyEvents(location.lat, location.lon, RADIUS_M),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000)),
-      ])
-      if (data.length > 0) {
-        setEvents(data)
-        localStorage.setItem('ryadom_events', JSON.stringify(data))
+    // Пробуем до 3 раз — прокси может быть холодным при первом запросе
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const data = await fetchNearbyEvents(location.lat, location.lon, RADIUS_M)
+        if (data.length > 0) {
+          setEvents(data)
+          localStorage.setItem('ryadom_events', JSON.stringify(data))
+        }
+        break
+      } catch (e) {
+        console.warn(`loadEvents attempt ${attempt}:`, e.message)
+        if (attempt < 3) await new Promise(r => setTimeout(r, 3000))
       }
-    } catch (e) {
-      console.warn('loadEvents:', e.message)
-    } finally {
-      setLoadingEvents(false)
     }
+    setLoadingEvents(false)
   }, [location])
 
   useEffect(() => { loadEvents() }, [loadEvents])
