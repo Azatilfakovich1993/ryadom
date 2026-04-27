@@ -2,12 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
 import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, supabase } from '../lib/supabase'
 import { ACHIEVEMENTS, getAllUnlocked } from '../utils/achievements'
-import emailjs from '@emailjs/browser'
-
-const EMAILJS_SERVICE  = 'service_e9rq08l'
-const EMAILJS_TEMPLATE = 'template_sv3vhnv'
-const EMAILJS_KEY      = 'yeMBepFqVCzgEH0Si'
-const PROXY_URL        = 'https://ryadom-proxy.azatilfakovich1993.workers.dev'
 
 function FeedbackForm({ profile, onClose }) {
   const [type, setType]       = useState('💡 Идея')
@@ -38,20 +32,11 @@ function FeedbackForm({ profile, onClose }) {
         from_email: params.from_email, phone: params.phone,
         from_name: params.from_name, username: params.username,
       }])
-      // EmailJS через Cloudflare прокси — прямой fetch без SDK
+      // Отправка через Supabase Edge Function → Resend
       try {
-        await fetch(`${PROXY_URL}/emailjs/api/v1.0/email/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service_id: EMAILJS_SERVICE,
-            template_id: EMAILJS_TEMPLATE,
-            user_id: EMAILJS_KEY,
-            template_params: params,
-          }),
-        })
+        await supabase.functions.invoke('send-feedback', { body: params })
       } catch (e) {
-        console.warn('EmailJS failed:', e)
+        console.warn('send-feedback failed:', e)
       }
       setDone(true)
     } catch (e) {
