@@ -248,14 +248,13 @@ export default function App() {
     return () => clearTimeout(t)
   }, [showFirstVisit])
 
-  // ── Подсказка «долго не создавал» ────────────────────────
+  // ── Подсказка — показывать при каждом открытии, исчезает через 4 сек ──
   useEffect(() => {
-    if (!authUser) return
-    const last = localStorage.getItem('ryadom_last_event')
-    if (last && Date.now() - parseInt(last) > 12 * 60 * 60 * 1000) {
-      setShowCreateHint(true)
-    }
-  }, [authUser])
+    if (mode !== 'map') return
+    setShowCreateHint(true)
+    const t = setTimeout(() => setShowCreateHint(false), 4000)
+    return () => clearTimeout(t)
+  }, []) // eslint-disable-line
 
   // ── Радар при старте: волны на карте → карточка результата ──
   const handleRadarDone = useCallback(() => {
