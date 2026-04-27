@@ -681,7 +681,6 @@ export default function App() {
             setAuthUser(null); setProfile(null)
             localStorage.removeItem('ryadom_auth_user')
             localStorage.removeItem('ryadom_profile')
-            localStorage.removeItem('ryadom_events')
             setShowProfile(false)
           }}
           onAdmin={() => { setShowProfile(false); setShowAdmin(true) }}
