@@ -293,8 +293,29 @@ export default function App() {
 
   useEffect(() => { loadEvents() }, [loadEvents])
 
-  // Realtime отключён — WebSocket заблокирован провайдерами РФ, вызывает тормоза
-  // Вместо него — polling каждые 60 секунд
+  // ── Realtime через Cloudflare WebSocket прокси ───────────
+  useEffect(() => {
+    if (channelRef.current) supabase.removeChannel(channelRef.current)
+    const ch = supabase.channel('events-live')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, ({ new: ev }) => {
+        if (new Date(ev.expires_at) <= new Date()) return
+        const loc = locationRef.current
+        if (loc && distanceM(loc.lat, loc.lon, ev.lat, ev.lon) > RADIUS_M) return
+        setEvents(prev => prev.find(e => e.id === ev.id) ? prev : [ev, ...prev])
+        showToast(`📍 ${ev.title}`, 'info')
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'events' }, ({ old: ev }) => {
+        setEvents(prev => prev.filter(e => e.id !== ev.id))
+        setSelectedEvent(s => s?.id === ev.id ? null : s)
+      })
+      .subscribe(status => {
+        if (status === 'SUBSCRIBED') console.log('Realtime connected ✓')
+      })
+    channelRef.current = ch
+    return () => supabase.removeChannel(ch)
+  }, [showToast])
+
+  // Polling как запасной вариант если Realtime не работает
   useEffect(() => {
     const id = setInterval(() => { loadEvents() }, 60_000)
     return () => clearInterval(id)
