@@ -348,7 +348,11 @@ export default function App() {
           event.video_url = videoUrl
         } catch (e) { console.warn('video upload failed:', e) }
       }
-      setEvents(prev => prev.find(e => e.id === event.id) ? prev : [event, ...prev])
+      setEvents(prev => {
+        const updated = prev.find(e => e.id === event.id) ? prev : [event, ...prev]
+        localStorage.setItem('ryadom_events', JSON.stringify(updated))
+        return updated
+      })
       loadEvents()
     } catch (err) {
       console.error('createEvent failed:', err)
