@@ -23,6 +23,20 @@ import { CATEGORY_CONFIG } from './components/MapComponent'
 
 const RADIUS_M = 100000
 
+async function loadProfileWithRetry(userId, setProfile) {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const p = await getProfile(userId)
+      if (p) {
+        setProfile(p)
+        localStorage.setItem('ryadom_profile', JSON.stringify(p))
+        return
+      }
+    } catch {}
+    await new Promise(r => setTimeout(r, 2000 * (i + 1)))
+  }
+}
+
 function EventsPeek({ events, location, onSelect }) {
   const [open, setOpen] = useState(false)
 
@@ -184,7 +198,7 @@ export default function App() {
       if (session?.user) {
         setAuthUser(session.user)
         localStorage.setItem('ryadom_auth_user', JSON.stringify(session.user))
-        getProfile(session.user.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } })
+        loadProfileWithRetry(session.user.id, setProfile)
       }
       setAuthChecked(true)
     })
@@ -192,7 +206,7 @@ export default function App() {
       if (session?.user) {
         setAuthUser(session.user)
         localStorage.setItem('ryadom_auth_user', JSON.stringify(session.user))
-        getProfile(session.user.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } })
+        loadProfileWithRetry(session.user.id, setProfile)
       }
       // Не очищаем при null — это может быть временный сбой прокси
       // Данные очищаются только при явном выходе (onSignOut)
@@ -729,7 +743,7 @@ export default function App() {
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
-          onAuth={(u) => { setAuthUser(u); setShowAuth(false); getProfile(u.id).then(p => { if (p) { setProfile(p); localStorage.setItem('ryadom_profile', JSON.stringify(p)) } }) }}
+          onAuth={(u) => { setAuthUser(u); setShowAuth(false); loadProfileWithRetry(u.id, setProfile) }}
         />
       )}
 
