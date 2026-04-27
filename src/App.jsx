@@ -289,6 +289,11 @@ export default function App() {
   useEffect(() => { loadEvents() }, [loadEvents])
 
   // Realtime отключён — WebSocket заблокирован провайдерами РФ, вызывает тормоза
+  // Вместо него — polling каждые 60 секунд
+  useEffect(() => {
+    const id = setInterval(() => { loadEvents() }, 60_000)
+    return () => clearInterval(id)
+  }, [loadEvents])
 
   // ── Auto-expire ───────────────────────────────────────────
   useEffect(() => {
