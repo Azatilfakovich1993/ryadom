@@ -343,29 +343,6 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         </div>
       )}
 
-      {/* Кнопка «Найти меня» */}
-      {mapReady && userLocation && (
-        <button
-          onClick={handleLocateMe}
-          style={{
-            position: 'absolute', bottom: 100, right: 12, zIndex: 10,
-            width: 40, height: 40,
-            borderRadius: 12,
-            background: 'rgba(17,24,39,0.95)',
-            border: '1.5px solid rgba(34,211,238,0.5)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.4), 0 0 10px rgba(34,211,238,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-               stroke="#22d3ee" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-            <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" strokeOpacity="0.3"/>
-          </svg>
-        </button>
-      )}
 
     </div>
   )
