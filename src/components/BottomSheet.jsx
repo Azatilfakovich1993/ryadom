@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { supabase, fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile, fetchReactions, toggleReaction, submitReport } from '../lib/supabase'
+import { fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile, fetchReactions, toggleReaction, submitReport, subscribeToMessages } from '../lib/firebase'
 import { tryUnlock, incrementMessageCount } from '../utils/achievements'
 import CreatorSheet from './CreatorSheet'
 import Picker from '@emoji-mart/react'
@@ -54,16 +54,10 @@ function EventChat({ event, user, authUser }) {
   }, [event.id])
 
   useEffect(() => {
-    loadMessages()
-    const ch = supabase.channel(`chat-${event.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-      }, ({ new: msg }) => {
-        if (msg.event_id === event.id) setMessages(prev => [...prev, msg])
-      })
-      .subscribe()
-    return () => supabase.removeChannel(ch)
-  }, [event.id, loadMessages])
+    // Firebase Realtime Database — настоящий real-time без WebSocket прокси
+    const unsub = subscribeToMessages(event.id, msgs => setMessages(msgs))
+    return () => unsub()
+  }, [event.id])
 
   useEffect(() => {
     if (expanded) endRef.current?.scrollIntoView({ behavior: 'smooth' })

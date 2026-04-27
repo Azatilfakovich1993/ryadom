@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/firebase'
+import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, query, orderBy, limit, where } from 'firebase/firestore'
 import { CATEGORY_CONFIG } from './MapComponent'
 
 const TABS = [
@@ -22,31 +23,31 @@ function Analytics() {
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
       const weekStart  = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-      const [
-        { count: totalUsers },
-        { count: totalEvents },
-        { count: todayEvents },
-        { count: weekEvents },
-        { data: byCat },
-        { data: byHour },
-      ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('events').select('*', { count: 'exact', head: true }),
-        supabase.from('events').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
-        supabase.from('events').select('*', { count: 'exact', head: true }).gte('created_at', weekStart),
-        supabase.from('events').select('category'),
-        supabase.from('events').select('created_at'),
+      const [profilesSnap, eventsSnap] = await Promise.all([
+        getDocs(collection(db, 'profiles')),
+        getDocs(collection(db, 'events')),
       ])
 
-      // По категориям
-      const catMap = {}
-      byCat?.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + 1 })
+      const totalUsers = profilesSnap.size
+      const allEvents = eventsSnap.docs.map(d => ({ ...d.data() }))
+      const totalEvents = allEvents.length
 
-      // По часам
+      const todayEvents = allEvents.filter(e => {
+        const t = e.created_at?.toDate?.() ?? new Date(e.created_at)
+        return t >= new Date(todayStart)
+      }).length
+      const weekEvents = allEvents.filter(e => {
+        const t = e.created_at?.toDate?.() ?? new Date(e.created_at)
+        return t >= new Date(weekStart)
+      }).length
+
+      const catMap = {}
+      allEvents.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + 1 })
+
       const hourMap = Array(24).fill(0)
-      byHour?.forEach(e => {
-        const h = new Date(e.created_at).getHours()
-        hourMap[h]++
+      allEvents.forEach(e => {
+        const t = e.created_at?.toDate?.() ?? new Date(e.created_at)
+        hourMap[new Date(t).getHours()]++
       })
       const maxHour = Math.max(...hourMap, 1)
 
@@ -128,16 +129,23 @@ function Events() {
   const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
-    supabase.from('events').select('*').order('created_at', { ascending: false }).limit(100)
-      .then(({ data }) => { setEvents(data ?? []); setLoading(false) })
+    getDocs(query(collection(db, 'events'), orderBy('created_at', 'desc'), limit(100)))
+      .then(snap => {
+        setEvents(snap.docs.map(d => {
+          const ev = { id: d.id, ...d.data() }
+          if (ev.expires_at?.toDate) ev.expires_at = ev.expires_at.toDate().toISOString()
+          if (ev.created_at?.toDate) ev.created_at = ev.created_at.toDate().toISOString()
+          return ev
+        }))
+        setLoading(false)
+      })
   }, [])
 
   const handleDelete = async (id) => {
     if (!confirm('Удалить событие?')) return
     setDeletingId(id)
-    const { error } = await supabase.rpc('admin_delete_event', { event_id: id })
-    if (!error) setEvents(prev => prev.filter(e => e.id !== id))
-    else console.error('delete error:', error)
+    await deleteDoc(doc(db, 'events', id))
+    setEvents(prev => prev.filter(e => e.id !== id))
     setDeletingId(null)
   }
 
@@ -183,8 +191,8 @@ function Users() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    supabase.from('profiles').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setUsers(data ?? []); setLoading(false) })
+    getDocs(collection(db, 'profiles'))
+      .then(snap => { setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
   }, [])
 
   const filtered = search.trim()
@@ -197,14 +205,14 @@ function Users() {
   const toggleBan = async (user) => {
     const newVal = !user.is_banned
     if (!confirm(newVal ? `Заблокировать ${user.username}?` : `Разблокировать ${user.username}?`)) return
-    await supabase.from('profiles').update({ is_banned: newVal }).eq('id', user.id)
+    await updateDoc(doc(db, 'profiles', user.id), { is_banned: newVal })
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_banned: newVal } : u))
   }
 
   const toggleBusiness = async (user) => {
     const newVal = !user.is_business
     if (!confirm(newVal ? `Выдать бизнес-доступ ${user.username}?` : `Убрать бизнес-доступ у ${user.username}?`)) return
-    await supabase.from('profiles').update({ is_business: newVal }).eq('id', user.id)
+    await updateDoc(doc(db, 'profiles', user.id), { is_business: newVal })
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_business: newVal } : u))
   }
 
@@ -272,14 +280,14 @@ function Reviews() {
   const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
-    supabase.from('reviews').select('*').order('created_at', { ascending: false }).limit(100)
-      .then(({ data }) => { setReviews(data ?? []); setLoading(false) })
+    getDocs(query(collection(db, 'reviews'), orderBy('created_at', 'desc'), limit(100)))
+      .then(snap => { setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
   }, [])
 
   const handleDelete = async (id) => {
     if (!confirm('Удалить отзыв?')) return
     setDeletingId(id)
-    await supabase.from('reviews').delete().eq('id', id)
+    await deleteDoc(doc(db, 'reviews', id))
     setReviews(prev => prev.filter(r => r.id !== id))
     setDeletingId(null)
   }
@@ -327,20 +335,18 @@ function Broadcast() {
   const [userSearch, setUserSearch] = useState('')
 
   useEffect(() => {
-    supabase.from('announcements').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => setAnnouncements(data ?? []))
-    supabase.from('profiles').select('id,username,display_name,avatar_url')
-      .order('username').then(({ data }) => setUsers(data ?? []))
+    getDocs(collection(db, 'announcements')).then(snap => setAnnouncements(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+    getDocs(collection(db, 'profiles')).then(snap => setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
   }, [])
 
   const handleSend = async () => {
     if (!message.trim() || sending) return
     setSending(true)
-    const expires_at = new Date(Date.now() + hours * 3600000).toISOString()
-    const payload = { message: message.trim(), type, expires_at }
+    const expires_at = new Date(Date.now() + hours * 3600000)
+    const payload = { message: message.trim(), type, expires_at, created_at: new Date() }
     if (targetId) payload.target_user_id = targetId
-    const { data } = await supabase.from('announcements').insert([payload]).select().single()
-    if (data) setAnnouncements(prev => [data, ...prev])
+    const ref = await addDoc(collection(db, 'announcements'), payload)
+    setAnnouncements(prev => [{ id: ref.id, ...payload }, ...prev])
     setMessage('')
     setTargetId(null)
     setUserSearch('')
@@ -350,7 +356,7 @@ function Broadcast() {
   }
 
   const handleDelete = async (id) => {
-    await supabase.from('announcements').delete().eq('id', id)
+    await deleteDoc(doc(db, 'announcements', id))
     setAnnouncements(prev => prev.filter(a => a.id !== id))
   }
 
@@ -496,8 +502,9 @@ function FeedbackList() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.from('feedback').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setItems(data ?? []); setLoading(false) })
+    getDocs(query(collection(db, 'feedback'), orderBy('created_at', 'desc')))
+      .then(snap => { setItems(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   if (loading) return <Loader />
@@ -528,12 +535,13 @@ function Reports() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.from('reports').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setReports(data ?? []); setLoading(false) })
+    getDocs(query(collection(db, 'reports'), orderBy('created_at', 'desc')))
+      .then(snap => { setReports(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   const handleDelete = async (id) => {
-    await supabase.from('reports').delete().eq('id', id)
+    await deleteDoc(doc(db, 'reports', id))
     setReports(prev => prev.filter(r => r.id !== id))
   }
 

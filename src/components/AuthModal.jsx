@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signIn, signUp, checkUsername } from '../lib/supabase'
+import { signIn, signUp, checkUsername } from '../lib/firebase'
 
 function mapError(err) {
   const msg = err?.message ?? ''

@@ -17,7 +17,11 @@ import OnboardingScreen from './components/OnboardingScreen'
 import AdminPanel from './components/AdminPanel'
 import { useTelegram } from './hooks/useTelegram'
 import { useGeolocation } from './hooks/useGeolocation'
-import { supabase, fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo } from './lib/supabase'
+import {
+  auth, onAuthStateChanged,
+  fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo,
+  subscribeToEvents, fetchAnnouncements,
+} from './lib/firebase'
 import { tryUnlock } from './utils/achievements'
 import { CATEGORY_CONFIG } from './components/MapComponent'
 
@@ -180,38 +184,20 @@ export default function App() {
 
   // ── Announcements ─────────────────────────────────────────
   useEffect(() => {
-    const loadAnnouncement = async () => {
-      const uid = authUser?.id ?? null
-      const { data } = await supabase.from('announcements').select('*')
-        .gte('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(10)
-      const relevant = (data ?? []).find(a => !a.target_user_id || a.target_user_id === uid)
-      if (relevant) setAnnouncement(relevant)
-    }
-    loadAnnouncement()
+    fetchAnnouncements(authUser?.uid ?? null).then(a => { if (a) setAnnouncement(a) }).catch(() => {})
   }, [authUser])
 
-  // ── Auth state ────────────────────────────────────────────
+  // ── Auth state (Firebase) ─────────────────────────────────
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setAuthUser(session.user)
-        localStorage.setItem('ryadom_auth_user', JSON.stringify(session.user))
-        loadProfileWithRetry(session.user.id, setProfile)
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthUser(user)
+        localStorage.setItem('ryadom_auth_user', JSON.stringify({ id: user.uid, uid: user.uid, email: user.email }))
+        loadProfileWithRetry(user.uid, setProfile)
       }
       setAuthChecked(true)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session?.user) {
-        setAuthUser(session.user)
-        localStorage.setItem('ryadom_auth_user', JSON.stringify(session.user))
-        loadProfileWithRetry(session.user.id, setProfile)
-      }
-      // Не очищаем при null — это может быть временный сбой прокси
-      // Данные очищаются только при явном выходе (onSignOut)
-    })
-    return () => subscription.unsubscribe()
+    return () => unsub()
   }, [])
 
   const locationRef  = useRef(location)
@@ -318,26 +304,20 @@ export default function App() {
 
   useEffect(() => { loadEvents() }, [loadEvents])
 
-  // ── Realtime через Cloudflare WebSocket прокси ───────────
+  // ── Realtime (Firebase onSnapshot) ───────────────────────
   useEffect(() => {
-    if (channelRef.current) supabase.removeChannel(channelRef.current)
-    const ch = supabase.channel('events-live')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, ({ new: ev }) => {
-        if (new Date(ev.expires_at) <= new Date()) return
-        const loc = locationRef.current
+    const unsub = subscribeToEvents((type, ev) => {
+      const loc = locationRef.current
+      if (type === 'added') {
         if (loc && distanceM(loc.lat, loc.lon, ev.lat, ev.lon) > RADIUS_M) return
         setEvents(prev => prev.find(e => e.id === ev.id) ? prev : [ev, ...prev])
-        showToast(`📍 ${ev.title}`, 'info')
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'events' }, ({ old: ev }) => {
+        if (type === 'added') showToast(`📍 ${ev.title}`, 'info')
+      } else if (type === 'removed') {
         setEvents(prev => prev.filter(e => e.id !== ev.id))
         setSelectedEvent(s => s?.id === ev.id ? null : s)
-      })
-      .subscribe(status => {
-        if (status === 'SUBSCRIBED') console.log('Realtime connected ✓')
-      })
-    channelRef.current = ch
-    return () => supabase.removeChannel(ch)
+      }
+    })
+    return () => unsub()
   }, [showToast])
 
   // Polling как запасной вариант если Realtime не работает
@@ -383,7 +363,7 @@ export default function App() {
         setCreating(false)
         return
       }
-      const uid = authUser.id
+      const uid = authUser.uid ?? authUser.id
       const eventParams = { title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [], creatorIsBusiness: !!useBusinessPin }
 
       // Без retry — иначе создаются дубликаты при медленном прокси

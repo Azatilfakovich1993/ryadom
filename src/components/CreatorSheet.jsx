@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchReviews, submitReview } from '../lib/supabase'
+import { fetchReviews, submitReview } from '../lib/firebase'
 
 function Stars({ value, onChange, size = 28 }) {
   const [hover, setHover] = useState(0)

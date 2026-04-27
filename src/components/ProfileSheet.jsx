@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, supabase } from '../lib/supabase'
+import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, saveFeedback } from '../lib/firebase'
 import { ACHIEVEMENTS, getAllUnlocked } from '../utils/achievements'
 
 function FeedbackForm({ profile, onClose }) {
@@ -27,16 +27,20 @@ function FeedbackForm({ profile, onClose }) {
         date: new Date().toLocaleString('ru-RU'),
       }
       // Сохраняем в Supabase всегда
-      await supabase.from('feedback').insert([{
+      await saveFeedback({
         type, message: params.message,
         from_email: params.from_email, phone: params.phone,
         from_name: params.from_name, username: params.username,
-      }])
-      // Отправка через Supabase Edge Function → Resend
+      })
+      // Email через Resend Edge Function
       try {
-        await supabase.functions.invoke('send-feedback', { body: params })
+        await fetch('https://ryadom-proxy.azatilfakovich1993.workers.dev/emailjs/api/v1.0/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ service_id: 'service_e9rq08l', template_id: 'template_sv3vhnv', user_id: 'yeMBepFqVCzgEH0Si', template_params: params }),
+        })
       } catch (e) {
-        console.warn('send-feedback failed:', e)
+        console.warn('email failed:', e)
       }
       setDone(true)
     } catch (e) {
