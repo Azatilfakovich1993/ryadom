@@ -1,4 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import bridge from '@vkontakte/vk-bridge'
+
+async function getVKLocation() {
+  const data = await bridge.send('VKWebAppGetGeodata')
+  if (data.available && data.lat && data.long) {
+    return { lat: data.lat, lon: data.long }
+  }
+  throw new Error('VK geo unavailable')
+}
 
 function waitForYmaps(ms = 6000) {
   return new Promise((resolve, reject) => {
@@ -89,11 +98,18 @@ export function useGeolocation(tg) {
       )
     }
 
+    // Telegram Mini App
     if (tg?.LocationManager?.isInited) {
       tg.LocationManager.getLocation((loc) => {
         if (loc) resolve({ lat: loc.latitude, lon: loc.longitude })
         else doRequest()
       })
+      return
+    }
+
+    // VK Mini App
+    if (bridge.isWebView?.()) {
+      getVKLocation().then(resolve).catch(doRequest)
       return
     }
 
