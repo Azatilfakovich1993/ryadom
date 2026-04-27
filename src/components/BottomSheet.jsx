@@ -313,7 +313,8 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
 
   const openYandex = (mode) => {
     const rtt = { auto: 'auto', pd: 'pd', mt: 'mt' }
-    window.open(`https://yandex.ru/maps/?rtext=~${event.lat},${event.lon}&rtt=${rtt[mode]}`, '_blank')
+    const to = `${event.lat},${event.lon}`
+    window.open(`https://maps.yandex.ru/?rtext=~${to}&rtt=${rtt[mode]}&z=14`, '_blank')
     setShowYaMode(false)
   }
   const [editing, setEditing]         = useState(false)
@@ -612,7 +613,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                     <button onClick={() => setShowYaMode(true)}
                             className="w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
                             style={{ background: 'rgba(252,211,77,0.15)', border: '1px solid rgba(252,211,77,0.4)', color: '#fcd34d' }}>
-                      🚕 Яндекс
+                      🗺 Маршрут
                     </button>
                   ) : (
                     <div className="flex gap-1.5">
