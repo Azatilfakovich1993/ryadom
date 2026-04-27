@@ -143,7 +143,16 @@ export default function App() {
   const [showAuth, setShowAuth]         = useState(false)
   const [showProfile, setShowProfile]   = useState(false)
   const [authUser, setAuthUser]         = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ryadom_auth_user') || 'null') } catch { return null }
+    try {
+      const cached = JSON.parse(localStorage.getItem('ryadom_auth_user') || 'null')
+      // Если кеш от старого Supabase (нет uid) — очищаем
+      if (cached && !cached.uid) {
+        localStorage.removeItem('ryadom_auth_user')
+        localStorage.removeItem('ryadom_profile')
+        return null
+      }
+      return cached
+    } catch { return null }
   })
   const [profile, setProfile]           = useState(() => {
     try { return JSON.parse(localStorage.getItem('ryadom_profile') || 'null') } catch { return null }
