@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import bridge from '@vkontakte/vk-bridge'
 import MapComponent from './components/MapComponent'
 import FeedView from './components/FeedView'
 import BottomSheet from './components/BottomSheet'
@@ -145,8 +146,17 @@ export default function App() {
   const [mode, setMode]                     = useState('map') // 'map' | 'feed'
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('ryadom_onboarded'))
   const [showAdmin, setShowAdmin]           = useState(false)
+  const [vkInsetTop, setVkInsetTop]         = useState(0)
   const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
+
+  // ── VK insets ────────────────────────────────────────────
+  useEffect(() => {
+    bridge.send('VKWebAppGetConfig').then(data => {
+      const top = data?.insets?.top ?? 0
+      if (top > 0) setVkInsetTop(top)
+    }).catch(() => {})
+  }, [])
 
   // ── Proxy warm-up ────────────────────────────────────────
   useEffect(() => {
@@ -448,7 +458,7 @@ export default function App() {
 
       {/* Top bar — единая панель */}
       {mode === 'map' && (
-        <div className="absolute top-0 left-0 right-0 z-20 px-3 pt-3 pb-2">
+        <div className="absolute top-0 left-0 right-0 z-20 px-3 pb-2" style={{ paddingTop: `${vkInsetTop + 12}px` }}>
           {/* Строка 1: лого / переключатель / профиль */}
           <div className="flex items-center gap-2 mb-2">
             {/* Лого */}
@@ -510,7 +520,7 @@ export default function App() {
 
       {/* Top bar — режим ленты (только переключатель) */}
       {mode === 'feed' && (
-        <div className="absolute top-0 left-0 right-0 z-20 flex justify-center pt-3 pb-2">
+        <div className="absolute top-0 left-0 right-0 z-20 flex justify-center pb-2" style={{ paddingTop: `${vkInsetTop + 12}px` }}>
           <div style={{
             display: 'flex', borderRadius: 14, padding: 3,
             background: 'rgba(17,24,39,0.85)',
