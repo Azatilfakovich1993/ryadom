@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
 import { supabase, fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile, fetchReactions, toggleReaction, submitReport } from '../lib/supabase'
 import { tryUnlock, incrementMessageCount } from '../utils/achievements'
@@ -41,9 +41,20 @@ function EventChat({ event, user, authUser }) {
   const inputRef = useRef(null)
   const endRef = useRef(null)
 
-  useEffect(() => {
-    fetchMessages(event.id).then(setMessages)
+  const loadMessages = useCallback(async () => {
+    for (let i = 0; i < 3; i++) {
+      try {
+        const data = await fetchMessages(event.id)
+        setMessages(data)
+        return
+      } catch {
+        if (i < 2) await new Promise(r => setTimeout(r, 2000))
+      }
+    }
+  }, [event.id])
 
+  useEffect(() => {
+    loadMessages()
     const ch = supabase.channel(`chat-${event.id}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages',
@@ -51,9 +62,8 @@ function EventChat({ event, user, authUser }) {
         if (msg.event_id === event.id) setMessages(prev => [...prev, msg])
       })
       .subscribe()
-
     return () => supabase.removeChannel(ch)
-  }, [event.id])
+  }, [event.id, loadMessages])
 
   useEffect(() => {
     if (expanded) endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -119,14 +129,13 @@ function EventChat({ event, user, authUser }) {
            style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
 
         {/* Header with collapse button */}
-        <button type="button" onClick={() => setExpanded(false)}
-                className="w-full flex items-center justify-between px-3 py-2.5 transition active:opacity-70"
-                style={{ borderBottom: '1px solid var(--bg-3)' }}>
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+        <div className="flex items-center px-3 py-2.5" style={{ borderBottom: '1px solid var(--bg-3)' }}>
+          <span className="text-[10px] font-bold uppercase tracking-wider flex-1" style={{ color: 'var(--accent)' }}>
             💬 Чат события · {messages.length}
           </span>
-          <span className="text-xs" style={{ color: 'var(--hint)' }}>▼ свернуть</span>
-        </button>
+          <button type="button" onClick={loadMessages} className="text-xs px-2 transition active:opacity-70" style={{ color: 'var(--hint)' }}>↻</button>
+          <button type="button" onClick={() => setExpanded(false)} className="text-xs transition active:opacity-70" style={{ color: 'var(--hint)' }}>▼ свернуть</button>
+        </div>
 
         {/* Messages */}
         <div className="overflow-y-auto p-3 flex flex-col gap-2" style={{ height: 200 }}>
