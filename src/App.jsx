@@ -181,8 +181,7 @@ export default function App() {
   useEffect(() => {
     // Определяем VK по наличию vk_* параметров в URL или bridge
     const isVK = window.location.search.includes('vk_') ||
-                 document.referrer.includes('vk.com') ||
-                 bridge.supports('VKWebAppGetConfig')
+                 document.referrer.includes('vk.com')
     if (isVK) setVkInsetTop(56)
   }, [])
 
@@ -337,11 +336,19 @@ export default function App() {
 
   // ── Auto-expire ───────────────────────────────────────────
   useEffect(() => {
-    const id = setInterval(() => {
-      setEvents(prev => prev.filter(e => new Date(e.expires_at) > new Date()))
-    }, 30_000)
-    return () => clearInterval(id)
-  }, [])
+    const now = Date.now()
+    const timers = events
+      .map(ev => {
+        const delay = new Date(ev.expires_at).getTime() - now
+        if (delay <= 0) return null
+        return setTimeout(() => {
+          setEvents(prev => prev.filter(e => e.id !== ev.id))
+          setSelectedEvent(s => s?.id === ev.id ? null : s)
+        }, delay)
+      })
+      .filter(Boolean)
+    return () => timers.forEach(clearTimeout)
+  }, [events])
 
   // ── Handlers ─────────────────────────────────────────────
   const handleEventClick = useCallback((event) => {

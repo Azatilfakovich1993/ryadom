@@ -72,13 +72,6 @@ function EventChat({ event, user, authUser }) {
     setSending(true)
     try {
       await sendMessage({ eventId: event.id, content: text, creatorId: myId })
-      setMessages(prev => [...prev, {
-        id: `tmp-${Date.now()}`,
-        event_id: event.id,
-        content: text,
-        creator_id: myId,
-        created_at: new Date().toISOString(),
-      }])
       setInput('')
       const msgCount = incrementMessageCount()
       if (msgCount >= 20) tryUnlock('soul')
@@ -319,12 +312,8 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   }, [event.lat, event.lon])
 
   const openYandex = (mode) => {
-    const schemes = { auto: 'yandexnavi', pd: 'yandexmaps', mt: 'yandexmaps' }
     const rtt = { auto: 'auto', pd: 'pd', mt: 'mt' }
-    window.location.href = `${schemes[mode]}://maps.yandex.ru/?rtext=~${event.lat},${event.lon}&rtt=${rtt[mode]}`
-    setTimeout(() => {
-      window.open(`https://yandex.ru/maps/?rtext=~${event.lat},${event.lon}&rtt=${rtt[mode]}`, '_blank')
-    }, 1500)
+    window.open(`https://yandex.ru/maps/?rtext=~${event.lat},${event.lon}&rtt=${rtt[mode]}`, '_blank')
     setShowYaMode(false)
   }
   const [editing, setEditing]         = useState(false)

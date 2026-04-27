@@ -425,10 +425,10 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                 {suggestions.map((s, i) => (
                   <button key={i} type="button"
                           onMouseDown={e => { e.preventDefault(); handlePick(s) }}
-                          className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition active:opacity-60"
+                          className="w-full text-left px-4 py-3 text-sm flex items-start gap-3 transition active:opacity-60"
                           style={{ color: 'var(--text)', borderBottom: i < suggestions.length - 1 ? '1px solid var(--bg-3)' : 'none' }}>
-                    <span style={{ color: 'var(--accent)', flexShrink: 0, fontSize: 13 }}>📍</span>
-                    <span className="truncate">{s}</span>
+                    <span style={{ color: 'var(--accent)', flexShrink: 0, fontSize: 13, marginTop: 1 }}>📍</span>
+                    <span style={{ wordBreak: 'break-word' }}>{s}</span>
                   </button>
                 ))}
               </div>
