@@ -43,8 +43,21 @@ export default function AuthModal({ onClose, onAuth }) {
         const user = await signUp(uname, password, displayName.trim())
         onAuth(user)
       } else {
-        const user = await signIn(uname, password)
-        onAuth(user)
+        // Retry login up to 3 times for slow proxy (VK/TG without VPN)
+        let lastErr
+        for (let i = 0; i < 3; i++) {
+          try {
+            const user = await signIn(uname, password)
+            onAuth(user)
+            return
+          } catch (err) {
+            lastErr = err
+            // Don't retry on wrong credentials
+            if (err?.message?.includes('Invalid') || err?.message?.includes('invalid')) throw err
+            if (i < 2) await new Promise(r => setTimeout(r, 2000))
+          }
+        }
+        throw lastErr
       }
     } catch (err) {
       setError(mapError(err))
