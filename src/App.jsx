@@ -333,10 +333,23 @@ export default function App() {
         return
       }
       const uid = authUser.id
-      const event = await Promise.race([
-        createEvent({ title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [], creatorIsBusiness: !!useBusinessPin }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('Превышено время ожидания. Попробуй ещё раз.')), 15000)),
-      ])
+      const eventParams = { title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [], creatorIsBusiness: !!useBusinessPin }
+
+      // Пробуем создать событие с 2 попытками по 20 секунд
+      let event = null
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          event = await Promise.race([
+            createEvent(eventParams),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000)),
+          ])
+          break
+        } catch (e) {
+          if (attempt === 2) throw new Error('Не удалось создать событие. Проверь подключение и попробуй ещё раз.')
+          showToast(`Повторяю попытку...`, 'info')
+          await new Promise(r => setTimeout(r, 1000))
+        }
+      }
       haptic('notification', 'success')
       setShowCreate(false)
       showToast('Событие опубликовано!')
