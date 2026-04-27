@@ -168,7 +168,19 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         })
         window._ryadomMap = mapRef.current
         setMapReady(true)
-        // Скрываем все Яндекс-контролы через DOM после рендера
+
+        // MutationObserver — скрываем Яндекс-контролы как только появляются в DOM
+        const hideYandexControls = (container) => {
+          container.querySelectorAll('*').forEach(el => {
+            const cls = typeof el.className === 'string' ? el.className : ''
+            if (cls.match(/ymaps-.*-(geolocation|zoom|float-button|controls__control|location|ruler)/)) {
+              el.style.setProperty('display', 'none', 'important')
+            }
+          })
+        }
+        const observer = new MutationObserver(() => hideYandexControls(containerRef.current))
+        observer.observe(containerRef.current, { childList: true, subtree: true })
+
         setTimeout(() => {
           const container = containerRef.current
           if (!container) return
