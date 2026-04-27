@@ -611,6 +611,30 @@ export default function App() {
               Что происходит рядом? 👀
             </div>
           )}
+          {/* Моё местоположение */}
+          <button
+            onClick={() => {
+              haptic('impact', 'light')
+              if (location && window._ryadomMap) {
+                window._ryadomMap.setCenter([location.lat, location.lon], 15, { duration: 500 })
+              }
+            }}
+            className="transition active:scale-90"
+            style={{
+              width: 44, height: 44, borderRadius: 13,
+              background: 'rgba(17,24,39,0.93)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--accent)' }}>
+              <circle cx="12" cy="12" r="3" fill="var(--accent)" stroke="none"/>
+              <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              <circle cx="12" cy="12" r="7" strokeOpacity="0.4"/>
+            </svg>
+          </button>
+
           {/* Добавить событие */}
           <button
             onClick={() => { haptic('impact', 'medium'); setShowCreate(true) }}
