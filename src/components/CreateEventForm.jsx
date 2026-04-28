@@ -580,11 +580,16 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 function SwipeToClose({ onClose, children }) {
   const [ty, setTy] = useState(0)
   const startY = useRef(0)
+  const startTime = useRef(0)
 
   return (
-    <div onTouchStart={e => { if (e.target.closest('button,a,input,textarea')) return; startY.current = e.touches[0].clientY }}
+    <div onTouchStart={e => { if (e.target.closest('button,a,input,textarea,select')) return; startY.current = e.touches[0].clientY; startTime.current = Date.now() }}
          onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
-         onTouchEnd={() => { ty > 100 ? onClose() : setTy(0) }}
+         onTouchEnd={() => {
+           const velocity = ty / (Date.now() - startTime.current)
+           if (ty > 200 || (ty > 80 && velocity > 0.5)) onClose()
+           else setTy(0)
+         }}
          style={{
            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
            borderRadius: '24px 24px 0 0',
