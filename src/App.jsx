@@ -729,7 +729,7 @@ export default function App() {
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
-          onAuth={(u) => { setAuthUser(u); setShowAuth(false); loadProfileWithRetry(u.id, setProfile) }}
+          onAuth={(u) => { setAuthUser(u); setShowAuth(false); loadProfileWithRetry(u.uid ?? u.id, setProfile) }}
         />
       )}
 

@@ -9,10 +9,27 @@ function mapError(err) {
   return msg || 'Что-то пошло не так'
 }
 
+function getPlatformUser() {
+  // Telegram
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+  if (tgUser) {
+    const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ')
+    const uname = (tgUser.username ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
+    return { name, username: uname }
+  }
+  // VK — данные приходят через URL параметры при открытии мини-апп
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('vk_user_id')) {
+    return { name: '', username: '' }
+  }
+  return { name: '', username: '' }
+}
+
 export default function AuthModal({ onClose, onAuth }) {
+  const platform = getPlatformUser()
   const [mode, setMode]               = useState('login')
-  const [username, setUsername]       = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [username, setUsername]       = useState(platform.username)
+  const [displayName, setDisplayName] = useState(platform.name)
   const [password, setPassword]       = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
