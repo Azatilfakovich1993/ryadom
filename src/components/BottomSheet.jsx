@@ -63,7 +63,7 @@ function EventChat({ event, user, authUser }) {
     if (expanded) endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, expanded])
 
-  const myId = authUser?.id?.toString() ?? user?.id?.toString() ?? null
+  const myId = (authUser?.uid ?? authUser?.id)?.toString() ?? user?.id?.toString() ?? null
 
   const handleSend = async (e) => {
     e?.preventDefault()
@@ -266,7 +266,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [reportReason, setReportReason] = useState('')
   const [reportSent, setReportSent]   = useState(false)
 
-  const myId = authUser?.id?.toString() ?? null
+  const myId = (authUser?.uid ?? authUser?.id)?.toString() ?? null
 
   useEffect(() => {
     fetchReactions(event.id).then(setReactions)
