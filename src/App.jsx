@@ -337,16 +337,19 @@ export default function App() {
   // ── Auto-expire ───────────────────────────────────────────
   useEffect(() => {
     const now = Date.now()
-    const timers = events
-      .map(ev => {
-        const delay = new Date(ev.expires_at).getTime() - now
-        if (delay <= 0) return null
-        return setTimeout(() => {
-          setEvents(prev => prev.filter(e => e.id !== ev.id))
-          setSelectedEvent(s => s?.id === ev.id ? null : s)
-        }, delay)
-      })
-      .filter(Boolean)
+    const hasExpired = events.some(e => new Date(e.expires_at).getTime() <= now)
+    if (hasExpired) {
+      setEvents(prev => prev.filter(e => new Date(e.expires_at).getTime() > now))
+      setSelectedEvent(s => s && new Date(s.expires_at).getTime() <= now ? null : s)
+      return
+    }
+    const timers = events.map(ev => {
+      const delay = new Date(ev.expires_at).getTime() - now
+      return setTimeout(() => {
+        setEvents(prev => prev.filter(e => e.id !== ev.id))
+        setSelectedEvent(s => s?.id === ev.id ? null : s)
+      }, delay)
+    })
     return () => timers.forEach(clearTimeout)
   }, [events])
 
