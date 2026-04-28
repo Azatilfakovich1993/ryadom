@@ -147,59 +147,49 @@ function PhotoLightbox({ photos, startIdx, onClose }) {
   )
 }
 
-function PhotoSlider({ photos }) {
+function PhotoSlider({ photos, onOpenLightbox }) {
   const [idx, setIdx] = useState(0)
-  const [lightbox, setLightbox] = useState(null)
   const touchX = useRef(0)
+  const moved = useRef(false)
 
   return (
-    <>
-      {lightbox !== null && <PhotoLightbox photos={photos} startIdx={lightbox} onClose={() => setLightbox(null)} />}
-      <div style={{
-        position: 'relative', width: '100%',
-        borderRadius: 20, overflow: 'hidden',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-        border: '1.5px solid rgba(255,255,255,0.1)',
-        aspectRatio: '4/3',
+    <div style={{ position: 'absolute', inset: 0 }}
+      onTouchStart={e => { touchX.current = e.touches[0].clientX; moved.current = false }}
+      onTouchMove={e => { if (Math.abs(e.touches[0].clientX - touchX.current) > 8) moved.current = true }}
+      onTouchEnd={e => {
+        const diff = touchX.current - e.changedTouches[0].clientX
+        if (!moved.current) { e.stopPropagation(); onOpenLightbox(idx); return }
+        if (diff > 40 && idx < photos.length - 1) { e.stopPropagation(); setIdx(i => i + 1) }
+        else if (diff < -40 && idx > 0) { e.stopPropagation(); setIdx(i => i - 1) }
       }}
-        onTouchStart={e => { touchX.current = e.touches[0].clientX }}
-        onTouchEnd={e => {
-          const diff = touchX.current - e.changedTouches[0].clientX
-          if (Math.abs(diff) < 5) { setLightbox(idx); return }
-          if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
-          else if (diff < -40 && idx > 0) setIdx(i => i - 1)
-        }}
-        onClick={() => setLightbox(idx)}
-      >
-        {photos.map((url, i) => (
-          <img key={i} src={url} alt="" style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'contain',
-            background: '#000',
-            transform: `translateX(${(i - idx) * 100}%)`,
-            transition: 'transform 0.3s ease',
-          }} />
-        ))}
-        {photos.length > 1 && (
-          <div style={{
-            position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', gap: 5, zIndex: 3,
-          }}>
-            {photos.map((_, i) => (
-              <div key={i} style={{
-                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-                background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)',
-                transition: 'all 0.3s',
-              }} />
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+    >
+      {photos.map((url, i) => (
+        <img key={i} src={url} alt="" style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          objectFit: 'contain', background: '#000',
+          transform: `translateX(${(i - idx) * 100}%)`,
+          transition: 'transform 0.3s ease',
+        }} />
+      ))}
+      {photos.length > 1 && (
+        <div style={{
+          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: 5, zIndex: 3,
+        }}>
+          {photos.map((_, i) => (
+            <div key={i} style={{
+              width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+              background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)',
+              transition: 'all 0.3s',
+            }} />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
-function EventCard({ event, dist, onViewDetails, parallaxY }) {
+function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const { label: timeLabel, urgency } = useCountdown(event.expires_at)
   const hasPhoto = event.photos?.length > 0
@@ -228,7 +218,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY }) {
       {/* Фото поверх — на весь экран */}
       {hasPhoto && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-          <PhotoSlider photos={event.photos} />
+          <PhotoSlider photos={event.photos} onOpenLightbox={onOpenLightbox} />
         </div>
       )}
 
@@ -389,6 +379,7 @@ function RadarCard({ hasEvents, radiusIdx, onExpand, onCreateEvent }) {
 export default function FeedView({ events, location, onViewEvent, onCreateEvent }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [radiusIdx, setRadiusIdx] = useState(0)
+  const [lightbox, setLightbox] = useState(null)
   const touchStartY = useRef(0)
   const dragging = useRef(false)
 
@@ -420,6 +411,7 @@ export default function FeedView({ events, location, onViewEvent, onCreateEvent 
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
+      {lightbox && <PhotoLightbox photos={lightbox.photos} startIdx={lightbox.idx} onClose={() => setLightbox(null)} />}
       {sorted.map((ev, i) => (
         <div key={ev.id} style={{
           position: 'absolute', inset: 0,
@@ -431,6 +423,7 @@ export default function FeedView({ events, location, onViewEvent, onCreateEvent 
             event={ev} dist={ev.dist}
             onViewDetails={() => onViewEvent(ev)}
             parallaxY={(i - currentIndex) * -40}
+            onOpenLightbox={(idx) => setLightbox({ photos: ev.photos, idx })}
           />
         </div>
       ))}

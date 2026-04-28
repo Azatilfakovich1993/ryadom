@@ -155,8 +155,6 @@ export default function AuthModal({ onClose, onAuth }) {
               <input value={displayName} onChange={e => setDisplayName(e.target.value.slice(0, 30))}
                      placeholder="Иван Иванов"
                      autoComplete="name"
-                     autoCapitalize="words"
-                     inputMode="text"
                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
                      style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
                      onFocus={e => e.target.style.borderColor = 'var(--accent)'}
