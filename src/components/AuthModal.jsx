@@ -167,7 +167,7 @@ export default function AuthModal({ onClose, onAuth }) {
                    style={{ color: 'var(--accent)' }}>Логин</label>
             <input value={username} onChange={e => setUsername(e.target.value.slice(0, 20))}
                    placeholder="kolya_izh"
-                   autoCapitalize="none" autoCorrect="off" spellCheck="false"
+                   autoCapitalize="none"
                    className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
                    style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
                    onFocus={e => e.target.style.borderColor = 'var(--accent)'}
