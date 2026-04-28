@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, signUp, checkUsername } from '../lib/firebase'
+import bridge from '@vkontakte/vk-bridge'
 
 function mapError(err) {
   const msg = err?.message ?? ''
@@ -33,6 +34,17 @@ export default function AuthModal({ onClose, onAuth }) {
   const [password, setPassword]       = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.get('vk_user_id')) return
+    bridge.send('VKWebAppGetUserInfo').then(u => {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(' ')
+      const uname = (u.screen_name ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
+      if (name) setDisplayName(prev => prev || name)
+      if (uname) setUsername(prev => prev || uname)
+    }).catch(() => {})
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
