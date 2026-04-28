@@ -154,6 +154,9 @@ export default function AuthModal({ onClose, onAuth }) {
                      style={{ color: 'var(--accent)' }}>Как тебя зовут?</label>
               <input value={displayName} onChange={e => setDisplayName(e.target.value.slice(0, 30))}
                      placeholder="Иван Иванов"
+                     autoComplete="name"
+                     autoCapitalize="words"
+                     inputMode="text"
                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
                      style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
                      onFocus={e => e.target.style.borderColor = 'var(--accent)'}
@@ -188,9 +191,9 @@ export default function AuthModal({ onClose, onAuth }) {
           </div>
 
           {mode === 'register' && (
-            <label className="flex items-start gap-3 mb-4 cursor-pointer">
+            <div className="flex items-start gap-3 mb-4">
               <div onClick={() => setAgreed(v => !v)}
-                   className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 transition"
+                   className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 transition cursor-pointer"
                    style={{
                      background: agreed ? 'var(--accent)' : 'var(--bg-2)',
                      border: `1.5px solid ${agreed ? 'var(--accent)' : 'var(--bg-3)'}`,
@@ -199,14 +202,15 @@ export default function AuthModal({ onClose, onAuth }) {
               </div>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--hint)' }}>
                 Я ознакомился и согласен с{' '}
-                <button type="button" onClick={() => setShowPolicy(true)}
+                <button type="button"
+                        onClick={e => { e.stopPropagation(); setShowPolicy(true) }}
                         className="underline transition"
                         style={{ color: 'var(--accent)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'inherit' }}>
                   политикой конфиденциальности
                 </button>
                 {' '}и даю согласие на обработку персональных данных
               </p>
-            </label>
+            </div>
           )}
 
           {error && (

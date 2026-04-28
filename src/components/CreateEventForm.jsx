@@ -3,6 +3,21 @@ import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
+const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
+
+async function takePhotoNative() {
+  const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
+  const image = await Camera.getPhoto({
+    quality: 85,
+    allowEditing: false,
+    resultType: CameraResultType.DataUrl,
+    source: CameraSource.Camera,
+  })
+  const res = await fetch(image.dataUrl)
+  const blob = await res.blob()
+  return new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' })
+}
+
 function CameraCapture({ onCapture, onClose }) {
   const videoRef  = useRef(null)
   const streamRef = useRef(null)
@@ -380,7 +395,11 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             </div>
 
             {photos.length < maxPhotos && (
-              <button type="button" onClick={() => setShowCamera(true)}
+              <button type="button" onClick={async () => {
+                if (isCapacitor) {
+                  try { const file = await takePhotoNative(); addPhoto(file) } catch {}
+                } else { setShowCamera(true) }
+              }}
                       className="flex items-center gap-2 text-sm py-2.5 px-4 rounded-2xl transition active:scale-95"
                       style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--bg-3)' }}>
                 <span>📸</span>

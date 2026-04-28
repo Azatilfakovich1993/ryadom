@@ -107,48 +107,95 @@ function CityBackground({ color, parallaxY = 0 }) {
   )
 }
 
-function PhotoSlider({ photos }) {
-  const [idx, setIdx] = useState(0)
+function PhotoLightbox({ photos, startIdx, onClose }) {
+  const [idx, setIdx] = useState(startIdx)
   const touchX = useRef(0)
-
   return (
-    <div style={{
-      position: 'relative', width: '100%',
-      borderRadius: 20, overflow: 'hidden',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-      border: '1.5px solid rgba(255,255,255,0.1)',
-      aspectRatio: '4/3',
-    }}
-      onTouchStart={e => { touchX.current = e.touches[0].clientX }}
-      onTouchEnd={e => {
-        const diff = touchX.current - e.changedTouches[0].clientX
-        if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
-        else if (diff < -40 && idx > 0) setIdx(i => i - 1)
-      }}
-    >
-      {photos.map((url, i) => (
-        <img key={i} src={url} alt="" style={{
-          position: 'absolute', inset: 0, width: '100%', height: '100%',
-          objectFit: 'cover',
-          transform: `translateX(${(i - idx) * 100}%)`,
-          transition: 'transform 0.3s ease',
-        }} />
-      ))}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.97)', display: 'flex', flexDirection: 'column' }}
+         onClick={onClose}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
+           onTouchStart={e => { touchX.current = e.touches[0].clientX; e.stopPropagation() }}
+           onTouchEnd={e => {
+             e.stopPropagation()
+             const diff = touchX.current - e.changedTouches[0].clientX
+             if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
+             else if (diff < -40 && idx > 0) setIdx(i => i - 1)
+           }}
+           onClick={e => e.stopPropagation()}>
+        {photos.map((url, i) => (
+          <img key={i} src={url} alt="" style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'contain',
+            transform: `translateX(${(i - idx) * 100}%)`,
+            transition: 'transform 0.3s ease',
+          }} />
+        ))}
+      </div>
       {photos.length > 1 && (
-        <div style={{
-          position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', gap: 5, zIndex: 3,
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '12px 0' }}>
           {photos.map((_, i) => (
             <div key={i} style={{
               width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-              background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)',
+              background: i === idx ? '#fff' : 'rgba(255,255,255,0.4)',
               transition: 'all 0.3s',
             }} />
           ))}
         </div>
       )}
+      <button style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer' }}>✕</button>
     </div>
+  )
+}
+
+function PhotoSlider({ photos }) {
+  const [idx, setIdx] = useState(0)
+  const [lightbox, setLightbox] = useState(null)
+  const touchX = useRef(0)
+
+  return (
+    <>
+      {lightbox !== null && <PhotoLightbox photos={photos} startIdx={lightbox} onClose={() => setLightbox(null)} />}
+      <div style={{
+        position: 'relative', width: '100%',
+        borderRadius: 20, overflow: 'hidden',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        border: '1.5px solid rgba(255,255,255,0.1)',
+        aspectRatio: '4/3',
+      }}
+        onTouchStart={e => { touchX.current = e.touches[0].clientX }}
+        onTouchEnd={e => {
+          const diff = touchX.current - e.changedTouches[0].clientX
+          if (Math.abs(diff) < 5) { setLightbox(idx); return }
+          if (diff > 40 && idx < photos.length - 1) setIdx(i => i + 1)
+          else if (diff < -40 && idx > 0) setIdx(i => i - 1)
+        }}
+        onClick={() => setLightbox(idx)}
+      >
+        {photos.map((url, i) => (
+          <img key={i} src={url} alt="" style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'contain',
+            background: '#000',
+            transform: `translateX(${(i - idx) * 100}%)`,
+            transition: 'transform 0.3s ease',
+          }} />
+        ))}
+        {photos.length > 1 && (
+          <div style={{
+            position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 5, zIndex: 3,
+          }}>
+            {photos.map((_, i) => (
+              <div key={i} style={{
+                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+                background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)',
+                transition: 'all 0.3s',
+              }} />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

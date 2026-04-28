@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import bridge from '@vkontakte/vk-bridge'
+import { Geolocation } from '@capacitor/geolocation'
+
+const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
 
 async function getVKLocation() {
   const data = await bridge.send('VKWebAppGetGeodata')
@@ -104,6 +107,16 @@ export function useGeolocation(tg) {
         if (loc) resolve({ lat: loc.latitude, lon: loc.longitude })
         else doRequest()
       })
+      return
+    }
+
+    // Capacitor (Android APK)
+    if (isCapacitor) {
+      Geolocation.requestPermissions().then(() =>
+        Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 })
+      ).then(pos => {
+        resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+      }).catch(() => { setDenied(true); setLoading(false) })
       return
     }
 
