@@ -165,7 +165,8 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) 
 
   useEffect(() => {
     if (!authUser) return
-    getProfile(authUser.id).then(p => {
+    const uid = authUser.uid ?? authUser.id
+    getProfile(uid).then(p => {
       if (p) {
         setProfile(p)
         setDisplayName(p.display_name ?? '')
@@ -174,7 +175,7 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) 
         setAvatar(p.avatar_url ?? null)
       }
     })
-    fetchMyEvents(authUser.id).then(setMyEvents)
+    fetchMyEvents(uid).then(setMyEvents)
   }, [authUser])
 
   const handleAvatarChange = async (e) => {
@@ -188,7 +189,7 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateProfile(authUser.id, {
+      await updateProfile(authUser.uid ?? authUser.id, {
         display_name: displayName.trim(),
         bio: bio.trim(),
         city: city.trim(),
