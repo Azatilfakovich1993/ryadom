@@ -20,6 +20,7 @@ import { useGeolocation } from './hooks/useGeolocation'
 import {
   auth, onAuthStateChanged,
   fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo,
+  uploadEventPhoto, updateEventPhotos,
   subscribeToEvents, fetchAnnouncements,
 } from './lib/firebase'
 import { tryUnlock } from './utils/achievements'
@@ -383,10 +384,26 @@ export default function App() {
         return
       }
       const uid = authUser.uid ?? authUser.id
-      const eventParams = { title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: photos ?? [], creatorIsBusiness: !!useBusinessPin }
+      const eventParams = { title, category, lat, lon, durationHours, creatorId: uid, chatEnabled, photos: [], creatorIsBusiness: !!useBusinessPin }
 
-      // Без retry — иначе создаются дубликаты при медленном прокси
       const event = await createEvent(eventParams)
+
+      // Загружаем фото в Firebase Storage
+      if (photos?.length > 0) {
+        try {
+          const photoUrls = await Promise.all(
+            photos.map(async (dataUrl, i) => {
+              const res = await fetch(dataUrl)
+              const blob = await res.blob()
+              const file = new File([blob], `photo_${i}.jpg`, { type: 'image/jpeg' })
+              return uploadEventPhoto(file, event.id, i)
+            })
+          )
+          await updateEventPhotos(event.id, photoUrls)
+          event.photos = photoUrls
+        } catch (e) { console.warn('photo upload failed:', e) }
+      }
+
       haptic('notification', 'success')
       setShowCreate(false)
       showToast('Событие опубликовано!')

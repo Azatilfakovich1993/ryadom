@@ -43,10 +43,10 @@ const firebaseConfig = {
   appId: '1:1081784996268:web:e0c432526ab8364c0f6a09',
 }
 
-const app  = initializeApp(firebaseConfig)
-export const auth = getAuth(app)
-export const db   = getFirestore(app)
-export const rtdb = getDatabase(app)
+const app     = initializeApp(firebaseConfig)
+export const auth    = getAuth(app)
+export const db      = getFirestore(app)
+export const rtdb    = getDatabase(app)
 
 // ── Helpers ───────────────────────────────────────────────
 function distanceM(lat1, lon1, lat2, lon2) {
@@ -210,7 +210,7 @@ export function subscribeToMessages(eventId, callback) {
   return () => off(msgRef)
 }
 
-// ── Photos (base64 in Firestore) ──────────────────────────
+// ── Photos (base64 compressed in Firestore) ───────────────
 export async function uploadEventPhoto(file, eventId, index) {
   return new Promise((resolve) => {
     const reader = new FileReader()

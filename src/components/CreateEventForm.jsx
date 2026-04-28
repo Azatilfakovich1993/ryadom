@@ -142,14 +142,14 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     reader.onload = e => {
       const img = new Image()
       img.onload = () => {
-        const MAX = 1600
+        const MAX = 600
         let w = img.width, h = img.height
         if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
         if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
         const canvas = document.createElement('canvas')
         canvas.width = w; canvas.height = h
         canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.90))
+        resolve(canvas.toDataURL('image/jpeg', 0.50))
       }
       img.src = e.target.result
     }
