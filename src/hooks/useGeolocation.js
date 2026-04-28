@@ -112,11 +112,17 @@ export function useGeolocation(tg) {
 
     // Capacitor (Android APK)
     if (isCapacitor) {
-      Geolocation.requestPermissions().then(() =>
-        Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 })
-      ).then(pos => {
-        resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude })
-      }).catch(() => { setDenied(true); setLoading(false) })
+      Geolocation.requestPermissions()
+        .then(status => {
+          const granted = status?.location === 'granted' || status?.coarseLocation === 'granted'
+          if (!granted) { setDenied(true); setLoading(false); return }
+          return Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 })
+        })
+        .then(pos => {
+          if (!pos) return
+          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+        })
+        .catch(() => { setDenied(true); setLoading(false) })
       return
     }
 

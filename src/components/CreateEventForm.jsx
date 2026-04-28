@@ -148,9 +148,17 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
         if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
         const canvas = document.createElement('canvas')
         canvas.width = w; canvas.height = h
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.50))
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, w, h)
+        try {
+          ctx.drawImage(img, 0, 0, w, h)
+          resolve(canvas.toDataURL('image/jpeg', 0.50))
+        } catch {
+          resolve(e.target.result)
+        }
       }
+      img.onerror = () => resolve(e.target.result)
       img.src = e.target.result
     }
     reader.readAsDataURL(file)
@@ -369,8 +377,12 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             <label className="text-[11px] font-bold uppercase tracking-wider mb-2 block"
                    style={{ color: 'var(--accent)' }}>Фото (до 3-х)</label>
 
-            <input ref={galleryInputRef} type="file" accept="image/*" className="hidden"
-                   onChange={e => { addPhoto(e.target.files[0]); e.target.value = '' }} />
+            <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden"
+                   onChange={e => {
+                     const files = Array.from(e.target.files).slice(0, maxPhotos - photos.length)
+                     files.forEach(f => addPhoto(f))
+                     e.target.value = ''
+                   }} />
 
             <div className="flex gap-2 mb-2">
               {photoPreviews.map((preview, i) => (
