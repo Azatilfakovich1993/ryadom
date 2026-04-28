@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
-import imageCompression from 'browser-image-compression'
 
 const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
 
@@ -112,7 +111,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [video, setVideo]             = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
-  const maxPhotos = isBusiness ? 5 : 3
+  const maxPhotos = isBusiness ? 3 : 1
   const durations = isBusiness ? DURATIONS_BUSINESS : DURATIONS
   const [showCamera, setShowCamera] = useState(false)
   const galleryInputRef = useRef(null)
@@ -138,28 +137,12 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   }
 
   // ── Photos ─────────────────────────────────────────────────
-  const compressImage = async (file) => {
-    try {
-      const compressed = await imageCompression(file, {
-        maxSizeMB: 0.25,
-        maxWidthOrHeight: 800,
-        useWebWorker: false,
-        fileType: 'image/jpeg',
-        initialQuality: 0.6,
-      })
-      return new Promise(resolve => {
-        const reader = new FileReader()
-        reader.onload = e => resolve(e.target.result)
-        reader.readAsDataURL(compressed)
-      })
-    } catch {
-      return new Promise(resolve => {
-        const reader = new FileReader()
-        reader.onload = e => resolve(e.target.result)
-        reader.readAsDataURL(file)
-      })
-    }
-  }
+  const compressImage = (file) => new Promise(resolve => {
+    const reader = new FileReader()
+    reader.onload = e => resolve(e.target.result)
+    reader.onerror = () => resolve(null)
+    reader.readAsDataURL(file)
+  })
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
