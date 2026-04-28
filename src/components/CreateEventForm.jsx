@@ -3,6 +3,51 @@ import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
+function CameraCapture({ onCapture, onClose }) {
+  const videoRef  = useRef(null)
+  const streamRef = useRef(null)
+
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(stream => {
+        streamRef.current = stream
+        if (videoRef.current) videoRef.current.srcObject = stream
+      })
+      .catch(() => onClose())
+    return () => streamRef.current?.getTracks().forEach(t => t.stop())
+  }, [onClose])
+
+  const capture = () => {
+    const video = videoRef.current
+    if (!video) return
+    const canvas = document.createElement('canvas')
+    canvas.width  = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0)
+    canvas.toBlob(blob => {
+      streamRef.current?.getTracks().forEach(t => t.stop())
+      onCapture(new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' }))
+    }, 'image/jpeg', 0.88)
+  }
+
+  return (
+    <div className="absolute inset-0 z-[100] flex flex-col" style={{ background: '#000' }}>
+      <video ref={videoRef} autoPlay playsInline muted className="flex-1 w-full object-cover" />
+      <div className="flex items-center justify-between px-10 py-6" style={{ background: 'rgba(0,0,0,0.7)' }}>
+        <button type="button" onClick={onClose}
+                className="text-sm font-semibold px-4 py-2 rounded-2xl"
+                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
+          Отмена
+        </button>
+        <button type="button" onClick={capture}
+                className="w-16 h-16 rounded-full border-4 border-white transition active:scale-90"
+                style={{ background: 'rgba(255,255,255,0.9)' }} />
+        <div className="w-16" />
+      </div>
+    </div>
+  )
+}
+
 const DURATIONS = [
   { value: 1, label: '1 ч' },
   { value: 2, label: '2 ч' },
@@ -53,8 +98,8 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [useBusinessPin, setUseBusinessPin] = useState(false)
   const maxPhotos = isBusiness ? 5 : 3
   const durations = isBusiness ? DURATIONS_BUSINESS : DURATIONS
+  const [showCamera, setShowCamera] = useState(false)
   const galleryInputRef = useRef(null)
-  const cameraInputRef  = useRef(null)
   const videoInputRef   = useRef(null)
 
   // Address
@@ -230,6 +275,12 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
   return (
     <>
+      {showCamera && (
+        <CameraCapture
+          onCapture={file => { addPhoto(file); setShowCamera(false) }}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
       <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <SwipeToClose onClose={onClose}>
         <div className="flex justify-center pt-3 pb-1">
@@ -305,8 +356,6 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
             <input ref={galleryInputRef} type="file" accept="image/*" className="hidden"
                    onChange={e => { addPhoto(e.target.files[0]); e.target.value = '' }} />
-            <input ref={cameraInputRef} type="file" capture="environment" className="hidden"
-                   onChange={e => { addPhoto(e.target.files[0]); e.target.value = '' }} />
 
             <div className="flex gap-2 mb-2">
               {photoPreviews.map((preview, i) => (
@@ -331,7 +380,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
             </div>
 
             {photos.length < maxPhotos && (
-              <button type="button" onClick={() => cameraInputRef.current?.click()}
+              <button type="button" onClick={() => setShowCamera(true)}
                       className="flex items-center gap-2 text-sm py-2.5 px-4 rounded-2xl transition active:scale-95"
                       style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--bg-3)' }}>
                 <span>📸</span>
