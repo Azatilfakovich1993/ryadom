@@ -305,7 +305,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
             <input ref={galleryInputRef} type="file" accept="image/*" className="hidden"
                    onChange={e => { addPhoto(e.target.files[0]); e.target.value = '' }} />
-            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+            <input ref={cameraInputRef} type="file" capture="environment" className="hidden"
                    onChange={e => { addPhoto(e.target.files[0]); e.target.value = '' }} />
 
             <div className="flex gap-2 mb-2">
