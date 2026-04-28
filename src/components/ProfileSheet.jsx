@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
-import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, saveFeedback } from '../lib/firebase'
+import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, saveFeedback, deleteAccount } from '../lib/firebase'
 import { ACHIEVEMENTS, getAllUnlocked } from '../utils/achievements'
 
 function FeedbackForm({ profile, onClose }) {
@@ -159,6 +159,8 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin, on
   const [city, setCity]               = useState('')
   const [avatar, setAvatar]           = useState(null)
   const [saving, setSaving]           = useState(false)
+  const [deleteStep, setDeleteStep]   = useState(0)
+  const [deleting, setDeleting]       = useState(false)
   const [showEvents, setShowEvents]   = useState(false)
   const [deletingId, setDeletingId]   = useState(null)
   const avatarInputRef = useRef(null)
@@ -518,6 +520,70 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin, on
                   style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.2)' }}>
             Выйти из аккаунта
           </button>
+
+          {/* Delete account */}
+          <div className="mt-2">
+            {deleteStep === 0 && (
+              <button onClick={() => setDeleteStep(1)}
+                      className="w-full py-2.5 rounded-2xl text-xs font-semibold transition active:scale-95"
+                      style={{ background: 'transparent', color: 'var(--hint)', border: '1px solid var(--bg-3)' }}>
+                Удалить аккаунт
+              </button>
+            )}
+            {deleteStep === 1 && (
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
+                <p className="text-sm font-semibold mb-3 text-center" style={{ color: 'var(--danger)' }}>
+                  ⚠️ Удалить аккаунт?
+                </p>
+                <p className="text-xs mb-3 text-center" style={{ color: 'var(--hint)' }}>
+                  Все ваши данные, события и сообщения будут удалены безвозвратно
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setDeleteStep(0)}
+                          className="flex-1 py-2 rounded-xl text-xs font-semibold transition active:scale-95"
+                          style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>
+                    Отмена
+                  </button>
+                  <button onClick={() => setDeleteStep(2)}
+                          className="flex-1 py-2 rounded-xl text-xs font-bold transition active:scale-95"
+                          style={{ background: 'rgba(248,113,113,0.2)', color: 'var(--danger)' }}>
+                    Да, удалить
+                  </button>
+                </div>
+              </div>
+            )}
+            {deleteStep === 2 && (
+              <div className="rounded-2xl p-4" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)' }}>
+                <p className="text-sm font-bold mb-2 text-center" style={{ color: 'var(--danger)' }}>
+                  🚨 Последнее предупреждение
+                </p>
+                <p className="text-xs mb-3 text-center" style={{ color: 'var(--hint)' }}>
+                  Это действие нельзя отменить. Вы уверены?
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setDeleteStep(0)}
+                          className="flex-1 py-2 rounded-xl text-xs font-semibold transition active:scale-95"
+                          style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>
+                    Отмена
+                  </button>
+                  <button onClick={async () => {
+                            setDeleting(true)
+                            try {
+                              const uid = authUser.uid ?? authUser.id
+                              await deleteAccount(uid)
+                              localStorage.clear()
+                              onSignOut()
+                            } catch { setDeleting(false); setDeleteStep(0) }
+                          }}
+                          disabled={deleting}
+                          className="flex-1 py-2 rounded-xl text-xs font-black transition active:scale-95 disabled:opacity-50"
+                          style={{ background: 'var(--danger)', color: '#fff' }}>
+                    {deleting ? '⏳ Удаляю…' : '🗑 Удалить навсегда'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </ProfileSwipe>
     </>

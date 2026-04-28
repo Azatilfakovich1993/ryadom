@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  deleteUser,
 } from 'firebase/auth'
 import {
   getFirestore,
@@ -90,6 +91,11 @@ export async function signIn(username, password) {
 
 export async function signOut() {
   await firebaseSignOut(auth)
+}
+
+export async function deleteAccount(userId) {
+  await deleteDoc(doc(db, 'profiles', userId))
+  await deleteUser(auth.currentUser)
 }
 
 export { onAuthStateChanged }

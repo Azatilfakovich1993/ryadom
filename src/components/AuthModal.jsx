@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { signIn, signUp, checkUsername } from '../lib/firebase'
 import bridge from '@vkontakte/vk-bridge'
+import PrivacyPolicy from './PrivacyPolicy'
 
 function mapError(err) {
   const msg = err?.message ?? ''
@@ -32,6 +33,8 @@ export default function AuthModal({ onClose, onAuth }) {
   const [username, setUsername]       = useState(platform.username)
   const [displayName, setDisplayName] = useState(platform.name)
   const [password, setPassword]       = useState('')
+  const [agreed, setAgreed]           = useState(false)
+  const [showPolicy, setShowPolicy]   = useState(false)
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
 
@@ -61,6 +64,10 @@ export default function AuthModal({ onClose, onAuth }) {
     }
     if (mode === 'register' && !displayName.trim()) {
       setError('Укажи имя')
+      return
+    }
+    if (mode === 'register' && !agreed) {
+      setError('Необходимо согласиться с политикой конфиденциальности')
       return
     }
 
@@ -99,6 +106,7 @@ export default function AuthModal({ onClose, onAuth }) {
 
   return (
     <>
+      {showPolicy && <PrivacyPolicy onClose={() => setShowPolicy(false)} />}
       <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl"
            style={{
@@ -178,6 +186,28 @@ export default function AuthModal({ onClose, onAuth }) {
                    onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                    onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
           </div>
+
+          {mode === 'register' && (
+            <label className="flex items-start gap-3 mb-4 cursor-pointer">
+              <div onClick={() => setAgreed(v => !v)}
+                   className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 transition"
+                   style={{
+                     background: agreed ? 'var(--accent)' : 'var(--bg-2)',
+                     border: `1.5px solid ${agreed ? 'var(--accent)' : 'var(--bg-3)'}`,
+                   }}>
+                {agreed && <span style={{ color: '#111827', fontSize: 12, fontWeight: 900 }}>✓</span>}
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--hint)' }}>
+                Я ознакомился и согласен с{' '}
+                <button type="button" onClick={() => setShowPolicy(true)}
+                        className="underline transition"
+                        style={{ color: 'var(--accent)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 'inherit' }}>
+                  политикой конфиденциальности
+                </button>
+                {' '}и даю согласие на обработку персональных данных
+              </p>
+            </label>
+          )}
 
           {error && (
             <div className="mb-4 px-4 py-3 rounded-2xl text-sm"
