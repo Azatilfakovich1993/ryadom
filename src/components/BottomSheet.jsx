@@ -325,7 +325,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
   const [geocoding, setGeocoding]     = useState(false)
   const [saving, setSaving]           = useState(false)
   const addrDebounce                  = useRef(null)
-  const isOwner = authUser && event.creator_id === authUser.id
+  const isOwner = authUser && event.creator_id === (authUser.uid ?? authUser.id)
 
   useEffect(() => {
     if (!event.creator_id) return
