@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
+import imageCompression from 'browser-image-compression'
 
 const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
 
@@ -137,32 +138,28 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   }
 
   // ── Photos ─────────────────────────────────────────────────
-  const compressImage = (file) => new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const img = new Image()
-      img.onload = () => {
-        const MAX = 600
-        let w = img.width, h = img.height
-        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
-        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
-        const canvas = document.createElement('canvas')
-        canvas.width = w; canvas.height = h
-        const ctx = canvas.getContext('2d')
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, w, h)
-        try {
-          ctx.drawImage(img, 0, 0, w, h)
-          resolve(canvas.toDataURL('image/jpeg', 0.50))
-        } catch {
-          resolve(e.target.result)
-        }
-      }
-      img.onerror = () => resolve(e.target.result)
-      img.src = e.target.result
+  const compressImage = async (file) => {
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.25,
+        maxWidthOrHeight: 800,
+        useWebWorker: false,
+        fileType: 'image/jpeg',
+        initialQuality: 0.6,
+      })
+      return new Promise(resolve => {
+        const reader = new FileReader()
+        reader.onload = e => resolve(e.target.result)
+        reader.readAsDataURL(compressed)
+      })
+    } catch {
+      return new Promise(resolve => {
+        const reader = new FileReader()
+        reader.onload = e => resolve(e.target.result)
+        reader.readAsDataURL(file)
+      })
     }
-    reader.readAsDataURL(file)
-  })
+  }
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
