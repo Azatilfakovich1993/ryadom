@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 export const CATEGORY_CONFIG = {
   sport: { color: '#3b82f6', icon: '⚽', label: 'Спорт' },
   food:  { color: '#FFD700', icon: '🍽️', label: 'Еда'   },
-  chat:  { color: '#10b981', icon: '💬', label: 'Общение'},
+  chat:  { color: '#10b981', icon: '💬', label: 'Событие'},
   help:  { color: '#f43f5e', icon: '🆘', label: 'Помощь' },
 }
 

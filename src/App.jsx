@@ -124,7 +124,7 @@ function distanceM(lat1, lon1, lat2, lon2) {
 const CHIPS = [
   { key: 'sport', icon: '⚽', label: 'Спорт',   color: '#3b82f6' },
   { key: 'food',  icon: '🍕', label: 'Еда',     color: '#f59e0b' },
-  { key: 'chat',  icon: '💬', label: 'Общение', color: '#10b981' },
+  { key: 'chat',  icon: '💬', label: 'Событие', color: '#10b981' },
   { key: 'help',  icon: '🆘', label: 'Помощь',  color: '#f43f5e' },
 ]
 
