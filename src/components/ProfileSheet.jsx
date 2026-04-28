@@ -149,7 +149,7 @@ function compressAvatar(file) {
   })
 }
 
-export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) {
+export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin, onProfileUpdate }) {
   const [profile, setProfile]         = useState(null)
   const [myEvents, setMyEvents]       = useState([])
   const [showFeedback, setShowFeedback] = useState(false)
@@ -195,13 +195,16 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin }) 
         city: city.trim(),
         avatar_url: avatar,
       })
-      setProfile(prev => ({
-        ...prev,
+      const updated = {
+        ...profile,
         display_name: displayName.trim(),
         bio: bio.trim(),
         city: city.trim(),
         avatar_url: avatar,
-      }))
+      }
+      setProfile(updated)
+      localStorage.setItem('ryadom_profile', JSON.stringify(updated))
+      onProfileUpdate?.(updated)
       setEditing(false)
     } finally {
       setSaving(false)

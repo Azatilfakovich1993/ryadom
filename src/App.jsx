@@ -744,6 +744,7 @@ export default function App() {
             setShowProfile(false)
           }}
           onAdmin={() => { setShowProfile(false); setShowAdmin(true) }}
+          onProfileUpdate={p => setProfile(p)}
         />
       )}
 
