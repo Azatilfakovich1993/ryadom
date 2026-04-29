@@ -8,4 +8,14 @@ export default defineConfig(({ mode }) => ({
     host: true,
     port: 5173,
   },
+  optimizeDeps: {
+    include: ['@vkontakte/vk-bridge'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
 }))
