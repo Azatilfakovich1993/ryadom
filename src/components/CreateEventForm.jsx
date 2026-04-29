@@ -114,6 +114,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [photos, setPhotos]           = useState([])
   const [photoPreviews, setPhotoPreviews] = useState([])
   const [uploadingCount, setUploadingCount] = useState(0)
+  const photosRef = useRef([])
   const [video, setVideo]             = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
@@ -162,12 +163,13 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   }
 
   const addPhoto = async (file) => {
-    if (!file || photos.length >= maxPhotos) return
+    if (!file || photosRef.current.length >= maxPhotos) return
     setUploadingCount(n => n + 1)
     try {
       const url = await uploadToCloudinary(file)
-      setPhotos(prev => [...prev, url])
-      setPhotoPreviews(prev => [...prev, url])
+      photosRef.current = [...photosRef.current, url]
+      setPhotos([...photosRef.current])
+      setPhotoPreviews([...photosRef.current])
     } catch {
       alert('Не удалось загрузить фото. Проверьте интернет.')
     } finally {
@@ -176,9 +178,11 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   }
 
   const removePhoto = (i) => {
-    setPhotos(prev => prev.filter((_, idx) => idx !== i))
-    setPhotoPreviews(prev => prev.filter((_, idx) => idx !== i))
+    photosRef.current = photosRef.current.filter((_, idx) => idx !== i)
+    setPhotos([...photosRef.current])
+    setPhotoPreviews([...photosRef.current])
   }
+
 
   // ── Автосохранение черновика ──────────────────────────────
   useEffect(() => {
