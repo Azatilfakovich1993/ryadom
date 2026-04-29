@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSwipeDown } from '../hooks/useSwipeDown'
 import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
@@ -142,27 +143,32 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   }
 
   // ── Photos ─────────────────────────────────────────────────
-  const compressImage = async (file) => {
-    try {
-      const bitmap = await createImageBitmap(file)
-      const MAX = 1600
-      let w = bitmap.width, h = bitmap.height
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
-      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h)
-      bitmap.close()
-      return canvas.toDataURL('image/jpeg', 0.88)
-    } catch {
-      return new Promise(resolve => {
-        const reader = new FileReader()
-        reader.onload = e => resolve(e.target.result)
-        reader.onerror = () => resolve(null)
-        reader.readAsDataURL(file)
-      })
+  const compressImage = (file) => new Promise(resolve => {
+    const reader = new FileReader()
+    reader.onerror = () => resolve(null)
+    reader.onload = e => {
+      const img = new Image()
+      img.onerror = () => resolve(null)
+      img.onload = () => {
+        const MAX = 900
+        let w = img.naturalWidth || img.width
+        let h = img.naturalHeight || img.height
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#000'
+        ctx.fillRect(0, 0, w, h)
+        ctx.drawImage(img, 0, 0, w, h)
+        const result = canvas.toDataURL('image/jpeg', 0.78)
+        resolve(result.length > 100 ? result : null)
+      }
+      img.src = e.target.result
     }
-  }
+    reader.readAsDataURL(file)
+  })
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
@@ -628,18 +634,10 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 }
 
 function SwipeToClose({ onClose, children }) {
-  const [ty, setTy] = useState(0)
-  const startY = useRef(0)
-  const startTime = useRef(0)
+  const { handlers, style } = useSwipeDown(onClose, { threshold: 280, velocityThreshold: 0.9 })
 
   return (
-    <div onTouchStart={e => { if (e.target.closest('button,a,input,textarea,select')) return; startY.current = e.touches[0].clientY; startTime.current = Date.now() }}
-         onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
-         onTouchEnd={() => {
-           const velocity = ty / (Date.now() - startTime.current)
-           if (ty > 300 || (ty > 150 && velocity > 0.8)) onClose()
-           else setTy(0)
-         }}
+    <div {...handlers}
          style={{
            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
            borderRadius: '24px 24px 0 0',
@@ -648,8 +646,7 @@ function SwipeToClose({ onClose, children }) {
            boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
            paddingBottom: 'env(safe-area-inset-bottom, 20px)',
            maxHeight: '92vh', overflowY: 'auto',
-           transform: `translateY(${ty}px)`,
-           transition: ty === 0 ? 'transform 0.3s ease' : 'none',
+           ...style,
          }}>
       {children}
     </div>
