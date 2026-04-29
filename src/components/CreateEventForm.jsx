@@ -142,7 +142,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     reader.onload = e => {
       const img = new Image()
       img.onload = () => {
-        const MAX = 300
+        const MAX = 800
         let w = img.width, h = img.height
         if (w > h) { h = Math.round(h * MAX / w); w = MAX }
         else { w = Math.round(w * MAX / h); h = MAX }
@@ -152,7 +152,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
         ctx.fillStyle = '#111'
         ctx.fillRect(0, 0, w, h)
         ctx.drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.4))
+        resolve(canvas.toDataURL('image/jpeg', 0.65))
       }
       img.onerror = () => resolve(e.target.result)
       img.src = e.target.result
