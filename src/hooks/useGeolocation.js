@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import bridge from '@vkontakte/vk-bridge'
-import { Geolocation } from '@capacitor/geolocation'
 
 const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
 
@@ -112,17 +111,19 @@ export function useGeolocation(tg) {
 
     // Capacitor (Android APK)
     if (isCapacitor) {
-      Geolocation.requestPermissions()
-        .then(status => {
-          const granted = status?.location === 'granted' || status?.coarseLocation === 'granted'
-          if (!granted) { setDenied(true); setLoading(false); return }
-          return Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 })
-        })
-        .then(pos => {
-          if (!pos) return
-          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude })
-        })
-        .catch(() => { setDenied(true); setLoading(false) })
+      import('@capacitor/geolocation').then(({ Geolocation }) => {
+        Geolocation.requestPermissions()
+          .then(status => {
+            const granted = status?.location === 'granted' || status?.coarseLocation === 'granted'
+            if (!granted) { setDenied(true); setLoading(false); return null }
+            return Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 })
+          })
+          .then(pos => {
+            if (!pos) return
+            resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+          })
+          .catch(() => { setDenied(true); setLoading(false) })
+      }).catch(() => { setDenied(true); setLoading(false) })
       return
     }
 
