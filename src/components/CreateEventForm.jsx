@@ -111,10 +111,9 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [showRestoreBar, setShowRestoreBar] = useState(!!savedDraft?.title)
 
   // Photos & video
-  const [photos, setPhotos]           = useState([])
-  const [photoPreviews, setPhotoPreviews] = useState([])
-  const [uploadingCount, setUploadingCount] = useState(0)
-  const photosRef = useRef([])
+  const [photoFiles, setPhotoFiles]   = useState([]) // File objects for upload
+  const [photoPreviews, setPhotoPreviews] = useState([]) // blob URLs for display
+  const [uploading, setUploading]     = useState(false)
   const [video, setVideo]             = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
@@ -143,44 +142,36 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     setResolved(val)
   }
 
-  // ── Photos → Cloudinary ───────────────────────────────────
-  const uploadToCloudinary = async (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', 'ryadom')
-    formData.append('folder', 'ryadom_events')
-    const res = await fetch('https://api.cloudinary.com/v1_1/dp9jsepjg/image/upload', {
-      method: 'POST',
-      body: formData,
-    })
-    if (!res.ok) throw new Error('upload failed')
-    const data = await res.json()
-    return data.secure_url
-  }
-
-  const compressImage = async (file) => {
-    return uploadToCloudinary(file)
-  }
-
-  const addPhoto = async (file) => {
-    if (!file || photosRef.current.length >= maxPhotos) return
-    setUploadingCount(n => n + 1)
-    try {
-      const url = await uploadToCloudinary(file)
-      photosRef.current = [...photosRef.current, url]
-      setPhotos([...photosRef.current])
-      setPhotoPreviews([...photosRef.current])
-    } catch (err) {
-      alert('Ошибка загрузки фото: ' + (err?.message || err))
-    } finally {
-      setUploadingCount(n => n - 1)
-    }
+  // ── Photos: instant preview + Cloudinary on submit ────────
+  const addPhoto = (file) => {
+    if (!file || photoFiles.length >= maxPhotos) return
+    const preview = URL.createObjectURL(file)
+    setPhotoFiles(prev => [...prev, file])
+    setPhotoPreviews(prev => [...prev, preview])
   }
 
   const removePhoto = (i) => {
-    photosRef.current = photosRef.current.filter((_, idx) => idx !== i)
-    setPhotos([...photosRef.current])
-    setPhotoPreviews([...photosRef.current])
+    URL.revokeObjectURL(photoPreviews[i])
+    setPhotoFiles(prev => prev.filter((_, idx) => idx !== i))
+    setPhotoPreviews(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  const uploadAllToCloudinary = async (files) => {
+    const urls = []
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', 'ryadom')
+      formData.append('folder', 'ryadom_events')
+      const res = await fetch('https://api.cloudinary.com/v1_1/dp9jsepjg/image/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error('Ошибка загрузки фото')
+      const data = await res.json()
+      urls.push(data.secure_url)
+    }
+    return urls
   }
 
 
@@ -296,20 +287,32 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       coords = { lat: userLocation.lat, lon: userLocation.lon }
     }
     localStorage.removeItem(DRAFT_KEY)
+    let uploadedPhotos = []
+    if (photoFiles.length > 0) {
+      setUploading(true)
+      try {
+        uploadedPhotos = await uploadAllToCloudinary(photoFiles)
+      } catch (err) {
+        alert('Ошибка загрузки фото: ' + err.message)
+        setUploading(false)
+        return
+      }
+      setUploading(false)
+    }
     onSubmit({
       title: title.trim(),
       category,
       durationHours: duration,
       lat: coords.lat,
       lon: coords.lon,
-      photos,
+      photos: uploadedPhotos,
       video: null,
       chatEnabled,
       useBusinessPin: isBusiness && useBusinessPin,
     })
   }
 
-  const isSubmitting = loading || geocoding || uploadingCount > 0
+  const isSubmitting = loading || geocoding || uploading
 
   return (
     <>
@@ -403,19 +406,13 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                    style={{ color: 'var(--accent)' }}>Фото (до {maxPhotos})</label>
 
             <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden"
-                   onChange={async e => {
-                     const files = Array.from(e.target.files).slice(0, maxPhotos - photosRef.current.length)
-                     for (const f of files) await addPhoto(f)
+                   onChange={e => {
+                     const files = Array.from(e.target.files).slice(0, maxPhotos - photoFiles.length)
+                     files.forEach(f => addPhoto(f))
                      e.target.value = ''
                    }} />
 
             <div className="flex gap-2 mb-2">
-              {uploadingCount > 0 && (
-                <div className="flex-shrink-0 rounded-2xl flex items-center justify-center text-xs"
-                     style={{ width: 80, height: 80, background: 'var(--bg-2)', border: '1px dashed var(--accent)', color: 'var(--accent)' }}>
-                  ⏳
-                </div>
-              )}
               {photoPreviews.map((preview, i) => (
                 <div key={i} className="relative flex-shrink-0 rounded-2xl overflow-hidden"
                      style={{ width: 80, height: 80 }}>
@@ -612,7 +609,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                   onClick={e => { document.activeElement?.blur(); handleSubmit(e) }}
                   className="w-full py-4 rounded-2xl text-sm font-black transition active:scale-95 disabled:opacity-40"
                   style={{ background: 'var(--accent)', color: '#111827', boxShadow: '0 0 24px var(--accent-glow)' }}>
-            {uploadingCount > 0 ? `📸 Загружаю фото…` : geocoding ? '🔍 Определяю адрес…' : loading ? '⏳ Публикую…' : '🚀 Опубликовать'}
+            {uploading ? '📸 Загружаю фото…' : geocoding ? '🔍 Определяю адрес…' : loading ? '⏳ Публикую…' : '🚀 Опубликовать'}
           </button>
         </form>
       </SwipeToClose>
