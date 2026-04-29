@@ -8,13 +8,4 @@ export default defineConfig(({ mode }) => ({
     host: true,
     port: 5173,
   },
-  build: {
-    rollupOptions: {
-      external: mode === 'capacitor' ? [] : [
-        '@capacitor/geolocation',
-        '@capacitor/camera',
-        '@capacitor/app',
-      ],
-    },
-  },
 }))

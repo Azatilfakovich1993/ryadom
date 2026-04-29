@@ -109,20 +109,6 @@ export function useGeolocation(tg) {
       return
     }
 
-    // Capacitor (Android APK)
-    if (isCapacitor) {
-      import('@capacitor/geolocation').then(({ Geolocation }) => {
-        Geolocation.requestPermissions()
-          .then(status => {
-            const granted = status?.location === 'granted' || status?.coarseLocation === 'granted'
-            if (!granted) { setDenied(true); setLoading(false); return null }
-            return Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 })
-          })
-          .then(pos => { if (pos) resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }) })
-          .catch(() => { setDenied(true); setLoading(false) })
-      }).catch(() => doRequest())
-      return
-    }
 
     // VK Mini App
     if (bridge.isWebView?.()) {
