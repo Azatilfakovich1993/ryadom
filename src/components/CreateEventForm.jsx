@@ -424,7 +424,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                   </button>
                 </div>
               ))}
-              {photos.length < maxPhotos && (
+              {photoFiles.length < maxPhotos && (
                 <button type="button" onClick={() => galleryInputRef.current?.click()}
                         className="flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-2xl transition active:scale-95"
                         style={{ width: 80, height: 80, background: 'var(--bg-2)', border: '1.5px dashed var(--bg-3)', color: 'var(--hint)' }}>
@@ -434,7 +434,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
               )}
             </div>
 
-            {photos.length < maxPhotos && (
+            {photoFiles.length < maxPhotos && (
               <button type="button" onClick={async () => {
                 if (isCapacitor) {
                   try { const file = await takePhotoNative(); addPhoto(file) } catch {}
