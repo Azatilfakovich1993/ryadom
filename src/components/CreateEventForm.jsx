@@ -616,7 +616,9 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
           </div>
 
           {/* Кнопка */}
-          <button type="submit" disabled={!title.trim() || isSubmitting}
+          <button type="button"
+                  disabled={!title.trim() || isSubmitting}
+                  onClick={e => { document.activeElement?.blur(); handleSubmit(e) }}
                   className="w-full py-4 rounded-2xl text-sm font-black transition active:scale-95 disabled:opacity-40"
                   style={{ background: 'var(--accent)', color: '#111827', boxShadow: '0 0 24px var(--accent-glow)' }}>
             {geocoding ? '🔍 Определяю адрес…' : loading ? '⏳ Публикую…' : '🚀 Опубликовать'}
