@@ -3,6 +3,20 @@ import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
+const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
+
+async function takePhotoNative() {
+  const { Camera, CameraResultType, CameraSource } = await import(/* @vite-ignore */ '@capacitor/camera')
+  const image = await Camera.getPhoto({
+    quality: 85,
+    allowEditing: false,
+    resultType: CameraResultType.DataUrl,
+    source: CameraSource.Camera,
+  })
+  const res = await fetch(image.dataUrl)
+  const blob = await res.blob()
+  return new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' })
+}
 
 function CameraCapture({ onCapture, onClose }) {
   const videoRef  = useRef(null)
