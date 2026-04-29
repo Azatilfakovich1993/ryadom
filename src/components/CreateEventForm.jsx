@@ -141,55 +141,35 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     setResolved(val)
   }
 
-  // ── Photos ─────────────────────────────────────────────────
-  const compressImage = async (file) => {
-    const MAX = 900
-
-    const tryCanvas = (source, w, h) => {
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(source, 0, 0, w, h)
-      return canvas.toDataURL('image/jpeg', 0.82)
-    }
-
-    try {
-      const bitmap = await createImageBitmap(file)
-      let w = bitmap.width, h = bitmap.height
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
-      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
-      const result = tryCanvas(bitmap, w, h)
-      bitmap.close()
-      if (result) return result
-    } catch {}
-
-    // Fallback: FileReader + Image
-    return new Promise(resolve => {
-      const reader = new FileReader()
-      reader.onerror = () => resolve(null)
-      reader.onload = e => {
-        const img = new Image()
-        img.onerror = () => resolve(null)
-        img.onload = () => {
-          let w = img.naturalWidth || img.width
-          let h = img.naturalHeight || img.height
-          if (!w || !h) { resolve(null); return }
-          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
-          if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
-          resolve(tryCanvas(img, w, h) || e.target.result)
-        }
-        img.src = e.target.result
-      }
-      reader.readAsDataURL(file)
+  // ── Photos → Cloudinary ───────────────────────────────────
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'ryadom')
+    formData.append('folder', 'ryadom_events')
+    const res = await fetch('https://api.cloudinary.com/v1_1/dp9jsepjg/image/upload', {
+      method: 'POST',
+      body: formData,
     })
+    if (!res.ok) throw new Error('upload failed')
+    const data = await res.json()
+    return data.secure_url
+  }
+
+  const compressImage = async (file) => {
+    return uploadToCloudinary(file)
   }
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
-    let dataUrl = await compressImage(file)
-    if (!dataUrl) dataUrl = await compressImage(file) // retry once
-    if (!dataUrl) return
-    setPhotos(prev => [...prev, dataUrl])
-    setPhotoPreviews(prev => [...prev, dataUrl])
+    try {
+      const url = await uploadToCloudinary(file)
+      setPhotos(prev => [...prev, url])
+      setPhotoPreviews(prev => [...prev, url])
+    } catch {
+      // Show error toast via alert fallback
+      alert('Не удалось загрузить фото. Проверьте интернет.')
+    }
   }
 
   const removePhoto = (i) => {
