@@ -215,9 +215,15 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
         </span>
       </div>
 
-      {/* Фото поверх — на весь экран */}
+      {/* Фото — верхняя половина карточки */}
       {hasPhoto && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+        <div style={{
+          position: 'absolute', top: 16, left: 16, right: 16,
+          height: '45%', zIndex: 2,
+          borderRadius: 16, overflow: 'hidden',
+          border: '1.5px solid rgba(255,255,255,0.15)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        }}>
           <PhotoSlider photos={event.photos} onOpenLightbox={onOpenLightbox} />
         </div>
       )}
