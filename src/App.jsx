@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import bridge from '@vkontakte/vk-bridge'
+import { App as CapApp } from '@capacitor/app'
 import MapComponent from './components/MapComponent'
 import FeedView from './components/FeedView'
 import BottomSheet from './components/BottomSheet'
@@ -177,6 +178,33 @@ export default function App() {
   const [vkInsetTop, setVkInsetTop]         = useState(0)
   const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
+
+  // ── Android back button ──────────────────────────────────
+  const lastBackPress = useRef(0)
+  useEffect(() => {
+    const isCapacitor = window.Capacitor?.isNativePlatform?.()
+    if (!isCapacitor) return
+    const handler = CapApp.addListener('backButton', () => {
+      // Закрываем открытые экраны по порядку
+      if (showAdmin)    { setShowAdmin(false);    return }
+      if (showProfile)  { setShowProfile(false);  return }
+      if (showAuth)     { setShowAuth(false);     return }
+      if (showCreate)   { setShowCreate(false);   return }
+      if (selectedEvent){ setSelectedEvent(null); return }
+      if (clusterEvents){ setClusterEvents(null); return }
+      if (showPremium)  { setShowPremium(false);  return }
+      if (mode === 'feed') { setMode('map');       return }
+      // На главном экране — двойное нажатие для выхода
+      const now = Date.now()
+      if (now - lastBackPress.current < 2000) {
+        CapApp.exitApp()
+      } else {
+        lastBackPress.current = now
+        showToast('Нажмите ещё раз для выхода', 'info')
+      }
+    })
+    return () => handler.then(h => h.remove())
+  }, [showAdmin, showProfile, showAuth, showCreate, selectedEvent, clusterEvents, showPremium, mode, showToast])
 
   // ── VK insets ────────────────────────────────────────────
   useEffect(() => {
