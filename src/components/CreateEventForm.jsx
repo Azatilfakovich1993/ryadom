@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useSwipeDown } from '../hooks/useSwipeDown'
 import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
@@ -634,20 +633,26 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 }
 
 function SwipeToClose({ onClose, children }) {
-  const { handlers, style } = useSwipeDown(onClose, { threshold: 280, velocityThreshold: 0.9 })
+  const [ty, setTy] = useState(0)
+  const startY = useRef(0)
+  const startTime = useRef(0)
 
   return (
-    <div {...handlers}
-         style={{
-           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
-           borderRadius: '24px 24px 0 0',
-           background: 'rgba(17,24,39,0.98)',
-           border: '1px solid var(--border)', borderBottom: 'none',
-           boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
-           paddingBottom: 'env(safe-area-inset-bottom, 20px)',
-           maxHeight: '92vh', overflowY: 'auto',
-           ...style,
-         }}>
+    <div
+      onTouchStart={e => { if (e.target.closest('button,a,input,textarea,select')) return; startY.current = e.touches[0].clientY; startTime.current = Date.now() }}
+      onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
+      onTouchEnd={() => { const v = ty / (Date.now() - startTime.current); if (ty > 280 || (ty > 120 && v > 0.9)) onClose(); else setTy(0) }}
+      style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
+        borderRadius: '24px 24px 0 0',
+        background: 'rgba(17,24,39,0.98)',
+        border: '1px solid var(--border)', borderBottom: 'none',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+        paddingBottom: 'env(safe-area-inset-bottom, 20px)',
+        maxHeight: '92vh', overflowY: 'auto',
+        transform: `translateY(${ty}px)`,
+        transition: ty === 0 ? 'transform 0.3s ease' : 'none',
+      }}>
       {children}
     </div>
   )
