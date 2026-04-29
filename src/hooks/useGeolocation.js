@@ -111,7 +111,7 @@ export function useGeolocation(tg) {
 
     // Capacitor (Android APK)
     if (isCapacitor) {
-      import('@capacitor/geolocation').then(({ Geolocation }) => {
+      import(/* @vite-ignore */ '@capacitor/geolocation').then(({ Geolocation }) => {
         Geolocation.requestPermissions()
           .then(status => {
             const granted = status?.location === 'granted' || status?.coarseLocation === 'granted'

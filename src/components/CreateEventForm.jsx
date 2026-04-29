@@ -6,7 +6,7 @@ import data from '@emoji-mart/data'
 const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
 
 async function takePhotoNative() {
-  const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
+  const { Camera, CameraResultType, CameraSource } = await import(/* @vite-ignore */ '@capacitor/camera')
   const image = await Camera.getPhoto({
     quality: 85,
     allowEditing: false,
