@@ -113,6 +113,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   // Photos & video
   const [photos, setPhotos]           = useState([])
   const [photoPreviews, setPhotoPreviews] = useState([])
+  const [uploadingCount, setUploadingCount] = useState(0)
   const [video, setVideo]             = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
@@ -162,13 +163,15 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
+    setUploadingCount(n => n + 1)
     try {
       const url = await uploadToCloudinary(file)
       setPhotos(prev => [...prev, url])
       setPhotoPreviews(prev => [...prev, url])
     } catch {
-      // Show error toast via alert fallback
       alert('Не удалось загрузить фото. Проверьте интернет.')
+    } finally {
+      setUploadingCount(n => n - 1)
     }
   }
 
@@ -302,7 +305,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     })
   }
 
-  const isSubmitting = loading || geocoding
+  const isSubmitting = loading || geocoding || uploadingCount > 0
 
   return (
     <>
@@ -403,6 +406,12 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                    }} />
 
             <div className="flex gap-2 mb-2">
+              {uploadingCount > 0 && (
+                <div className="flex-shrink-0 rounded-2xl flex items-center justify-center text-xs"
+                     style={{ width: 80, height: 80, background: 'var(--bg-2)', border: '1px dashed var(--accent)', color: 'var(--accent)' }}>
+                  ⏳
+                </div>
+              )}
               {photoPreviews.map((preview, i) => (
                 <div key={i} className="relative flex-shrink-0 rounded-2xl overflow-hidden"
                      style={{ width: 80, height: 80 }}>
@@ -599,7 +608,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                   onClick={e => { document.activeElement?.blur(); handleSubmit(e) }}
                   className="w-full py-4 rounded-2xl text-sm font-black transition active:scale-95 disabled:opacity-40"
                   style={{ background: 'var(--accent)', color: '#111827', boxShadow: '0 0 24px var(--accent-glow)' }}>
-            {geocoding ? '🔍 Определяю адрес…' : loading ? '⏳ Публикую…' : '🚀 Опубликовать'}
+            {uploadingCount > 0 ? `📸 Загружаю фото…` : geocoding ? '🔍 Определяю адрес…' : loading ? '⏳ Публикую…' : '🚀 Опубликовать'}
           </button>
         </form>
       </SwipeToClose>
