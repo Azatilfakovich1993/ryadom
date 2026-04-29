@@ -409,10 +409,10 @@ export default function App() {
       showToast('Событие опубликовано!')
       localStorage.setItem('ryadom_last_event', Date.now().toString())
       setShowCreateHint(false)
-      showAchievement('first_spark')
       const cnt = (profile?.events_count ?? 0) + 1
-      if (cnt >= 3)  showAchievement('activist')
-      if (cnt >= 10) showAchievement('legend')
+      if (cnt === 1) showAchievement('first_spark')
+      if (cnt === 3) showAchievement('activist')
+      if (cnt === 10) showAchievement('legend')
       if (video) {
         try {
           const videoUrl = await uploadEventVideo(video, event.id)

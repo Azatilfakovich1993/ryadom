@@ -142,29 +142,27 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   }
 
   // ── Photos ─────────────────────────────────────────────────
-  const compressImage = (file) => new Promise(resolve => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const img = new Image()
-      img.onload = () => {
-        const MAX = 1600
-        let w = img.width, h = img.height
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX }
-        else { w = Math.round(w * MAX / h); h = MAX }
-        const canvas = document.createElement('canvas')
-        canvas.width = w; canvas.height = h
-        const ctx = canvas.getContext('2d')
-        ctx.fillStyle = '#111'
-        ctx.fillRect(0, 0, w, h)
-        ctx.drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.88))
-      }
-      img.onerror = () => resolve(e.target.result)
-      img.src = e.target.result
+  const compressImage = async (file) => {
+    try {
+      const bitmap = await createImageBitmap(file)
+      const MAX = 1600
+      let w = bitmap.width, h = bitmap.height
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
+      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h)
+      bitmap.close()
+      return canvas.toDataURL('image/jpeg', 0.88)
+    } catch {
+      return new Promise(resolve => {
+        const reader = new FileReader()
+        reader.onload = e => resolve(e.target.result)
+        reader.onerror = () => resolve(null)
+        reader.readAsDataURL(file)
+      })
     }
-    reader.onerror = () => resolve(null)
-    reader.readAsDataURL(file)
-  })
+  }
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
@@ -321,7 +319,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
         {showRestoreBar && (
           <div className="mx-4 mb-2 px-4 py-2.5 rounded-2xl flex items-center gap-3"
                style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)' }}>
-            <span className="text-xs flex-1" style={{ color: 'var(--accent)' }}>📝 Восстановлен черновик</span>
+            <span className="text-xs flex-1" style={{ color: 'var(--accent)' }}>📝 Восстановлен черновик (фото не сохраняются)</span>
             <button type="button" onClick={() => {
               setTitle(''); setQuery(''); setCategory('chat'); setDuration(1)
               localStorage.removeItem(DRAFT_KEY); setShowRestoreBar(false)
