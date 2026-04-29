@@ -186,7 +186,9 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
   const addPhoto = async (file) => {
     if (!file || photos.length >= maxPhotos) return
-    const dataUrl = await compressImage(file)
+    let dataUrl = await compressImage(file)
+    if (!dataUrl) dataUrl = await compressImage(file) // retry once
+    if (!dataUrl) return
     setPhotos(prev => [...prev, dataUrl])
     setPhotoPreviews(prev => [...prev, dataUrl])
   }
@@ -315,7 +317,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       lat: coords.lat,
       lon: coords.lon,
       photos,
-      video: isBusiness ? video : null,
+      video: null,
       chatEnabled,
       useBusinessPin: isBusiness && useBusinessPin,
     })
