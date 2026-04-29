@@ -10,9 +10,11 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      },
+      external: mode === 'capacitor' ? [] : [
+        '@capacitor/geolocation',
+        '@capacitor/camera',
+        '@capacitor/app',
+      ],
     },
   },
 }))
