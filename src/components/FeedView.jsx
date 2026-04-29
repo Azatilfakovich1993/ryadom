@@ -193,12 +193,22 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const { label: timeLabel, urgency } = useCountdown(event.expires_at)
   const hasPhoto = event.photos?.length > 0
+  const isBiz = !!event.creator_is_business
+  const bizColor = '#FFD700'
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#0a0f1e' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: isBiz ? '#0f0c00' : '#0a0f1e' }}>
 
       {/* Городская сетка с параллаксом */}
-      <CityBackground color={cfg.color} parallaxY={parallaxY} />
+      <CityBackground color={isBiz ? bizColor : cfg.color} parallaxY={parallaxY} />
+
+      {/* Золотое свечение для бизнеса */}
+      {isBiz && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(255,215,0,0.12) 0%, transparent 70%)',
+        }} />
+      )}
 
       {/* Голограмма — иконка категории */}
       <div style={{
@@ -209,7 +219,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
         <span style={{
           fontSize: 220,
           opacity: 0.13,
-          filter: `drop-shadow(0 0 30px ${cfg.color}) drop-shadow(0 0 60px ${cfg.color}) drop-shadow(0 0 100px ${cfg.color}88)`,
+          filter: `drop-shadow(0 0 30px ${isBiz ? bizColor : cfg.color}) drop-shadow(0 0 60px ${isBiz ? bizColor : cfg.color})`,
         }}>
           {cfg.icon}
         </span>
@@ -221,8 +231,8 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
           position: 'absolute', top: 16, left: 16, right: 16,
           height: '45%', zIndex: 2,
           borderRadius: 16, overflow: 'hidden',
-          border: '1.5px solid rgba(255,255,255,0.15)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          border: `1.5px solid ${isBiz ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.15)'}`,
+          boxShadow: isBiz ? '0 4px 20px rgba(255,215,0,0.2)' : '0 4px 20px rgba(0,0,0,0.5)',
         }}>
           <PhotoSlider photos={event.photos} onOpenLightbox={onOpenLightbox} />
         </div>
@@ -231,7 +241,7 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
       {/* Рамка по контуру */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 4,
-        boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.15)',
+        boxShadow: isBiz ? 'inset 0 0 0 2px rgba(255,215,0,0.35)' : 'inset 0 0 0 2px rgba(255,255,255,0.15)',
         pointerEvents: 'none',
       }} />
 
@@ -294,14 +304,14 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
         <button onClick={onViewDetails} style={{
           width: '100%', padding: '13px 0',
           borderRadius: 16, cursor: 'pointer',
-          background: 'rgba(17,24,39,0.75)',
-          border: `1.5px solid ${cfg.color}`,
-          color: '#fff',
+          background: isBiz ? 'rgba(255,215,0,0.15)' : 'rgba(17,24,39,0.75)',
+          border: `1.5px solid ${isBiz ? bizColor : cfg.color}`,
+          color: isBiz ? bizColor : '#fff',
           fontSize: 14, fontWeight: 900, letterSpacing: '0.08em',
-          boxShadow: `0 0 20px ${cfg.color}44`,
-          textShadow: `0 0 12px ${cfg.color}`,
+          boxShadow: `0 0 20px ${isBiz ? 'rgba(255,215,0,0.3)' : cfg.color + '44'}`,
+          textShadow: `0 0 12px ${isBiz ? bizColor : cfg.color}`,
         }}>
-          ПОДРОБНЕЕ →
+          {isBiz ? '⭐ ПОДРОБНЕЕ →' : 'ПОДРОБНЕЕ →'}
         </button>
       </div>
     </div>
@@ -391,10 +401,16 @@ export default function FeedView({ events, location, onViewEvent, onCreateEvent 
 
   const sorted = useMemo(() => {
     const radius = RADII[radiusIdx]
-    return events
+    const mapped = events
       .map(ev => ({ ...ev, dist: location ? distM(location.lat, location.lon, ev.lat, ev.lon) : null }))
       .filter(ev => ev.dist === null || ev.dist <= radius)
-      .sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity))
+    return mapped.sort((a, b) => {
+      const aIsBiz = !!a.creator_is_business && (a.dist === null || a.dist <= 500)
+      const bIsBiz = !!b.creator_is_business && (b.dist === null || b.dist <= 500)
+      if (aIsBiz && !bIsBiz) return -1
+      if (!aIsBiz && bIsBiz) return 1
+      return (a.dist ?? Infinity) - (b.dist ?? Infinity)
+    })
   }, [events, location, radiusIdx])
 
   const totalCards = sorted.length + 1
