@@ -19,15 +19,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Android back button — outside React/Vite bundling
-      ;(function() {
-        var lastBack = 0
-        document.addEventListener('backbutton', function() {
-          // Dispatch custom event for React to handle
-          window.dispatchEvent(new CustomEvent('ryadom_back'))
-        })
-      })()
-    </script>
   </body>
 </html>
