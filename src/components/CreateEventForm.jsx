@@ -150,9 +150,9 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       canvas.width = w; canvas.height = h
       const ctx = canvas.getContext('2d')
       ctx.drawImage(source, 0, 0, w, h)
-      // Check if image actually drew (sample center pixel)
+      // Only check alpha — dark images have rgb=0 but alpha=255
       const px = ctx.getImageData(Math.floor(w / 2), Math.floor(h / 2), 1, 1).data
-      if (px[0] === 0 && px[1] === 0 && px[2] === 0 && px[3] === 0) return null
+      if (px[3] === 0) return null
       return canvas.toDataURL('image/jpeg', 0.82)
     }
 
