@@ -181,28 +181,25 @@ export default function App() {
   // ── Android back button ──────────────────────────────────
   const lastBackPress = useRef(0)
   useEffect(() => {
-    if (!window.Capacitor?.isNativePlatform?.()) return
-    let listener = null
-    import('@capacitor/app').then(({ App: CapApp }) => {
-      listener = CapApp.addListener('backButton', () => {
-        if (showAdmin)    { setShowAdmin(false);    return }
-        if (showProfile)  { setShowProfile(false);  return }
-        if (showAuth)     { setShowAuth(false);     return }
-        if (showCreate)   { setShowCreate(false);   return }
-        if (selectedEvent){ setSelectedEvent(null); return }
-        if (clusterEvents){ setClusterEvents(null); return }
-        if (showPremium)  { setShowPremium(false);  return }
-        if (mode === 'feed') { setMode('map');       return }
-        const now = Date.now()
-        if (now - lastBackPress.current < 2000) {
-          CapApp.exitApp()
-        } else {
-          lastBackPress.current = now
-          showToast('Нажмите ещё раз для выхода', 'info')
-        }
-      })
-    }).catch(() => {})
-    return () => { listener?.then?.(h => h?.remove()) }
+    const handler = (e) => {
+      if (showAdmin)    { setShowAdmin(false);    return }
+      if (showProfile)  { setShowProfile(false);  return }
+      if (showAuth)     { setShowAuth(false);     return }
+      if (showCreate)   { setShowCreate(false);   return }
+      if (selectedEvent){ setSelectedEvent(null); return }
+      if (clusterEvents){ setClusterEvents(null); return }
+      if (showPremium)  { setShowPremium(false);  return }
+      if (mode === 'feed') { setMode('map');       return }
+      const now = Date.now()
+      if (now - lastBackPress.current < 2000) {
+        navigator.app?.exitApp?.()
+      } else {
+        lastBackPress.current = now
+        showToast('Нажмите ещё раз для выхода', 'info')
+      }
+    }
+    document.addEventListener('backbutton', handler)
+    return () => document.removeEventListener('backbutton', handler)
   }, [showAdmin, showProfile, showAuth, showCreate, selectedEvent, clusterEvents, showPremium, mode, showToast])
 
   // ── VK insets ────────────────────────────────────────────
