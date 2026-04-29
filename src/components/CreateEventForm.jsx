@@ -170,8 +170,8 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       photosRef.current = [...photosRef.current, url]
       setPhotos([...photosRef.current])
       setPhotoPreviews([...photosRef.current])
-    } catch {
-      alert('Не удалось загрузить фото. Проверьте интернет.')
+    } catch (err) {
+      alert('Ошибка загрузки фото: ' + (err?.message || err))
     } finally {
       setUploadingCount(n => n - 1)
     }
@@ -403,9 +403,9 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
                    style={{ color: 'var(--accent)' }}>Фото (до {maxPhotos})</label>
 
             <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden"
-                   onChange={e => {
-                     const files = Array.from(e.target.files).slice(0, maxPhotos - photos.length)
-                     files.forEach(f => addPhoto(f))
+                   onChange={async e => {
+                     const files = Array.from(e.target.files).slice(0, maxPhotos - photosRef.current.length)
+                     for (const f of files) await addPhoto(f)
                      e.target.value = ''
                    }} />
 
