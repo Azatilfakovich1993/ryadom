@@ -117,7 +117,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [video, setVideo]             = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
-  const maxPhotos = isBusiness ? 5 : 1
+  const maxPhotos = isBusiness ? 5 : 3
   const durations = isBusiness ? DURATIONS_BUSINESS : DURATIONS
   const [showCamera, setShowCamera] = useState(false)
   const galleryInputRef = useRef(null)
@@ -396,7 +396,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
           {/* Фото */}
           <div className="mb-4">
             <label className="text-[11px] font-bold uppercase tracking-wider mb-2 block"
-                   style={{ color: 'var(--accent)' }}>Фото (до 3-х)</label>
+                   style={{ color: 'var(--accent)' }}>Фото (до {maxPhotos})</label>
 
             <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden"
                    onChange={e => {

@@ -211,9 +211,12 @@ function SwipeableSheet({ onClose, children }) {
   const [translateY, setTranslateY] = useState(0)
   const isDragging = useRef(false)
 
+  const startTime = useRef(0)
+
   const onTouchStart = (e) => {
     if (e.target.closest('button,a,input,textarea,select')) return
     startY.current = e.touches[0].clientY
+    startTime.current = Date.now()
     isDragging.current = true
   }
 
@@ -225,7 +228,8 @@ function SwipeableSheet({ onClose, children }) {
 
   const onTouchEnd = () => {
     isDragging.current = false
-    if (translateY > 100) {
+    const velocity = translateY / Math.max(1, Date.now() - startTime.current)
+    if (translateY > 220 || (translateY > 80 && velocity > 0.8)) {
       onClose()
     } else {
       setTranslateY(0)
