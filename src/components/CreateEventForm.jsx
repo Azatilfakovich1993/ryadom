@@ -111,7 +111,8 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [showRestoreBar, setShowRestoreBar] = useState(!!savedDraft?.title)
 
   // Photos & video
-  const [photoFiles, setPhotoFiles]   = useState([]) // File objects for upload
+  const [photoFiles, setPhotoFiles]   = useState([]) // for UI (length check)
+  const photoFilesRef = useRef([])                   // always up-to-date for submit
   const [photoPreviews, setPhotoPreviews] = useState([]) // blob URLs for display
   const [uploading, setUploading]     = useState(false)
   const [video, setVideo]             = useState(null)
@@ -144,15 +145,16 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
   // ── Photos: instant preview + Cloudinary on submit ────────
   const addPhoto = (file) => {
-    if (!file || photoFiles.length >= maxPhotos) return
-    const preview = URL.createObjectURL(file)
-    setPhotoFiles(prev => [...prev, file])
-    setPhotoPreviews(prev => [...prev, preview])
+    if (!file || photoFilesRef.current.length >= maxPhotos) return
+    photoFilesRef.current = [...photoFilesRef.current, file]
+    setPhotoFiles([...photoFilesRef.current])
+    setPhotoPreviews(prev => [...prev, URL.createObjectURL(file)])
   }
 
   const removePhoto = (i) => {
     URL.revokeObjectURL(photoPreviews[i])
-    setPhotoFiles(prev => prev.filter((_, idx) => idx !== i))
+    photoFilesRef.current = photoFilesRef.current.filter((_, idx) => idx !== i)
+    setPhotoFiles([...photoFilesRef.current])
     setPhotoPreviews(prev => prev.filter((_, idx) => idx !== i))
   }
 
@@ -288,10 +290,10 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     }
     localStorage.removeItem(DRAFT_KEY)
     let uploadedPhotos = []
-    if (photoFiles.length > 0) {
+    if (photoFilesRef.current.length > 0) {
       setUploading(true)
       try {
-        uploadedPhotos = await uploadAllToCloudinary(photoFiles)
+        uploadedPhotos = await uploadAllToCloudinary(photoFilesRef.current)
       } catch (err) {
         alert('Ошибка загрузки фото: ' + err.message)
         setUploading(false)
