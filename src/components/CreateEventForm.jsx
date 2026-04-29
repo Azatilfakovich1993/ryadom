@@ -637,7 +637,7 @@ function SwipeToClose({ onClose, children }) {
          onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
          onTouchEnd={() => {
            const velocity = ty / (Date.now() - startTime.current)
-           if (ty > 200 || (ty > 80 && velocity > 0.5)) onClose()
+           if (ty > 300 || (ty > 150 && velocity > 0.8)) onClose()
            else setTy(0)
          }}
          style={{
