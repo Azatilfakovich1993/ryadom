@@ -178,30 +178,6 @@ export default function App() {
   const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
 
-  // ── Android back button ──────────────────────────────────
-  const lastBackPress = useRef(0)
-  useEffect(() => {
-    const handler = (e) => {
-      if (showAdmin)    { setShowAdmin(false);    return }
-      if (showProfile)  { setShowProfile(false);  return }
-      if (showAuth)     { setShowAuth(false);     return }
-      if (showCreate)   { setShowCreate(false);   return }
-      if (selectedEvent){ setSelectedEvent(null); return }
-      if (clusterEvents){ setClusterEvents(null); return }
-      if (showPremium)  { setShowPremium(false);  return }
-      if (mode === 'feed') { setMode('map');       return }
-      const now = Date.now()
-      if (now - lastBackPress.current < 2000) {
-        navigator.app?.exitApp?.()
-      } else {
-        lastBackPress.current = now
-        showToast('Нажмите ещё раз для выхода', 'info')
-      }
-    }
-    document.addEventListener('backbutton', handler)
-    return () => document.removeEventListener('backbutton', handler)
-  }, [showAdmin, showProfile, showAuth, showCreate, selectedEvent, clusterEvents, showPremium, mode, showToast])
-
   // ── VK insets ────────────────────────────────────────────
   useEffect(() => {
     // Определяем VK по наличию vk_* параметров в URL или bridge
@@ -433,10 +409,10 @@ export default function App() {
       showToast('Событие опубликовано!')
       localStorage.setItem('ryadom_last_event', Date.now().toString())
       setShowCreateHint(false)
+      showAchievement('first_spark')
       const cnt = (profile?.events_count ?? 0) + 1
-      if (cnt === 1) showAchievement('first_spark')
-      if (cnt === 3) showAchievement('activist')
-      if (cnt === 10) showAchievement('legend')
+      if (cnt >= 3)  showAchievement('activist')
+      if (cnt >= 10) showAchievement('legend')
       if (video) {
         try {
           const videoUrl = await uploadEventVideo(video, event.id)
