@@ -139,7 +139,24 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   // ── Photos ─────────────────────────────────────────────────
   const compressImage = (file) => new Promise(resolve => {
     const reader = new FileReader()
-    reader.onload = e => resolve(e.target.result)
+    reader.onload = e => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 300
+        let w = img.width, h = img.height
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX }
+        else { w = Math.round(w * MAX / h); h = MAX }
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#111'
+        ctx.fillRect(0, 0, w, h)
+        ctx.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.4))
+      }
+      img.onerror = () => resolve(e.target.result)
+      img.src = e.target.result
+    }
     reader.onerror = () => resolve(null)
     reader.readAsDataURL(file)
   })
