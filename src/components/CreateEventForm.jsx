@@ -144,44 +144,47 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   // ── Photos ─────────────────────────────────────────────────
   const compressImage = async (file) => {
     const MAX = 900
-    const drawToCanvas = (source, w, h) => {
+
+    const tryCanvas = (source, w, h) => {
       const canvas = document.createElement('canvas')
       canvas.width = w; canvas.height = h
       const ctx = canvas.getContext('2d')
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, w, h)
       ctx.drawImage(source, 0, 0, w, h)
+      // Check if image actually drew (sample center pixel)
+      const px = ctx.getImageData(Math.floor(w / 2), Math.floor(h / 2), 1, 1).data
+      if (px[0] === 0 && px[1] === 0 && px[2] === 0 && px[3] === 0) return null
       return canvas.toDataURL('image/jpeg', 0.82)
     }
-    // createImageBitmap handles EXIF rotation correctly
+
     try {
       const bitmap = await createImageBitmap(file)
       let w = bitmap.width, h = bitmap.height
       if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
       if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
-      const result = drawToCanvas(bitmap, w, h)
+      const result = tryCanvas(bitmap, w, h)
       bitmap.close()
-      return result
-    } catch {
-      // Fallback for unsupported formats
-      return new Promise(resolve => {
-        const reader = new FileReader()
-        reader.onerror = () => resolve(null)
-        reader.onload = e => {
-          const img = new Image()
-          img.onerror = () => resolve(null)
-          img.onload = () => {
-            let w = img.naturalWidth || img.width
-            let h = img.naturalHeight || img.height
-            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
-            if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
-            resolve(drawToCanvas(img, w, h))
-          }
-          img.src = e.target.result
+      if (result) return result
+    } catch {}
+
+    // Fallback: FileReader + Image
+    return new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onerror = () => resolve(null)
+      reader.onload = e => {
+        const img = new Image()
+        img.onerror = () => resolve(null)
+        img.onload = () => {
+          let w = img.naturalWidth || img.width
+          let h = img.naturalHeight || img.height
+          if (!w || !h) { resolve(null); return }
+          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
+          if (h > MAX) { w = Math.round(w * MAX / h); h = MAX }
+          resolve(tryCanvas(img, w, h) || e.target.result)
         }
-        reader.readAsDataURL(file)
-      })
-    }
+        img.src = e.target.result
+      }
+      reader.readAsDataURL(file)
+    })
   }
 
   const addPhoto = async (file) => {
