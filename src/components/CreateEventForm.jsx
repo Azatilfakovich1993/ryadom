@@ -98,12 +98,17 @@ function geocodeAddress(address, userLocation) {
   })
 }
 
+const DRAFT_KEY = 'ryadom_event_draft'
+
 export default function CreateEventForm({ onSubmit, onClose, loading, userLocation, isBusiness = false }) {
-  const [title, setTitle]       = useState('')
-  const [category, setCategory] = useState('chat')
-  const [duration, setDuration] = useState(1)
-  const [chatEnabled, setChatEnabled] = useState(true)
+  const savedDraft = (() => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') } catch { return null } })()
+
+  const [title, setTitle]       = useState(savedDraft?.title || '')
+  const [category, setCategory] = useState(savedDraft?.category || 'chat')
+  const [duration, setDuration] = useState(savedDraft?.duration || 1)
+  const [chatEnabled, setChatEnabled] = useState(savedDraft?.chatEnabled ?? true)
   const [showEmoji, setShowEmoji] = useState(false)
+  const [showRestoreBar, setShowRestoreBar] = useState(!!savedDraft?.title)
 
   // Photos & video
   const [photos, setPhotos]           = useState([])
@@ -118,7 +123,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const videoInputRef   = useRef(null)
 
   // Address
-  const [query, setQuery]             = useState('')
+  const [query, setQuery]             = useState(savedDraft?.address || '')
   const [suggestions, setSuggestions] = useState([])
   const [showSug, setShowSug]         = useState(false)
   const [resolved, setResolved]       = useState(null)
@@ -172,6 +177,12 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
     setPhotos(prev => prev.filter((_, idx) => idx !== i))
     setPhotoPreviews(prev => prev.filter((_, idx) => idx !== i))
   }
+
+  // ── Автосохранение черновика ──────────────────────────────
+  useEffect(() => {
+    if (!title && !query) return
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, category, duration, chatEnabled, address: query }))
+  }, [title, category, duration, chatEnabled, query])
 
   const addVideo = (file) => {
     if (!file) return
@@ -278,6 +289,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
       if (!userLocation) { setAddrError('Укажите адрес или разрешите геолокацию'); return }
       coords = { lat: userLocation.lat, lon: userLocation.lon }
     }
+    localStorage.removeItem(DRAFT_KEY)
     onSubmit({
       title: title.trim(),
       category,
@@ -306,6 +318,16 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-9 h-[3px] rounded-full" style={{ background: 'var(--bg-3)' }} />
         </div>
+        {showRestoreBar && (
+          <div className="mx-4 mb-2 px-4 py-2.5 rounded-2xl flex items-center gap-3"
+               style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)' }}>
+            <span className="text-xs flex-1" style={{ color: 'var(--accent)' }}>📝 Восстановлен черновик</span>
+            <button type="button" onClick={() => {
+              setTitle(''); setQuery(''); setCategory('chat'); setDuration(1)
+              localStorage.removeItem(DRAFT_KEY); setShowRestoreBar(false)
+            }} className="text-xs" style={{ color: 'var(--hint)' }}>Очистить</button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="px-5 pt-3 pb-4"
               onClick={() => showEmoji && setShowEmoji(false)}>
