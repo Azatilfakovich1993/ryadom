@@ -116,7 +116,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const [video, setVideo]             = useState(null)
   const [videoPreview, setVideoPreview] = useState(null)
   const [useBusinessPin, setUseBusinessPin] = useState(false)
-  const maxPhotos = isBusiness ? 3 : 1
+  const maxPhotos = isBusiness ? 5 : 1
   const durations = isBusiness ? DURATIONS_BUSINESS : DURATIONS
   const [showCamera, setShowCamera] = useState(false)
   const galleryInputRef = useRef(null)
@@ -461,27 +461,6 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
               </button>
             )}
 
-            {/* Бизнес: видео */}
-            {isBusiness && (
-              <div className="mt-1">
-                {!videoPreview ? (
-                  <button type="button" onClick={() => videoInputRef.current?.click()}
-                          className="flex items-center gap-2 text-sm py-2.5 px-4 rounded-2xl transition active:scale-95"
-                          style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--bg-3)' }}>
-                    <span>🎬</span><span>Добавить видео (до 50 МБ)</span>
-                  </button>
-                ) : (
-                  <div className="relative rounded-2xl overflow-hidden" style={{ height: 140 }}>
-                    <video src={videoPreview} className="w-full h-full object-cover" controls />
-                    <button type="button" onClick={() => { setVideo(null); setVideoPreview(null) }}
-                            className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                            style={{ background: 'rgba(0,0,0,0.75)', color: '#fff' }}>✕</button>
-                  </div>
-                )}
-                <input ref={videoInputRef} type="file" accept="video/*" className="hidden"
-                       onChange={e => addVideo(e.target.files[0])} />
-              </div>
-            )}
 
             {/* Бизнес: золотой пин */}
             {isBusiness && (
