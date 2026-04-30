@@ -623,12 +623,29 @@ function SwipeToClose({ onClose, children }) {
   const [ty, setTy] = useState(0)
   const startY = useRef(0)
   const startTime = useRef(0)
+  const isDragging = useRef(false)
 
   return (
     <div
-      onTouchStart={e => { if (e.target.closest('button,a,input,textarea,select')) return; startY.current = e.touches[0].clientY; startTime.current = Date.now() }}
-      onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
-      onTouchEnd={() => { const v = ty / (Date.now() - startTime.current); if (ty > 280 || (ty > 120 && v > 0.9)) onClose(); else setTy(0) }}
+      onTouchStart={e => {
+        if (e.target.closest('button,a,input,textarea,select')) return
+        startY.current = e.touches[0].clientY
+        startTime.current = Date.now()
+        isDragging.current = true
+      }}
+      onTouchMove={e => {
+        if (!isDragging.current) return
+        const d = e.touches[0].clientY - startY.current
+        if (d > 0) setTy(d)
+      }}
+      onTouchEnd={() => {
+        if (!isDragging.current) return
+        isDragging.current = false
+        const elapsed = Math.max(1, Date.now() - startTime.current)
+        const velocity = ty / elapsed
+        if (ty > 300 || (ty > 150 && velocity > 0.6)) onClose()
+        else setTy(0)
+      }}
       style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
         borderRadius: '24px 24px 0 0',
