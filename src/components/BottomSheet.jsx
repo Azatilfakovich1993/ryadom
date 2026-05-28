@@ -256,6 +256,7 @@ function EventChat({ event, user, authUser }) {
             🔒 Войдите в аккаунт чтобы написать
           </div>
         ) : (
+          <>
           {replyTo && (
             <div className="flex items-center gap-2 px-3 py-2"
                  style={{ borderTop: '1px solid var(--bg-3)', background: 'var(--bg-2)' }}>
@@ -291,6 +292,7 @@ function EventChat({ event, user, authUser }) {
               </svg>
             </button>
           </form>
+          </>
         )}
       </div>
       )}
