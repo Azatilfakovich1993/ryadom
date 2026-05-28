@@ -595,6 +595,7 @@ function ProfileSwipe({ onClose, children }) {
   const startY = useRef(0)
   const startTime = useRef(0)
   const dragging = useRef(false)
+  const activated = useRef(false)
 
   return (
     <div
@@ -603,19 +604,24 @@ function ProfileSwipe({ onClose, children }) {
         startY.current = e.touches[0].clientY
         startTime.current = Date.now()
         dragging.current = true
+        activated.current = false
       }}
       onTouchMove={e => {
         if (!dragging.current) return
         const d = e.touches[0].clientY - startY.current
-        if (d > 0) setTy(d)
+        if (d < 15) return // мёртвая зона — не реагируем на случайные касания
+        activated.current = true
+        if (d > 0) setTy(d - 15)
       }}
       onTouchEnd={() => {
         if (!dragging.current) return
         dragging.current = false
+        if (!activated.current) { setTy(0); return }
         const elapsed = Math.max(1, Date.now() - startTime.current)
         const velocity = ty / elapsed
-        if (ty > 250 || (ty > 100 && velocity > 0.6)) onClose()
+        if (ty > 220 || (ty > 80 && velocity > 0.6)) onClose()
         else setTy(0)
+        activated.current = false
       }}
       className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
       style={{
