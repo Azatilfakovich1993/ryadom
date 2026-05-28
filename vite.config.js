@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'capacitor' ? '/' : '/ryadom/',
+  base: (mode === 'capacitor' || mode === 'firebase') ? '/' : '/ryadom/',
   server: {
     host: true,
     port: 5173,
