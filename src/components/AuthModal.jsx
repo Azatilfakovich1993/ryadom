@@ -54,8 +54,8 @@ export default function AuthModal({ onClose, onAuth }) {
     setError('')
     const uname = username.trim().toLowerCase()
 
-    if (!/^[a-z0-9_]{3,20}$/.test(uname)) {
-      setError('Логин: 3-20 символов, только буквы a-z, цифры, _')
+    if (!/^[a-z0-9_.]{3,20}$/.test(uname)) {
+      setError('Логин: 3-20 символов, только латинские буквы, цифры, _ и .')
       return
     }
     if (password.length < 6) {
@@ -165,15 +165,15 @@ export default function AuthModal({ onClose, onAuth }) {
           <div className="mb-3">
             <label className="text-[11px] font-bold uppercase tracking-wider mb-2 block"
                    style={{ color: 'var(--accent)' }}>Логин</label>
-            <input value={username} onChange={e => setUsername(e.target.value.slice(0, 20))}
-                   placeholder="kolya_izh"
+            <input value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, '').slice(0, 20))}
+                   placeholder="ivan.ivanov"
                    autoCapitalize="none"
                    className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
                    style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--bg-3)' }}
                    onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                    onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
             {mode === 'register' && (
-              <p className="text-xs mt-1" style={{ color: 'var(--hint)' }}>Только буквы a–z, цифры, _  ·  3–20 символов</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--hint)' }}>Латинские буквы, цифры, _ и .  ·  3–20 символов</p>
             )}
           </div>
 
