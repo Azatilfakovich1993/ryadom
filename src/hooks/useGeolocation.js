@@ -36,7 +36,10 @@ async function getYandexLocation() {
 }
 
 export function useGeolocation(tg) {
-  const [location, setLocation] = useState(null)
+  const MOSCOW = { lat: 55.7558, lon: 37.6176 }
+  const cachedLoc = (() => { try { return JSON.parse(localStorage.getItem('ryadom_last_location') || 'null') } catch { return null } })()
+  const [location, setLocation] = useState(cachedLoc ?? MOSCOW)
+  const [approximate, setApproximate] = useState(!cachedLoc)
   const [error, setError]       = useState(null)
   const [loading, setLoading]   = useState(true)
   const [denied, setDenied]     = useState(false)
@@ -52,8 +55,10 @@ export function useGeolocation(tg) {
       if (resolvedRef.current) return
       resolvedRef.current = true
       setLocation(loc)
+      setApproximate(false)
       setDenied(false)
       setLoading(false)
+      localStorage.setItem('ryadom_last_location', JSON.stringify(loc))
     }
 
     const doRequest = () => {
@@ -61,17 +66,16 @@ export function useGeolocation(tg) {
         setDenied(true); setLoading(false); return
       }
 
-      // Таймер: если за 3 сек браузер не ответил — Яндекс геолокация
+      // Таймер: если за 8 сек браузер не ответил — Яндекс геолокация
       const fallbackTimer = setTimeout(async () => {
         if (resolvedRef.current) return
         try {
           const loc = await getYandexLocation()
           resolve(loc)
-          // Продолжаем ждать GPS в фоне для уточнения
         } catch {
-          // Яндекс тоже не ответил — ждём браузер дальше
+          // Яндекс тоже не ответил — ждём GPS дальше
         }
-      }, 3000)
+      }, 8000)
 
       // Быстрый запрос (WiFi/IP)
       navigator.geolocation.getCurrentPosition(
@@ -137,5 +141,5 @@ export function useGeolocation(tg) {
     requestLocation()
   }, [requestLocation])
 
-  return { location, error, loading, denied, refetch: requestLocation }
+  return { location, error, loading, denied, approximate, refetch: requestLocation }
 }

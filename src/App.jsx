@@ -137,7 +137,7 @@ const CHIPS = [
 
 export default function App() {
   const { tg, user, haptic } = useTelegram()
-  const { location, loading: locLoading, denied: geoDenied, refetch: geoRefetch } = useGeolocation(tg)
+  const { location, loading: locLoading, denied: geoDenied, approximate, refetch: geoRefetch } = useGeolocation(tg)
 
   const [events, setEvents]             = useState(() => {
     try { return JSON.parse(localStorage.getItem('ryadom_events') || '[]') } catch { return [] }
@@ -761,6 +761,13 @@ export default function App() {
 
       {/* Геолокация отключена — полноэкранный промпт */}
       {geoDenied && <GeoPrompt onRetry={geoRefetch} />}
+      {approximate && !geoDenied && (
+        <div className="absolute z-30 left-4 right-4 flex items-center gap-2 px-4 py-2.5 rounded-2xl"
+             style={{ bottom: 110, background: 'rgba(17,24,39,0.92)', border: '1px solid rgba(34,211,238,0.3)', backdropFilter: 'blur(12px)' }}>
+          <span style={{ fontSize: 14 }}>📍</span>
+          <p className="text-xs" style={{ color: 'var(--accent)' }}>Уточняем ваше местоположение…</p>
+        </div>
+      )}
 
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
