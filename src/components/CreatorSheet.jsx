@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchReviews, submitReview } from '../lib/firebase'
+import { ACHIEVEMENTS } from '../utils/achievements'
 
 function Stars({ value, onChange, size = 28 }) {
   const [hover, setHover] = useState(0)
@@ -34,27 +35,26 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
   const [sending, setSending]   = useState(false)
   const [done, setDone]         = useState(false)
 
-  const reviewerId = authUser?.id?.toString() ?? (() => {
+  const myId = (authUser?.uid ?? authUser?.id)?.toString() ?? (() => {
     let id = localStorage.getItem('ryadom_uid')
     if (!id) { id = crypto.randomUUID(); localStorage.setItem('ryadom_uid', id) }
     return id
   })()
 
-  const isOwn = authUser && authUser.id === creator.id
+  const isOwn = (authUser?.uid ?? authUser?.id) === creator.id
 
   useEffect(() => {
     fetchReviews(creator.id).then(r => { setReviews(r); setLoading(false) })
-    // check if already reviewed this event
   }, [creator.id])
 
-  const alreadyReviewed = reviews.some(r => r.reviewer_id === reviewerId && r.event_id === event?.id)
+  const alreadyReviewed = reviews.some(r => r.reviewer_id === myId && r.event_id === event?.id)
 
   const handleSubmit = async () => {
     if (!rating || sending) return
     setSending(true)
     try {
-      await submitReview({ reviewerId, targetId: creator.id, eventId: event.id, rating, comment })
-      const fresh = await fetchReviews(creator.id).then(r => r)
+      await submitReview({ reviewerId: myId, targetId: creator.id, eventId: event.id, rating, comment })
+      const fresh = await fetchReviews(creator.id)
       setReviews(fresh)
       setDone(true)
     } catch (e) {
@@ -65,8 +65,11 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
   }
 
   const avg = avgRating(reviews)
-  const initials = (creator.display_name ?? creator.username ?? '?')
+  const initials = (creator.display_name ?? '?')
     .split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
+
+  const unlockedAchievements = (creator.achievements ?? [])
+    .filter(id => ACHIEVEMENTS[id])
 
   return (
     <>
@@ -99,23 +102,23 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-base truncate" style={{ color: 'var(--text)' }}>
-                {creator.display_name || creator.username || 'Аноним'}
+                {creator.display_name || 'Аноним'}
               </p>
-              {creator.username && (
-                <p className="text-xs mb-1" style={{ color: 'var(--hint)' }}>@{creator.username}</p>
-              )}
               {reviews.length > 0 ? (
-                <div className="flex items-center gap-2">
-                  <Stars value={Math.round(avg)} size={14} />
-                  <span className="text-xs font-bold" style={{ color: 'var(--text)' }}>
-                    {avg.toFixed(1)}
-                  </span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Stars value={Math.round(avg)} size={13} />
+                  <span className="text-xs font-bold" style={{ color: 'var(--text)' }}>{avg.toFixed(1)}</span>
                   <span className="text-xs" style={{ color: 'var(--hint)' }}>
                     ({reviews.length} {reviews.length === 1 ? 'отзыв' : reviews.length < 5 ? 'отзыва' : 'отзывов'})
                   </span>
                 </div>
               ) : (
-                <p className="text-xs" style={{ color: 'var(--hint)' }}>Отзывов пока нет</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>Отзывов пока нет</p>
+              )}
+              {(creator.events_count ?? 0) > 0 && (
+                <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>
+                  📍 {creator.events_count} {creator.events_count === 1 ? 'событие' : creator.events_count < 5 ? 'события' : 'событий'}
+                </p>
               )}
             </div>
           </div>
@@ -125,13 +128,32 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
             <div className="rounded-2xl px-4 py-3 mb-4 flex flex-col gap-2"
                  style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
               {creator.city && (
-                <p className="text-sm font-semibold" style={{ color: 'var(--hint)' }}>
-                  📍 {creator.city}
-                </p>
+                <p className="text-sm" style={{ color: 'var(--hint)' }}>📍 {creator.city}</p>
               )}
               {creator.bio && (
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--text)' }}>{creator.bio}</p>
               )}
+            </div>
+          )}
+
+          {/* Achievements */}
+          {unlockedAchievements.length > 0 && (
+            <div className="mb-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--hint)' }}>
+                Достижения
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {unlockedAchievements.map(id => {
+                  const a = ACHIEVEMENTS[id]
+                  return (
+                    <div key={id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl"
+                         style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                      <span style={{ fontSize: 16 }}>{a.icon}</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{a.title}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
@@ -141,15 +163,13 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
               <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--accent)' }}>
                 {alreadyReviewed || done ? '✅ Ваш отзыв' : '⭐ Оценить инициатора'}
               </p>
-
               {done || alreadyReviewed ? (
                 <div className="rounded-2xl px-4 py-3 text-sm text-center"
                      style={{ background: 'rgba(34,211,238,0.07)', border: '1px solid rgba(34,211,238,0.2)', color: 'var(--accent)' }}>
                   Спасибо за отзыв! 🙌
                 </div>
               ) : (
-                <div className="rounded-2xl p-4"
-                     style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                <div className="rounded-2xl p-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
                   <div className="flex justify-center mb-3">
                     <Stars value={rating} onChange={setRating} size={32} />
                   </div>

@@ -38,8 +38,13 @@ function EventChat({ event, user, authUser }) {
   const [sending, setSending]   = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [viewingProfile, setViewingProfile] = useState(null)
+  const [contextMsg, setContextMsg] = useState(null)
+  const [senderProfiles, setSenderProfiles] = useState({})
+  const [replyTo, setReplyTo] = useState(null)
   const inputRef = useRef(null)
   const endRef = useRef(null)
+  const longPressTimer = useRef(null)
 
   const loadMessages = useCallback(async () => {
     for (let i = 0; i < 3; i++) {
@@ -62,6 +67,18 @@ function EventChat({ event, user, authUser }) {
   useEffect(() => {
     if (expanded) endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, expanded])
+
+  // Load sender profiles
+  useEffect(() => {
+    const ids = [...new Set(messages.map(m => m.creator_id).filter(Boolean))]
+    ids.forEach(id => {
+      if (!senderProfiles[id]) {
+        getProfile(id).then(p => {
+          if (p) setSenderProfiles(prev => ({ ...prev, [id]: p }))
+        }).catch(() => {})
+      }
+    })
+  }, [messages])
 
   const myId = (authUser?.uid ?? authUser?.id)?.toString() ?? user?.id?.toString() ?? null
 
@@ -93,6 +110,14 @@ function EventChat({ event, user, authUser }) {
 
   return (
     <div className="mb-4" onClick={() => showEmoji && setShowEmoji(false)}>
+      {viewingProfile && (
+        <CreatorSheet
+          creator={viewingProfile}
+          event={event}
+          authUser={authUser}
+          onClose={() => setViewingProfile(null)}
+        />
+      )}
 
       {/* Collapsed: tap to expand */}
       {!expanded ? (
@@ -131,17 +156,74 @@ function EventChat({ event, user, authUser }) {
               <p className="text-xs" style={{ color: 'var(--hint)' }}>Напиши первым 👋</p>
             </div>
           )}
+          {contextMsg && (
+            <div className="absolute inset-0 z-10 flex items-end justify-center pb-2"
+                 style={{ background: 'rgba(0,0,0,0.5)' }}
+                 onClick={() => setContextMsg(null)}>
+              <div className="rounded-2xl overflow-hidden mx-4 w-full"
+                   style={{ background: 'rgba(17,24,39,0.98)', border: '1px solid var(--border)' }}
+                   onClick={e => e.stopPropagation()}>
+                <button className="w-full px-4 py-3 text-sm text-left flex items-center gap-3 transition active:opacity-70"
+                        style={{ color: 'var(--text)', borderBottom: '1px solid var(--bg-3)' }}
+                        onClick={() => { setReplyTo(contextMsg); setContextMsg(null); inputRef.current?.focus() }}>
+                  <span>↩️</span> Ответить
+                </button>
+                <button className="w-full px-4 py-3 text-sm text-left flex items-center gap-3 transition active:opacity-70"
+                        style={{ color: 'var(--text)', borderBottom: contextMsg.creator_id === myId ? '1px solid var(--bg-3)' : 'none' }}
+                        onClick={() => { navigator.clipboard?.writeText(contextMsg.content); setContextMsg(null) }}>
+                  <span>📋</span> Копировать
+                </button>
+                {contextMsg.creator_id === myId && (
+                  <button className="w-full px-4 py-3 text-sm text-left flex items-center gap-3 transition active:opacity-70"
+                          style={{ color: 'var(--danger)' }}
+                          onClick={() => setContextMsg(null)}>
+                    <span>🗑</span> Удалить
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {messages.map(msg => {
             const isMe = msg.creator_id === myId
+            const sender = senderProfiles[msg.creator_id]
+            const initials = (sender?.display_name ?? '?')[0]?.toUpperCase()
             return (
-              <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className="px-3 py-2 rounded-2xl text-sm break-words"
-                     style={{
-                       maxWidth: '75%',
-                       background: isMe ? 'var(--accent)' : 'var(--bg-3)',
-                       color: isMe ? '#111827' : 'var(--text)',
-                     }}>
-                  {msg.content}
+              <div key={msg.id} className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                {!isMe && (
+                  <button type="button"
+                          onClick={() => sender && setViewingProfile(sender)}
+                          className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center self-end mb-0.5 overflow-hidden transition active:scale-90"
+                          style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>
+                    {sender?.avatar_url
+                      ? <img src={sender.avatar_url} className="w-full h-full object-cover" alt="" />
+                      : initials}
+                  </button>
+                )}
+                <div style={{ maxWidth: '72%' }}>
+                  {!isMe && sender?.display_name && (
+                    <p className="text-[10px] mb-0.5 ml-1" style={{ color: 'var(--hint)' }}>
+                      {sender.display_name}
+                    </p>
+                  )}
+                  {replyTo && msg.reply_to === replyTo.id && (
+                    <div className="px-2 py-1 rounded-t-xl text-xs mb-0.5 truncate"
+                         style={{ background: 'var(--bg-2)', color: 'var(--hint)', borderLeft: '2px solid var(--accent)' }}>
+                      {replyTo.content}
+                    </div>
+                  )}
+                  <div
+                    onTouchStart={() => { longPressTimer.current = setTimeout(() => setContextMsg(msg), 500) }}
+                    onTouchEnd={() => clearTimeout(longPressTimer.current)}
+                    onTouchMove={() => clearTimeout(longPressTimer.current)}
+                    onContextMenu={e => { e.preventDefault(); setContextMsg(msg) }}
+                    className="px-3 py-2 rounded-2xl text-sm break-words"
+                    style={{
+                      background: isMe ? 'var(--accent)' : 'var(--bg-3)',
+                      color: isMe ? '#111827' : 'var(--text)',
+                    }}>
+                    {msg.content}
+                  </div>
                 </div>
               </div>
             )
@@ -174,6 +256,17 @@ function EventChat({ event, user, authUser }) {
             🔒 Войдите в аккаунт чтобы написать
           </div>
         ) : (
+          {replyTo && (
+            <div className="flex items-center gap-2 px-3 py-2"
+                 style={{ borderTop: '1px solid var(--bg-3)', background: 'var(--bg-2)' }}>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold" style={{ color: 'var(--accent)' }}>↩️ Ответ</p>
+                <p className="text-xs truncate" style={{ color: 'var(--hint)' }}>{replyTo.content}</p>
+              </div>
+              <button type="button" onClick={() => setReplyTo(null)}
+                      className="text-sm flex-shrink-0" style={{ color: 'var(--hint)' }}>✕</button>
+            </div>
+          )}
           <form onSubmit={handleSend} className="flex gap-2 p-2"
                 style={{ borderTop: '1px solid var(--bg-3)' }}>
             <button type="button" onClick={() => setShowEmoji(v => !v)}
