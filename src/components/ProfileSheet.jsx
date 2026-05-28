@@ -592,23 +592,43 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin, on
 
 function ProfileSwipe({ onClose, children }) {
   const [ty, setTy] = useState(0)
-  const startY = useRef(null)
+  const startY = useRef(0)
+  const startTime = useRef(0)
+  const dragging = useRef(false)
+
   return (
-    <div onTouchStart={e => { if (e.target.closest('button,a,input,textarea')) return; startY.current = e.touches[0].clientY }}
-         onTouchMove={e => { const d = e.touches[0].clientY - startY.current; if (d > 0) setTy(d) }}
-         onTouchEnd={() => { ty > 100 ? onClose() : setTy(0) }}
-         className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
-         style={{
-           background: 'rgba(17,24,39,0.98)',
-           backdropFilter: 'blur(24px)',
-           border: '1px solid var(--border)',
-           borderBottom: 'none',
-           boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
-           paddingBottom: 'env(safe-area-inset-bottom, 20px)',
-           maxHeight: '92vh',
-           transform: `translateY(${ty}px)`,
-           transition: ty === 0 ? 'transform 0.3s ease' : 'none',
-         }}>
+    <div
+      onTouchStart={e => {
+        if (e.target.closest('button,a,input,textarea,select')) return
+        startY.current = e.touches[0].clientY
+        startTime.current = Date.now()
+        dragging.current = true
+      }}
+      onTouchMove={e => {
+        if (!dragging.current) return
+        const d = e.touches[0].clientY - startY.current
+        if (d > 0) setTy(d)
+      }}
+      onTouchEnd={() => {
+        if (!dragging.current) return
+        dragging.current = false
+        const elapsed = Math.max(1, Date.now() - startTime.current)
+        const velocity = ty / elapsed
+        if (ty > 250 || (ty > 100 && velocity > 0.6)) onClose()
+        else setTy(0)
+      }}
+      className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
+      style={{
+        background: 'rgba(17,24,39,0.98)',
+        backdropFilter: 'blur(24px)',
+        border: '1px solid var(--border)',
+        borderBottom: 'none',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+        paddingBottom: 'env(safe-area-inset-bottom, 20px)',
+        maxHeight: '92vh',
+        transform: `translateY(${ty}px)`,
+        transition: ty === 0 ? 'transform 0.3s ease' : 'none',
+      }}>
       {children}
     </div>
   )
