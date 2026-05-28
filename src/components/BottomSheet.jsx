@@ -69,10 +69,12 @@ function EventChat({ event, user, authUser }) {
   }, [messages, expanded])
 
   // Load sender profiles
+  const loadedIds = useRef(new Set())
   useEffect(() => {
     const ids = [...new Set(messages.map(m => m.creator_id).filter(Boolean))]
     ids.forEach(id => {
-      if (!senderProfiles[id]) {
+      if (!loadedIds.current.has(id)) {
+        loadedIds.current.add(id)
         getProfile(id).then(p => {
           if (p) setSenderProfiles(prev => ({ ...prev, [id]: p }))
         }).catch(() => {})
@@ -90,6 +92,7 @@ function EventChat({ event, user, authUser }) {
     try {
       await sendMessage({ eventId: event.id, content: text, creatorId: myId })
       setInput('')
+      setReplyTo(null)
       const msgCount = incrementMessageCount()
       if (msgCount >= 20) tryUnlock('soul')
     } finally {
