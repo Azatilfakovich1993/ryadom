@@ -21,7 +21,7 @@ import {
   auth, onAuthStateChanged,
   fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo,
   uploadEventPhoto, updateEventPhotos,
-  subscribeToEvents, fetchAnnouncements,
+  subscribeToEvents, fetchAnnouncements, addAchievementToProfile,
 } from './lib/firebase'
 import { tryUnlock } from './utils/achievements'
 import { CATEGORY_CONFIG } from './components/MapComponent'
@@ -35,6 +35,12 @@ async function loadProfileWithRetry(userId, setProfile) {
       if (p) {
         setProfile(p)
         localStorage.setItem('ryadom_profile', JSON.stringify(p))
+        // Sync achievements from Firestore to localStorage
+        if (p.achievements?.length > 0) {
+          const local = JSON.parse(localStorage.getItem('ryadom_achievements') || '[]')
+          const merged = [...new Set([...local, ...p.achievements])]
+          localStorage.setItem('ryadom_achievements', JSON.stringify(merged))
+        }
         return
       }
     } catch {}
@@ -224,8 +230,12 @@ export default function App() {
 
   // ── Achievement helper ────────────────────────────────────
   const showAchievement = useCallback((id) => {
-    if (tryUnlock(id)) setAchievement(id)
-  }, [])
+    if (tryUnlock(id)) {
+      setAchievement(id)
+      const uid = authUser?.uid ?? authUser?.id
+      if (uid) addAchievementToProfile(uid, id).catch(() => {})
+    }
+  }, [authUser])
 
   // ── Logo taps easter egg (5 раз) ─────────────────────────
   const handleLogoTap = useCallback(() => {

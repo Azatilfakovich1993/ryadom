@@ -111,6 +111,14 @@ export async function updateProfile(userId, updates) {
   await updateDoc(doc(db, 'profiles', userId), updates)
 }
 
+export async function addAchievementToProfile(userId, id) {
+  const snap = await getDoc(doc(db, 'profiles', userId))
+  if (!snap.exists()) return
+  const current = snap.data().achievements ?? []
+  if (current.includes(id)) return
+  await updateDoc(doc(db, 'profiles', userId), { achievements: [...current, id] })
+}
+
 // ── Events ────────────────────────────────────────────────
 export async function fetchNearbyEvents(lat, lon, radiusMeters = 100000) {
   const now = new Date()
