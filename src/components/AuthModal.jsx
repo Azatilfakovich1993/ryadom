@@ -54,8 +54,8 @@ export default function AuthModal({ onClose, onAuth }) {
     setError('')
     const uname = username.trim().toLowerCase()
 
-    if (!/^[a-z0-9_.]{3,20}$/.test(uname)) {
-      setError('Логин: 3-20 символов, только латинские буквы, цифры, _ и .')
+    if (!/^[a-z0-9][a-z0-9_.]{2,19}$/.test(uname)) {
+      setError('Логин: минимум 3 символа, только латинские буквы и цифры')
       return
     }
     if (password.length < 6) {
@@ -134,6 +134,14 @@ export default function AuthModal({ onClose, onAuth }) {
             </button>
           </div>
 
+          {/* Подсказка для пользователей из Telegram */}
+          {mode === 'login' && !window.Telegram?.WebApp?.initDataUnsafe?.user && (
+            <div className="mb-4 px-3 py-2.5 rounded-2xl text-xs"
+                 style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)', color: 'var(--hint)' }}>
+              💬 Регистрировались через Telegram? Введите тот же логин и пароль
+            </div>
+          )}
+
           {/* Tabs */}
           <div className="flex gap-1 mb-5 p-1 rounded-2xl" style={{ background: 'var(--bg-2)' }}>
             {[['login', 'Войти'], ['register', 'Создать аккаунт']].map(([m, label]) => (
@@ -173,7 +181,7 @@ export default function AuthModal({ onClose, onAuth }) {
                    onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                    onBlur={e => e.target.style.borderColor = 'var(--bg-3)'} />
             {mode === 'register' && (
-              <p className="text-xs mt-1" style={{ color: 'var(--hint)' }}>Латинские буквы, цифры, _ и .  ·  3–20 символов</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--hint)' }}>Минимум 3 символа · только латиница и цифры</p>
             )}
           </div>
 
