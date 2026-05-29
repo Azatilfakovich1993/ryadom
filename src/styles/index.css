@@ -55,3 +55,8 @@ html, body, #root {
 
 /* Glow text utility */
 .glow { text-shadow: 0 0 12px var(--accent-glow); }
+
+@keyframes feed-new-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

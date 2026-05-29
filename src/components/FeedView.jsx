@@ -189,7 +189,7 @@ function PhotoSlider({ photos, onOpenLightbox }) {
   )
 }
 
-function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
+function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox, isNew }) {
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const { label: timeLabel, urgency } = useCountdown(event.expires_at)
   const hasPhoto = event.photos?.length > 0
@@ -241,7 +241,12 @@ function EventCard({ event, dist, onViewDetails, parallaxY, onOpenLightbox }) {
       {/* Рамка по контуру */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 4,
-        boxShadow: isBiz ? 'inset 0 0 0 2px rgba(255,215,0,0.35)' : 'inset 0 0 0 2px rgba(255,255,255,0.15)',
+        boxShadow: isBiz
+          ? 'inset 0 0 0 2px rgba(255,215,0,0.35)'
+          : isNew
+            ? `inset 0 0 0 2.5px ${cfg.color}, 0 0 20px ${cfg.color}66`
+            : 'inset 0 0 0 2px rgba(255,255,255,0.15)',
+        animation: isNew ? 'feed-new-pulse 1.2s ease-in-out infinite' : 'none',
         pointerEvents: 'none',
       }} />
 
@@ -392,7 +397,7 @@ function RadarCard({ hasEvents, radiusIdx, onExpand, onCreateEvent }) {
   )
 }
 
-export default function FeedView({ events, location, onViewEvent, onCreateEvent }) {
+export default function FeedView({ events, location, onViewEvent, onCreateEvent, newEventIds = new Set() }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [radiusIdx, setRadiusIdx] = useState(0)
   const [lightbox, setLightbox] = useState(null)
@@ -446,6 +451,7 @@ export default function FeedView({ events, location, onViewEvent, onCreateEvent 
             onViewDetails={() => onViewEvent(ev)}
             parallaxY={(i - currentIndex) * -40}
             onOpenLightbox={(idx) => setLightbox({ photos: ev.photos, idx })}
+            isNew={newEventIds.has(ev.id)}
           />
         </div>
       ))}

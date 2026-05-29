@@ -191,6 +191,7 @@ export default function App() {
   const [mode, setMode]                     = useState('map') // 'map' | 'feed'
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('ryadom_onboarded'))
   const [showAdmin, setShowAdmin]           = useState(false)
+  const [newEventIds, setNewEventIds]       = useState(new Set())
   const [vkInsetTop, setVkInsetTop]         = useState(0)
   const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
@@ -340,8 +341,11 @@ export default function App() {
       const loc = locationRef.current
       if (type === 'added') {
         if (loc && distanceM(loc.lat, loc.lon, ev.lat, ev.lon) > RADIUS_M) return
+        const isReallyNew = !prev => prev?.find(e => e.id === ev.id)
         setEvents(prev => prev.find(e => e.id === ev.id) ? prev : [ev, ...prev])
-        if (type === 'added') showToast(`📍 ${ev.title}`, 'info')
+        setNewEventIds(prev => new Set([...prev, ev.id]))
+        setTimeout(() => setNewEventIds(prev => { const s = new Set(prev); s.delete(ev.id); return s }), 20000)
+        showToast(`📍 ${ev.title}`, 'info')
       } else if (type === 'removed') {
         setEvents(prev => prev.filter(e => e.id !== ev.id))
         setSelectedEvent(s => s?.id === ev.id ? null : s)
@@ -453,6 +457,7 @@ export default function App() {
           userLocation={location}
           radarActive={radarActive}
           onRadarDone={handleRadarDone}
+          newEventIds={newEventIds}
         />
       </div>
 
@@ -464,6 +469,7 @@ export default function App() {
             location={location}
             onViewEvent={(ev) => { setMode('map'); handleEventClick(ev) }}
             onCreateEvent={() => setShowCreate(true)}
+            newEventIds={newEventIds}
           />
         </div>
       )}

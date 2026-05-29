@@ -47,6 +47,8 @@ const PIN_STYLES = `
   [class*="ymaps-"][class*="-location"] { display: none !important; }
   @keyframes rp-pulse { 0% { r: 22; opacity: 0.6; } 100% { r: 38; opacity: 0; } }
   .rp-biz-pulse { animation: rp-pulse 2s ease-out infinite; }
+  @keyframes rp-new-pulse { 0% { r: 22; opacity: 0.9; } 100% { r: 42; opacity: 0; } }
+  .rp-new-pulse { animation: rp-new-pulse 1.2s ease-out infinite; }
 `
 
 function injectStyles() {
@@ -79,6 +81,9 @@ function makePinLayout(ymaps) {
         <ellipse cx="24" cy="62" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)"/>
         {% if properties.isBusiness %}
         <circle class="rp-biz-pulse" cx="24" cy="23" r="22" fill="none" stroke="#FFD700" stroke-width="2"/>
+        {% endif %}
+        {% if properties.isNew %}
+        <circle class="rp-new-pulse" cx="24" cy="23" r="22" fill="none" stroke="{{ properties.color }}" stroke-width="2.5" opacity="0.9"/>
         {% endif %}
         <filter id="rp-gf-{{ properties.uid }}" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="4" result="blur"/>
@@ -132,7 +137,7 @@ function makePinLayout(ymaps) {
   })
 }
 
-export default function MapComponent({ events, onEventClick, userLocation, radarActive, onRadarDone }) {
+export default function MapComponent({ events, onEventClick, userLocation, radarActive, onRadarDone, newEventIds = new Set() }) {
   const containerRef   = useRef(null)
   const mapRef         = useRef(null)
   const marksRef       = useRef([])
@@ -309,7 +314,7 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
 
       const pm = new window.ymaps.Placemark(
         [event.lat, event.lon],
-        { color: pinColor, icon: cfg.icon, uid: event.id.replace(/-/g, '').slice(0, 8), dash, gap, ringColor, isBusiness: isBusiness ? 1 : 0 },
+        { color: pinColor, icon: cfg.icon, uid: event.id.replace(/-/g, '').slice(0, 8), dash, gap, ringColor, isBusiness: isBusiness ? 1 : 0, isNew: newEventIds.has(event.id) ? 1 : 0 },
         { iconLayout: pinLayoutRef.current }
       )
       pm.events.add('click', () => onEventClick(events[i]))
