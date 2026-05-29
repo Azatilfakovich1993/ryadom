@@ -245,18 +245,21 @@ export async function updateEventVideo(eventId, videoUrl) {
 
 // ── Reviews ───────────────────────────────────────────────
 export async function fetchReviews(targetId) {
-  const q = query(collection(db, 'reviews'), where('target_id', '==', targetId), orderBy('created_at', 'desc'))
+  const q = query(collection(db, 'reviews'), where('target_id', '==', targetId))
   const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.created_at?.seconds ?? 0) - (a.created_at?.seconds ?? 0))
 }
 
 export async function submitReview({ reviewerId, targetId, eventId, rating, comment }) {
+  // Один отзыв на одного человека (не на событие)
   const q = query(collection(db, 'reviews'),
     where('reviewer_id', '==', reviewerId),
-    where('event_id', '==', eventId))
+    where('target_id', '==', targetId))
   const existing = await getDocs(q)
   if (!existing.empty) {
-    await updateDoc(doc(db, 'reviews', existing.docs[0].id), { rating, comment: comment.trim() })
+    await updateDoc(doc(db, 'reviews', existing.docs[0].id), { rating, comment: comment.trim(), event_id: eventId })
   } else {
     await addDoc(collection(db, 'reviews'), {
       reviewer_id: reviewerId, target_id: targetId,

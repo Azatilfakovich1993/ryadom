@@ -47,7 +47,7 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
     fetchReviews(creator.id).then(r => { setReviews(r); setLoading(false) })
   }, [creator.id])
 
-  const alreadyReviewed = reviews.some(r => r.reviewer_id === myId && r.event_id === event?.id)
+  const alreadyReviewed = reviews.some(r => r.reviewer_id === myId)
 
   const handleSubmit = async () => {
     if (!rating || sending) return
