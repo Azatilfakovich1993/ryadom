@@ -733,6 +733,7 @@ export default function App() {
           onPremium={() => { setSelectedEvent(null); setShowPremium(true) }}
           user={user}
           authUser={authUser}
+          onAchievement={showAchievement}
           onDelete={() => {
             setEvents(prev => prev.filter(e => e.id !== selectedEvent.id))
             setSelectedEvent(null)

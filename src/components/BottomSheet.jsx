@@ -32,7 +32,7 @@ const CHAT_EMOJIS = [
   '🍕','⚽','🎮','🎵','🏃','☕','🍺','🌊','🌳','🎯',
 ]
 
-function EventChat({ event, user, authUser }) {
+function EventChat({ event, user, authUser, onAchievement }) {
   const [messages, setMessages] = useState([])
   const [input, setInput]       = useState('')
   const [sending, setSending]   = useState(false)
@@ -94,7 +94,7 @@ function EventChat({ event, user, authUser }) {
       setInput('')
       setReplyTo(null)
       const msgCount = incrementMessageCount()
-      if (msgCount >= 20) tryUnlock('soul')
+      if (msgCount >= 20) onAchievement?.('soul')
     } finally {
       setSending(false)
     }
@@ -355,7 +355,7 @@ function SwipeableSheet({ onClose, children }) {
   )
 }
 
-export default function BottomSheet({ event, onClose, onPremium, user, authUser, onDelete }) {
+export default function BottomSheet({ event, onClose, onPremium, user, authUser, onDelete, onAchievement }) {
   const { label, urgency, critical, expired } = useCountdown(event.expires_at)
   const cfg = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
   const hasPhotos = event.photos?.length > 0
@@ -814,7 +814,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
                 🚫 Ваш аккаунт заблокирован
               </div>
             ) : (
-              <EventChat event={event} user={user} authUser={authUser} />
+              <EventChat event={event} user={user} authUser={authUser} onAchievement={onAchievement} />
             )
           )}
 
