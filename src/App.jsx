@@ -421,9 +421,9 @@ export default function App() {
       if (cnt === 1) showAchievement('first_spark')
       if (cnt === 3) showAchievement('activist')
       if (cnt === 10) showAchievement('legend')
-      const uid = authUser?.uid ?? authUser?.id
-      if (uid) {
-        updateProfile(uid, { events_count: cnt }).catch(() => {})
+      const creatorUid = authUser?.uid ?? authUser?.id
+      if (creatorUid) {
+        updateProfile(creatorUid, { events_count: cnt }).catch(() => {})
         setProfile(prev => prev ? { ...prev, events_count: cnt } : prev)
         localStorage.setItem('ryadom_profile', JSON.stringify({ ...profile, events_count: cnt }))
       }
