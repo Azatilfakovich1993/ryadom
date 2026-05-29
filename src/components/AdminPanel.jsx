@@ -184,11 +184,94 @@ function Events() {
   )
 }
 
+// ── User Detail ───────────────────────────────────────────────
+function UserDetail({ user, onClose }) {
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getDocs(query(collection(db, 'reviews'), where('target_id', '==', user.id)))
+      .then(snap => { setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [user.id])
+
+  const deleteReview = async (reviewId) => {
+    if (!confirm('Удалить отзыв?')) return
+    await deleteDoc(doc(db, 'reviews', reviewId))
+    setReviews(prev => prev.filter(r => r.id !== reviewId))
+  }
+
+  const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—'
+
+  return (
+    <div className="fixed inset-0 z-[200] flex flex-col"
+         style={{ background: 'rgba(10,14,23,0.98)', backdropFilter: 'blur(20px)' }}>
+      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
+           style={{ borderBottom: '1px solid var(--border)' }}>
+        <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>←</button>
+        <h3 className="font-bold" style={{ color: 'var(--accent)' }}>Профиль пользователя</h3>
+      </div>
+      <div className="overflow-y-auto flex-1 px-4 py-4">
+        {/* Profile info */}
+        <div className="flex items-center gap-4 mb-4 p-4 rounded-2xl" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+          <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center font-bold text-lg flex-shrink-0"
+               style={{ background: 'var(--bg-3)', color: 'var(--accent)' }}>
+            {user.avatar_url
+              ? <img src={user.avatar_url} className="w-full h-full object-cover" alt="" />
+              : (user.display_name?.[0] ?? '?').toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold" style={{ color: 'var(--text)' }}>{user.display_name || 'Без имени'}</p>
+            <p className="text-xs" style={{ color: 'var(--hint)' }}>@{user.username}</p>
+            {user.city && <p className="text-xs" style={{ color: 'var(--hint)' }}>📍 {user.city}</p>}
+            {user.bio && <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>{user.bio}</p>}
+            <div className="flex gap-3 mt-1 text-xs" style={{ color: 'var(--hint)' }}>
+              <span>📍 {user.events_count ?? 0} событий</span>
+              <span>⭐ {avg} ({reviews.length} отзывов)</span>
+              {user.is_business && <span style={{ color: '#FFD700' }}>⭐ Бизнес</span>}
+              {user.is_banned && <span style={{ color: 'var(--danger)' }}>🚫 Бан</span>}
+              {user.is_admin && <span style={{ color: 'var(--accent)' }}>👑 Админ</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews */}
+        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--hint)' }}>
+          Отзывы ({reviews.length})
+        </p>
+        {loading ? <p className="text-sm" style={{ color: 'var(--hint)' }}>Загрузка…</p>
+        : reviews.length === 0 ? <p className="text-sm" style={{ color: 'var(--hint)' }}>Отзывов нет</p>
+        : reviews.map(r => (
+          <div key={r.id} className="rounded-2xl p-3 mb-2 flex gap-3"
+               style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span style={{ color: '#f59e0b' }}>{'⭐'.repeat(r.rating)}</span>
+                <span className="text-[10px]" style={{ color: 'var(--hint)' }}>
+                  {r.created_at?.toDate?.()?.toLocaleDateString('ru-RU') ?? ''}
+                </span>
+              </div>
+              {r.comment && <p className="text-sm" style={{ color: 'var(--text)' }}>{r.comment}</p>}
+            </div>
+            <button onClick={() => deleteReview(r.id)}
+                    className="text-xs px-2 py-1 rounded-xl flex-shrink-0 transition active:scale-90"
+                    style={{ background: 'rgba(248,113,113,0.15)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.3)' }}>
+              🗑
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Users ────────────────────────────────────────────────────
 function Users() {
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
     getDocs(collection(db, 'profiles'))
@@ -220,6 +303,7 @@ function Users() {
 
   return (
     <div className="flex flex-col gap-2">
+      {selectedUser && <UserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />}
       <input value={search} onChange={e => setSearch(e.target.value)}
              placeholder="Поиск по имени или @username…"
              className="w-full rounded-2xl px-4 py-2.5 text-sm outline-none mb-1"
@@ -230,7 +314,8 @@ function Users() {
         {search ? `Найдено: ${filtered.length}` : `Всего: ${users.length}`}
       </p>
       {filtered.map(u => (
-        <div key={u.id} className="flex items-center gap-3 rounded-2xl px-3 py-2.5"
+        <div key={u.id} className="flex items-center gap-3 rounded-2xl px-3 py-2.5 cursor-pointer transition active:opacity-70"
+             onClick={() => setSelectedUser(u)}
              style={{ background: 'var(--bg-2)', border: `1px solid ${u.is_banned ? 'rgba(248,113,113,0.3)' : 'var(--border)'}`, opacity: u.is_banned ? 0.7 : 1 }}>
           <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 font-bold text-sm"
                style={{ background: 'var(--bg-3)', color: 'var(--accent)' }}>
@@ -247,7 +332,7 @@ function Users() {
               @{u.username} {u.is_banned ? '· 🚫 Заблокирован' : ''}
             </p>
           </div>
-          <div className="flex flex-col gap-1 flex-shrink-0">
+          <div className="flex flex-col gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
             <button onClick={() => toggleBusiness(u)}
                     className="px-2 py-1 rounded-xl text-[10px] font-bold transition active:scale-90"
                     style={{
