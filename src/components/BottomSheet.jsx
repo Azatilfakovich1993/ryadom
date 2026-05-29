@@ -537,7 +537,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
         <div className="overflow-y-auto flex-1 px-5 pt-1">
 
           {/* Creator */}
-          {creator && (
+          {creator ? (
             <button type="button" onClick={() => setShowCreator(true)}
                     className="w-full flex items-center gap-3 mb-4 rounded-2xl px-3 py-2.5 transition active:scale-95"
                     style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
@@ -558,6 +558,15 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
               </div>
               <span className="text-xs flex-shrink-0" style={{ color: 'var(--hint)' }}>★ профиль →</span>
             </button>
+          ) : event.creator_id && (
+            <div className="w-full flex items-center gap-3 mb-4 rounded-2xl px-3 py-2.5 animate-pulse"
+                 style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+              <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: 'var(--bg-3)' }} />
+              <div className="flex-1">
+                <div className="h-2 rounded-full mb-2 w-16" style={{ background: 'var(--bg-3)' }} />
+                <div className="h-3 rounded-full w-32" style={{ background: 'var(--bg-3)' }} />
+              </div>
+            </div>
           )}
 
           {showCreator && creator && (
@@ -658,9 +667,12 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
             <div className="flex gap-2 overflow-x-auto mb-4 pb-1" style={{ scrollbarWidth: 'none' }}>
               {event.photos.map((url, i) => (
                 <button key={i} type="button" onClick={() => setLightbox(i)}
-                        className="flex-shrink-0 rounded-2xl overflow-hidden transition active:scale-95"
-                        style={{ width: 120, height: 90 }}>
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                        className="flex-shrink-0 rounded-2xl overflow-hidden transition active:scale-95 relative"
+                        style={{ width: 120, height: 90, background: 'var(--bg-3)' }}>
+                  <div className="absolute inset-0 animate-pulse rounded-2xl" style={{ background: 'var(--bg-3)' }} />
+                  <img src={url} alt="" className="w-full h-full object-cover relative"
+                       style={{ opacity: 0, transition: 'opacity 0.3s' }}
+                       onLoad={e => e.target.style.opacity = '1'} />
                 </button>
               ))}
             </div>
