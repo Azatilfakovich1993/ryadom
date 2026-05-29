@@ -19,7 +19,7 @@ import { useTelegram } from './hooks/useTelegram'
 import { useGeolocation } from './hooks/useGeolocation'
 import {
   auth, onAuthStateChanged,
-  fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo,
+  fetchNearbyEvents, createEvent, getProfile, updateProfile, uploadEventVideo, updateEventVideo,
   uploadEventPhoto, updateEventPhotos,
   subscribeToEvents, fetchAnnouncements, addAchievementToProfile, fetchReviews,
 } from './lib/firebase'
@@ -417,10 +417,16 @@ export default function App() {
       showToast('Событие опубликовано!')
       localStorage.setItem('ryadom_last_event', Date.now().toString())
       setShowCreateHint(false)
-      showAchievement('first_spark')
       const cnt = (profile?.events_count ?? 0) + 1
-      if (cnt >= 3)  showAchievement('activist')
-      if (cnt >= 10) showAchievement('legend')
+      if (cnt === 1) showAchievement('first_spark')
+      if (cnt === 3) showAchievement('activist')
+      if (cnt === 10) showAchievement('legend')
+      const uid = authUser?.uid ?? authUser?.id
+      if (uid) {
+        updateProfile(uid, { events_count: cnt }).catch(() => {})
+        setProfile(prev => prev ? { ...prev, events_count: cnt } : prev)
+        localStorage.setItem('ryadom_profile', JSON.stringify({ ...profile, events_count: cnt }))
+      }
       if (video) {
         try {
           const videoUrl = await uploadEventVideo(video, event.id)
