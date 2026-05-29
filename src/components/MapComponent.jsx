@@ -164,7 +164,7 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         mapRef.current = new window.ymaps.Map(containerRef.current, {
           center, zoom: 15,
           controls: [],
-          behaviors: ['drag', 'scrollZoom', 'multiTouch'],
+          behaviors: ['drag', 'scrollZoom', 'multiTouch', 'dblClickZoom'],
         })
         window._ryadomMap = mapRef.current
         setMapReady(true)
