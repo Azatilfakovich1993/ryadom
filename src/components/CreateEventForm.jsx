@@ -3,6 +3,77 @@ import { CATEGORY_CONFIG } from './MapComponent'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
+function MapPicker({ userLocation, onSelect, onClose }) {
+  const containerRef = useRef(null)
+  const mapRef = useRef(null)
+  const [resolving, setResolving] = useState(false)
+  const [hint, setHint] = useState('Переместите карту на нужное место')
+
+  useEffect(() => {
+    if (!window.ymaps || !containerRef.current) return
+    window.ymaps.ready(() => {
+      const center = userLocation ? [userLocation.lat, userLocation.lon] : [55.7558, 37.6176]
+      mapRef.current = new window.ymaps.Map(containerRef.current, {
+        center, zoom: 16,
+        controls: [],
+        behaviors: ['drag', 'scrollZoom', 'multiTouch', 'dblClickZoom'],
+      })
+    })
+    return () => { try { mapRef.current?.destroy() } catch {} }
+  }, [])
+
+  const handleSelect = async () => {
+    if (!mapRef.current) return
+    setResolving(true)
+    setHint('Определяю адрес…')
+    const center = mapRef.current.getCenter()
+    try {
+      const res = await window.ymaps.geocode(center, { results: 1 })
+      const obj = res.geoObjects.get(0)
+      const address = obj?.getAddressLine?.() ?? `${center[0].toFixed(5)}, ${center[1].toFixed(5)}`
+      onSelect({ lat: center[0], lon: center[1], address })
+    } catch {
+      onSelect({ lat: center[0], lon: center[1], address: `${center[0].toFixed(5)}, ${center[1].toFixed(5)}` })
+    } finally {
+      setResolving(false)
+    }
+  }
+
+  return (
+    <div className="absolute inset-0 z-[110] flex flex-col" style={{ background: '#000' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
+           style={{ background: 'rgba(17,24,39,0.95)', borderBottom: '1px solid var(--border)' }}>
+        <button type="button" onClick={onClose}
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>←</button>
+        <p className="text-sm font-semibold flex-1" style={{ color: 'var(--text)' }}>Выберите место на карте</p>
+      </div>
+
+      {/* Map */}
+      <div ref={containerRef} className="flex-1 relative" />
+
+      {/* Center pin */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 10 }}>
+        <div style={{ transform: 'translateY(-16px)', textAlign: 'center' }}>
+          <div style={{ fontSize: 32 }}>📍</div>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="flex-shrink-0 px-4 py-3 flex flex-col gap-2"
+           style={{ background: 'rgba(17,24,39,0.95)', borderTop: '1px solid var(--border)' }}>
+        <p className="text-xs text-center" style={{ color: 'var(--hint)' }}>{hint}</p>
+        <button type="button" onClick={handleSelect} disabled={resolving}
+                className="w-full py-3 rounded-2xl text-sm font-bold transition active:scale-95 disabled:opacity-50"
+                style={{ background: 'var(--accent)', color: '#111827' }}>
+          {resolving ? '⏳ Определяю адрес…' : '✓ Выбрать это место'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const isCapacitor = window.Capacitor?.isNativePlatform?.() ?? false
 
 async function takePhotoNative() {
@@ -121,6 +192,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
   const maxPhotos = isBusiness ? 5 : 3
   const durations = isBusiness ? DURATIONS_BUSINESS : DURATIONS
   const [showCamera, setShowCamera] = useState(false)
+  const [showMapPicker, setShowMapPicker] = useState(false)
   const galleryInputRef = useRef(null)
   const videoInputRef   = useRef(null)
 
@@ -324,6 +396,17 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
           onClose={() => setShowCamera(false)}
         />
       )}
+      {showMapPicker && (
+        <MapPicker
+          userLocation={userLocation}
+          onClose={() => setShowMapPicker(false)}
+          onSelect={({ lat, lon, address }) => {
+            setQuery(address)
+            saveResolved({ lat, lon, fullAddress: address })
+            setShowMapPicker(false)
+          }}
+        />
+      )}
       <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <SwipeToClose onClose={onClose}>
         <div className="flex justify-center pt-3 pb-1">
@@ -472,8 +555,15 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
 
           {/* Адрес */}
           <div className="mb-4">
-            <label className="text-[11px] font-bold uppercase tracking-wider mb-2 block"
-                   style={{ color: 'var(--accent)' }}>Адрес события</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider"
+                     style={{ color: 'var(--accent)' }}>Адрес события</label>
+              <button type="button" onClick={() => setShowMapPicker(true)}
+                      className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-xl transition active:scale-90"
+                      style={{ background: 'var(--bg-2)', color: 'var(--accent)', border: '1px solid var(--border)' }}>
+                🗺 Выбрать на карте
+              </button>
+            </div>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                     style={{ color: resolved ? 'var(--success)' : 'var(--accent)', fontSize: 14 }}>
@@ -528,7 +618,10 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
               ) : resolved ? (
                 <p className="text-xs flex items-center gap-1 truncate" style={{ color: 'var(--success)' }}>✓ {resolved.fullAddress}</p>
               ) : !query && userLocation ? (
-                <p className="text-xs" style={{ color: 'var(--hint)' }}>📍 Оставь пустым — используем твоё местоположение</p>
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--hint)' }}>📍 Оставь пустым — используем твоё местоположение</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--hint)' }}>🗺 Или нажми «Выбрать на карте» чтобы тыкнуть на точку</p>
+                </div>
               ) : null}
             </div>
           </div>
