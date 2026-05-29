@@ -341,7 +341,6 @@ export default function App() {
       const loc = locationRef.current
       if (type === 'added') {
         if (loc && distanceM(loc.lat, loc.lon, ev.lat, ev.lon) > RADIUS_M) return
-        const isReallyNew = !prev => prev?.find(e => e.id === ev.id)
         setEvents(prev => prev.find(e => e.id === ev.id) ? prev : [ev, ...prev])
         setNewEventIds(prev => new Set([...prev, ev.id]))
         setTimeout(() => setNewEventIds(prev => { const s = new Set(prev); s.delete(ev.id); return s }), 20000)
