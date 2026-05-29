@@ -21,25 +21,36 @@ import {
   auth, onAuthStateChanged,
   fetchNearbyEvents, createEvent, getProfile, uploadEventVideo, updateEventVideo,
   uploadEventPhoto, updateEventPhotos,
-  subscribeToEvents, fetchAnnouncements, addAchievementToProfile,
+  subscribeToEvents, fetchAnnouncements, addAchievementToProfile, fetchReviews,
 } from './lib/firebase'
 import { tryUnlock } from './utils/achievements'
 import { CATEGORY_CONFIG } from './components/MapComponent'
 
 const RADIUS_M = 100000
 
-async function loadProfileWithRetry(userId, setProfile) {
+async function loadProfileWithRetry(userId, setProfile, showToast) {
   for (let i = 0; i < 4; i++) {
     try {
       const p = await getProfile(userId)
       if (p) {
         setProfile(p)
         localStorage.setItem('ryadom_profile', JSON.stringify(p))
-        // Sync achievements from Firestore to localStorage
         if (p.achievements?.length > 0) {
           const local = JSON.parse(localStorage.getItem('ryadom_achievements') || '[]')
           const merged = [...new Set([...local, ...p.achievements])]
           localStorage.setItem('ryadom_achievements', JSON.stringify(merged))
+        }
+        // Проверяем новые отзывы
+        if (showToast) {
+          try {
+            const reviews = await fetchReviews(userId)
+            const key = `ryadom_reviews_count_${userId}`
+            const prevCount = parseInt(localStorage.getItem(key) || '0', 10)
+            if (reviews.length > prevCount && prevCount > 0) {
+              showToast(`⭐ Вам поступил новый отзыв! Проверьте профиль`, 'info')
+            }
+            localStorage.setItem(key, String(reviews.length))
+          } catch {}
         }
         return
       }
@@ -208,7 +219,7 @@ export default function App() {
       if (user) {
         setAuthUser(user)
         localStorage.setItem('ryadom_auth_user', JSON.stringify({ id: user.uid, uid: user.uid, email: user.email }))
-        loadProfileWithRetry(user.uid, setProfile)
+        loadProfileWithRetry(user.uid, setProfile, showToast)
       }
       setAuthChecked(true)
     })
@@ -740,7 +751,7 @@ export default function App() {
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
-          onAuth={(u) => { setAuthUser(u); setShowAuth(false); loadProfileWithRetry(u.uid ?? u.id, setProfile) }}
+          onAuth={(u) => { setAuthUser(u); setShowAuth(false); loadProfileWithRetry(u.uid ?? u.id, setProfile, showToast) }}
         />
       )}
 
