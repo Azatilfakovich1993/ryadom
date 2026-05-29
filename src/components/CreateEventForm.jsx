@@ -401,6 +401,7 @@ export default function CreateEventForm({ onSubmit, onClose, loading, userLocati
           userLocation={userLocation}
           onClose={() => setShowMapPicker(false)}
           onSelect={({ lat, lon, address }) => {
+            justPicked.current = true
             setQuery(address)
             saveResolved({ lat, lon, fullAddress: address })
             setShowMapPicker(false)
