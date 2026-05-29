@@ -778,7 +778,7 @@ export default function BottomSheet({ event, onClose, onPremium, user, authUser,
           {/* Поделиться + Пожаловаться */}
           <div className="flex gap-2 mb-4">
             <button type="button" onClick={async () => {
-                      const url = `https://azatilfakovich1993.github.io/ryadom/?event=${event.id}`
+                      const url = `https://ryadom-1a705.web.app/?event=${event.id}`
                       try {
                         if (navigator.share) {
                           await navigator.share({ title: event.title, text: event.title, url })
