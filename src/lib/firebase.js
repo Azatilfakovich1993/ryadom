@@ -173,14 +173,14 @@ export async function deleteEvent(eventId) {
 }
 
 export async function fetchMyEvents(creatorId) {
-  const q = query(collection(db, 'events'), where('creator_id', '==', creatorId), orderBy('created_at', 'desc'))
+  const q = query(collection(db, 'events'), where('creator_id', '==', creatorId))
   const snap = await getDocs(q)
   return snap.docs.map(d => {
     const ev = { id: d.id, ...d.data() }
     if (ev.expires_at?.toDate) ev.expires_at = ev.expires_at.toDate().toISOString()
     if (ev.created_at?.toDate) ev.created_at = ev.created_at.toDate().toISOString()
     return ev
-  })
+  }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 }
 
 // ── Chat (Realtime Database) ──────────────────────────────
