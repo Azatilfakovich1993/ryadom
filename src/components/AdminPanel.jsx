@@ -204,7 +204,7 @@ function UserDetail({ user, onClose }) {
   const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—'
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col"
+    <div className="absolute inset-0 z-[200] flex flex-col"
          style={{ background: 'rgba(10,14,23,0.98)', backdropFilter: 'blur(20px)' }}>
       <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
            style={{ borderBottom: '1px solid var(--border)' }}>
@@ -267,11 +267,10 @@ function UserDetail({ user, onClose }) {
 }
 
 // ── Users ────────────────────────────────────────────────────
-function Users() {
+function Users({ onViewUser }) {
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
     getDocs(collection(db, 'profiles'))
@@ -303,7 +302,6 @@ function Users() {
 
   return (
     <div className="flex flex-col gap-2">
-      {selectedUser && <UserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />}
       <input value={search} onChange={e => setSearch(e.target.value)}
              placeholder="Поиск по имени или @username…"
              className="w-full rounded-2xl px-4 py-2.5 text-sm outline-none mb-1"
@@ -315,7 +313,7 @@ function Users() {
       </p>
       {filtered.map(u => (
         <div key={u.id} className="flex items-center gap-3 rounded-2xl px-3 py-2.5 cursor-pointer transition active:opacity-70"
-             onClick={() => setSelectedUser(u)}
+             onClick={() => onViewUser(u)}
              style={{ background: 'var(--bg-2)', border: `1px solid ${u.is_banned ? 'rgba(248,113,113,0.3)' : 'var(--border)'}`, opacity: u.is_banned ? 0.7 : 1 }}>
           <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 font-bold text-sm"
                style={{ background: 'var(--bg-3)', color: 'var(--accent)' }}>
@@ -669,6 +667,7 @@ function Loader() {
 // ── Main ─────────────────────────────────────────────────────
 export default function AdminPanel({ onClose }) {
   const [tab, setTab] = useState('analytics')
+  const [viewingUser, setViewingUser] = useState(null)
 
   return (
     <>
@@ -711,7 +710,8 @@ export default function AdminPanel({ onClose }) {
         <div className="flex-1 overflow-y-auto px-5 pb-8">
           {tab === 'analytics' && <Analytics />}
           {tab === 'events'    && <Events />}
-          {tab === 'users'     && <Users />}
+          {tab === 'users'     && <Users onViewUser={setViewingUser} />}
+          {viewingUser && <UserDetail user={viewingUser} onClose={() => setViewingUser(null)} />}
           {tab === 'reviews'   && <Reviews />}
           {tab === 'reports'   && <Reports />}
           {tab === 'feedback'  && <FeedbackList />}
