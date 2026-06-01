@@ -359,7 +359,7 @@ function Users({ onViewUser }) {
               {u.display_name || u.username}
             </p>
             <p className="text-[10px]" style={{ color: u.is_banned ? 'var(--danger)' : 'var(--hint)' }}>
-              @{u.username} {u.is_banned ? '· 🚫 Заблокирован' : ''}
+              @{u.username} · 📍 {u.events_count ?? 0} событий {u.is_banned ? '· 🚫 Бан' : ''}
             </p>
           </div>
           <div className="flex flex-col gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
