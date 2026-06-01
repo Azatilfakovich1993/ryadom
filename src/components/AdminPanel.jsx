@@ -187,12 +187,24 @@ function Events() {
 // ── User Detail ───────────────────────────────────────────────
 function UserDetail({ user, onClose }) {
   const [reviews, setReviews] = useState([])
+  const [activeEvents, setActiveEvents] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [showAvatarFull, setShowAvatarFull] = useState(false)
 
   useEffect(() => {
     getDocs(query(collection(db, 'reviews'), where('target_id', '==', user.id)))
       .then(snap => { setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
       .catch(() => setLoading(false))
+    // Count active events
+    getDocs(query(collection(db, 'events'), where('creator_id', '==', user.id)))
+      .then(snap => {
+        const now = new Date()
+        const active = snap.docs.filter(d => {
+          const exp = d.data().expires_at
+          return exp?.toDate ? exp.toDate() > now : new Date(exp) > now
+        })
+        setActiveEvents(active.length)
+      }).catch(() => {})
   }, [user.id])
 
   const deleteReview = async (reviewId) => {
@@ -215,8 +227,14 @@ function UserDetail({ user, onClose }) {
       <div className="overflow-y-auto flex-1 px-4 py-4">
         {/* Profile info */}
         <div className="flex items-center gap-4 mb-4 p-4 rounded-2xl" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-          <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center font-bold text-lg flex-shrink-0"
-               style={{ background: 'var(--bg-3)', color: 'var(--accent)' }}>
+          {showAvatarFull && user.avatar_url && (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95" onClick={() => setShowAvatarFull(false)}>
+              <img src={user.avatar_url} className="max-w-[90vw] max-h-[80vh] rounded-2xl object-contain" alt="" />
+            </div>
+          )}
+          <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center font-bold text-lg flex-shrink-0 transition active:scale-90"
+               style={{ background: 'var(--bg-3)', color: 'var(--accent)', cursor: user.avatar_url ? 'pointer' : 'default' }}
+               onClick={() => user.avatar_url && setShowAvatarFull(true)}>
             {user.avatar_url
               ? <img src={user.avatar_url} className="w-full h-full object-cover" alt="" />
               : (user.display_name?.[0] ?? '?').toUpperCase()}
@@ -227,7 +245,8 @@ function UserDetail({ user, onClose }) {
             {user.city && <p className="text-xs" style={{ color: 'var(--hint)' }}>📍 {user.city}</p>}
             {user.bio && <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>{user.bio}</p>}
             <div className="flex gap-3 mt-1 text-xs" style={{ color: 'var(--hint)' }}>
-              <span>📍 {user.events_count ?? 0} событий</span>
+              <span>📍 {user.events_count ?? 0} событий всего</span>
+              <span style={{ color: activeEvents > 0 ? 'var(--success)' : 'var(--hint)' }}>🟢 {activeEvents} активных</span>
               <span>⭐ {avg} ({reviews.length} отзывов)</span>
               {user.is_business && <span style={{ color: '#FFD700' }}>⭐ Бизнес</span>}
               {user.is_banned && <span style={{ color: 'var(--danger)' }}>🚫 Бан</span>}
