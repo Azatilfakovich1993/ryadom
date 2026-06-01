@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import AvatarLightbox from './AvatarLightbox'
 import { CATEGORY_CONFIG } from './MapComponent'
 import { getProfile, updateProfile, fetchMyEvents, deleteEvent, signOut, saveFeedback, deleteAccount } from '../lib/firebase'
 import { ACHIEVEMENTS, getAllUnlocked } from '../utils/achievements'
@@ -161,6 +162,7 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin, on
   const [saving, setSaving]           = useState(false)
   const [deleteStep, setDeleteStep]   = useState(0)
   const [deleting, setDeleting]       = useState(false)
+  const [showAvatarLightbox, setShowAvatarLightbox] = useState(false)
   const [showEvents, setShowEvents]   = useState(false)
   const [deletingId, setDeletingId]   = useState(null)
   const avatarInputRef = useRef(null)
@@ -266,11 +268,13 @@ export default function ProfileSheet({ authUser, onClose, onSignOut, onAdmin, on
 
         <div className="overflow-y-auto flex-1 px-5 pb-4">
 
+          {showAvatarLightbox && <AvatarLightbox url={avatar} name={profile?.display_name} onClose={() => setShowAvatarLightbox(false)} />}
           {/* Avatar + name */}
           <div className="flex items-center gap-4 mb-5">
             <div className="relative flex-shrink-0">
-              <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-2xl font-black"
-                   style={{ border: `2.5px solid ${level.color}`, background: avatar ? 'transparent' : 'var(--bg-2)' }}>
+              <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-2xl font-black transition active:scale-90"
+                   style={{ border: `2.5px solid ${level.color}`, background: avatar ? 'transparent' : 'var(--bg-2)', cursor: avatar ? 'pointer' : 'default' }}
+                   onClick={() => avatar && !editing && setShowAvatarLightbox(true)}>
                 {avatar
                   ? <img src={avatar} className="w-full h-full object-cover" alt="" />
                   : <span style={{ color: level.color }}>{initials || '?'}</span>

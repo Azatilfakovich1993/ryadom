@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import AvatarLightbox from './AvatarLightbox'
 import { CATEGORY_CONFIG } from './MapComponent'
 import { fetchMessages, sendMessage, deleteEvent, updateEvent, getProfile, fetchReactions, toggleReaction, submitReport, subscribeToMessages } from '../lib/firebase'
 import { tryUnlock, incrementMessageCount } from '../utils/achievements'
@@ -42,6 +43,7 @@ function EventChat({ event, user, authUser, onAchievement }) {
   const [contextMsg, setContextMsg] = useState(null)
   const [senderProfiles, setSenderProfiles] = useState({})
   const [replyTo, setReplyTo] = useState(null)
+  const [avatarLightbox, setAvatarLightbox] = useState(null)
   const inputRef = useRef(null)
   const endRef = useRef(null)
   const longPressTimer = useRef(null)
@@ -113,6 +115,7 @@ function EventChat({ event, user, authUser, onAchievement }) {
 
   return (
     <div className="mb-4" onClick={() => showEmoji && setShowEmoji(false)}>
+      {avatarLightbox && <AvatarLightbox url={avatarLightbox.url} name={avatarLightbox.name} onClose={() => setAvatarLightbox(null)} />}
       {viewingProfile && (
         <CreatorSheet
           creator={viewingProfile}
@@ -195,7 +198,10 @@ function EventChat({ event, user, authUser, onAchievement }) {
               <div key={msg.id} className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
                 {!isMe && (
                   <button type="button"
-                          onClick={() => sender && setViewingProfile(sender)}
+                          onClick={() => {
+                            if (sender?.avatar_url) setAvatarLightbox({ url: sender.avatar_url, name: sender.display_name })
+                            else if (sender) setViewingProfile(sender)
+                          }}
                           className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center self-end mb-0.5 overflow-hidden transition active:scale-90"
                           style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>
                     {sender?.avatar_url

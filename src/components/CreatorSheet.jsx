@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchReviews, submitReview } from '../lib/firebase'
 import { ACHIEVEMENTS } from '../utils/achievements'
+import AvatarLightbox from './AvatarLightbox'
 
 function Stars({ value, onChange, size = 28 }) {
   const [hover, setHover] = useState(0)
@@ -34,6 +35,7 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
   const [comment, setComment]   = useState('')
   const [sending, setSending]   = useState(false)
   const [done, setDone]         = useState(false)
+  const [showAvatar, setShowAvatar] = useState(false)
 
   const myId = (authUser?.uid ?? authUser?.id)?.toString() ?? (() => {
     let id = localStorage.getItem('ryadom_uid')
@@ -91,10 +93,12 @@ export default function CreatorSheet({ creator, event, authUser, onClose }) {
 
         <div className="overflow-y-auto flex-1 px-5 pt-1 pb-4">
 
+          {showAvatar && <AvatarLightbox url={creator.avatar_url} name={creator.display_name} onClose={() => setShowAvatar(false)} />}
           {/* Profile header */}
           <div className="flex items-center gap-4 mb-5">
-            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-xl font-black flex-shrink-0"
-                 style={{ background: 'var(--bg-2)', border: '2px solid var(--accent)44' }}>
+            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-xl font-black flex-shrink-0 transition active:scale-90"
+                 style={{ background: 'var(--bg-2)', border: '2px solid var(--accent)44', cursor: creator.avatar_url ? 'pointer' : 'default' }}
+                 onClick={() => creator.avatar_url && setShowAvatar(true)}>
               {creator.avatar_url
                 ? <img src={creator.avatar_url} className="w-full h-full object-cover" alt="" />
                 : <span style={{ color: 'var(--accent)' }}>{initials || '?'}</span>
