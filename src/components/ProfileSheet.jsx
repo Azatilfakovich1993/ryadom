@@ -609,9 +609,10 @@ function ProfileSwipe({ onClose, children }) {
       onTouchMove={e => {
         if (!dragging.current) return
         const d = e.touches[0].clientY - startY.current
-        if (d < 15) return // мёртвая зона — не реагируем на случайные касания
+        if (Math.abs(d) < 10) return
         activated.current = true
-        if (d > 0) setTy(d - 15)
+        e.stopPropagation() // блокируем Telegram от перехвата жеста
+        setTy(Math.max(0, d)) // двигаем только вниз, но min=0 (нельзя выше исходного)
       }}
       onTouchEnd={() => {
         if (!dragging.current) return
