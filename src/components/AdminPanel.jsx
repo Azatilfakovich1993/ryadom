@@ -290,18 +290,20 @@ function Users({ onViewUser }) {
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('default') // 'default' | 'active'
 
   useEffect(() => {
     getDocs(collection(db, 'profiles'))
       .then(snap => { setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
   }, [])
 
-  const filtered = search.trim()
+  const filtered = (search.trim()
     ? users.filter(u =>
         u.username?.toLowerCase().includes(search.toLowerCase()) ||
         u.display_name?.toLowerCase().includes(search.toLowerCase())
       )
-    : users
+    : [...users]
+  ).sort((a, b) => sortBy === 'active' ? (b.events_count ?? 0) - (a.events_count ?? 0) : 0)
 
   const toggleBan = async (user) => {
     const newVal = !user.is_banned
@@ -321,12 +323,23 @@ function Users({ onViewUser }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <input value={search} onChange={e => setSearch(e.target.value)}
-             placeholder="Поиск по имени или @username…"
-             className="w-full rounded-2xl px-4 py-2.5 text-sm outline-none mb-1"
-             style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}
-             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-             onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+      <div className="flex gap-2">
+        <input value={search} onChange={e => setSearch(e.target.value)}
+               placeholder="Поиск по имени или @username…"
+               className="flex-1 rounded-2xl px-4 py-2.5 text-sm outline-none"
+               style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}
+               onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+               onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+        <button onClick={() => setSortBy(s => s === 'active' ? 'default' : 'active')}
+                className="px-3 py-2 rounded-2xl text-xs font-bold transition active:scale-90 flex-shrink-0"
+                style={{
+                  background: sortBy === 'active' ? 'var(--accent)' : 'var(--bg-2)',
+                  color: sortBy === 'active' ? '#111827' : 'var(--hint)',
+                  border: '1px solid var(--border)'
+                }}>
+          {sortBy === 'active' ? '🔥 По активности' : '📊 Сортировка'}
+        </button>
+      </div>
       <p className="text-xs" style={{ color: 'var(--hint)' }}>
         {search ? `Найдено: ${filtered.length}` : `Всего: ${users.length}`}
       </p>
