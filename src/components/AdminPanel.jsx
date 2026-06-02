@@ -11,6 +11,30 @@ const TABS = [
   { key: 'reports',   label: '🚩 Жалобы' },
   { key: 'feedback',  label: '💡 Обращения' },
   { key: 'broadcast', label: '📢 Рассылка' },
+  { key: 'seed',      label: '🌱 Тест-данные' },
+]
+
+const SEED_EVENTS = [
+  { title: 'Пробка на Пушкинской — объезд через Горького', category: 'help', lat: 56.8501, lon: 53.2098 },
+  { title: 'В парке Кирова играет живая музыка', category: 'chat', lat: 56.8612, lon: 53.1987 },
+  { title: 'Акция в Додо Пицца до 18:00 — скидка 30%', category: 'food', lat: 56.8489, lon: 53.2089 },
+  { title: 'На набережной пруда сейчас фестиваль еды', category: 'food', lat: 56.8601, lon: 53.2143 },
+  { title: 'Перекрыли ул. Ленина — идут ремонтные работы', category: 'help', lat: 56.8476, lon: 53.2067 },
+  { title: 'В ТЦ Столица открылся новый фудкорт', category: 'food', lat: 56.8534, lon: 53.2178 },
+  { title: 'Концерт на Центральной площади — вход свободный', category: 'chat', lat: 56.8512, lon: 53.2056 },
+  { title: 'На Буммаше сейчас дают бесплатную рассаду', category: 'help', lat: 56.8734, lon: 53.2478 },
+  { title: 'Футбол во дворе у школы №30, нужны игроки', category: 'sport', lat: 56.8527, lon: 53.2114 },
+  { title: 'Светофор не работает на Карла Маркса', category: 'help', lat: 56.8556, lon: 53.2234 },
+  { title: 'Кто сейчас у пруда? Присоединяйтесь', category: 'chat', lat: 56.8589, lon: 53.2212 },
+  { title: 'В Ашане скидки на овощи — только сегодня', category: 'food', lat: 56.8445, lon: 53.2356 },
+  { title: 'Велосипедисты едут колонной по Молодёжной', category: 'sport', lat: 56.8623, lon: 53.2312 },
+  { title: 'Потерялась собака в районе Север — помогите', category: 'help', lat: 56.8678, lon: 53.2389 },
+  { title: 'Ярмарка на Центральном рынке до 17:00', category: 'food', lat: 56.8467, lon: 53.2145 },
+  { title: 'Бесплатный мастер-класс по йоге в парке', category: 'sport', lat: 56.8712, lon: 53.2445 },
+  { title: 'Кафе Урал — бизнес-ланч 150р до 14:00', category: 'food', lat: 56.8498, lon: 53.2067 },
+  { title: 'Закрыт въезд на Молодёжную — ищите объезд', category: 'help', lat: 56.8445, lon: 53.1989 },
+  { title: 'Вечерняя пробежка от фонтана в 19:30', category: 'sport', lat: 56.8534, lon: 53.2201 },
+  { title: 'Раздаю котят в добрые руки — Север', category: 'help', lat: 56.8556, lon: 53.2098 },
 ]
 
 // ── Analytics ────────────────────────────────────────────────
@@ -697,6 +721,53 @@ function Loader() {
 }
 
 // ── Main ─────────────────────────────────────────────────────
+function SeedEvents() {
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const seed = async () => {
+    if (!confirm(`Создать ${SEED_EVENTS.length} тестовых событий?`)) return
+    setLoading(true)
+    const now = Date.now()
+    for (const e of SEED_EVENTS) {
+      const hours = 2 + Math.floor(Math.random() * 2)
+      await addDoc(collection(db, 'events'), {
+        title: e.title,
+        category: e.category,
+        lat: e.lat + (Math.random() - 0.5) * 0.008,
+        lon: e.lon + (Math.random() - 0.5) * 0.008,
+        expires_at: new Date(now + hours * 60 * 60 * 1000),
+        creator_id: 'ZWbYDP3i1ffKoAAlzuWdqjGnm562',
+        chat_enabled: true,
+        photos: [],
+        creator_is_business: false,
+        video_url: null,
+        created_at: new Date(),
+      })
+    }
+    setLoading(false)
+    setDone(true)
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-2xl p-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>Тестовые события для Ижевска</p>
+        <p className="text-xs mb-4" style={{ color: 'var(--hint)' }}>Добавит {SEED_EVENTS.length} реалистичных событий на карту — информационные, еда, спорт, помощь. Живут 2-3 часа.</p>
+        {done ? (
+          <div className="text-center py-3" style={{ color: 'var(--success)' }}>✅ {SEED_EVENTS.length} событий добавлено!</div>
+        ) : (
+          <button onClick={seed} disabled={loading}
+                  className="w-full py-3 rounded-2xl text-sm font-bold transition active:scale-95 disabled:opacity-50"
+                  style={{ background: 'var(--accent)', color: '#111827' }}>
+            {loading ? '⏳ Создаю события…' : `🌱 Создать ${SEED_EVENTS.length} тестовых событий`}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function AdminPanel({ onClose }) {
   const [tab, setTab] = useState('analytics')
   const [viewingUser, setViewingUser] = useState(null)
@@ -748,6 +819,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'reports'   && <Reports />}
           {tab === 'feedback'  && <FeedbackList />}
           {tab === 'broadcast' && <Broadcast />}
+          {tab === 'seed'      && <SeedEvents />}
         </div>
       </div>
     </>
