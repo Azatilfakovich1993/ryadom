@@ -211,7 +211,12 @@ export default function App() {
 
   // ── Announcements ─────────────────────────────────────────
   useEffect(() => {
-    fetchAnnouncements(authUser?.uid ?? null).then(a => { if (a) setAnnouncement(a) }).catch(() => {})
+    fetchAnnouncements(authUser?.uid ?? null).then(a => {
+      if (!a) return
+      const seen = localStorage.getItem('ryadom_seen_announcement')
+      if (seen === a.id) return // уже видели это объявление
+      setAnnouncement(a)
+    }).catch(() => {})
   }, [authUser])
 
   // ── Auth state (Firebase) ─────────────────────────────────
@@ -821,7 +826,7 @@ export default function App() {
                   <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>Сообщение от RYADOM</p>
                   <p className="text-base font-bold" style={{ color }}>{title}</p>
                 </div>
-                <button onClick={() => setAnnouncement(null)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center"
+                <button onClick={() => { localStorage.setItem('ryadom_seen_announcement', announcement.id); setAnnouncement(null) }} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center"
                         style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>✕</button>
               </div>
               <div className="overflow-y-auto flex-1">
@@ -833,7 +838,7 @@ export default function App() {
                         style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}>
                   🔗 Поделиться
                 </button>
-                <button onClick={() => setAnnouncement(null)}
+                <button onClick={() => { localStorage.setItem('ryadom_seen_announcement', announcement.id); setAnnouncement(null) }}
                         className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
                         style={{ background: 'var(--accent)', color: '#111827' }}>
                   Понятно
