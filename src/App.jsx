@@ -795,10 +795,21 @@ export default function App() {
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
       {announcement && (() => {
-        const icons = { warning: '❗', success: '✅', info: '📢' }
+        const icons  = { warning: '❗', success: '✅', info: '📢' }
+        const titles = { warning: 'Важно', success: 'Хорошие новости', info: 'Информация' }
         const colors = { warning: '#f59e0b', success: '#34d399', info: '#22d3ee' }
         const color = colors[announcement.type] ?? colors.info
-        const icon = icons[announcement.type] ?? '📢'
+        const icon  = icons[announcement.type] ?? '📢'
+        const title = titles[announcement.type] ?? 'Сообщение'
+        const handleShare = async () => {
+          const shareData = { title: 'RYADOM', text: announcement.message, url: 'https://ryadom-1a705.web.app' }
+          if (navigator.share) {
+            try { await navigator.share(shareData) } catch {}
+          } else {
+            await navigator.clipboard.writeText(`${announcement.message}\n\nhttps://ryadom-1a705.web.app`).catch(() => {})
+            showToast('Ссылка скопирована!', 'success')
+          }
+        }
         return (
           <div className="absolute inset-0 z-[60] flex items-end"
                style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
@@ -808,7 +819,7 @@ export default function App() {
                 <span style={{ fontSize: 28 }}>{icon}</span>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>Сообщение от RYADOM</p>
-                  <p className="text-base font-bold" style={{ color }}>Важное обновление</p>
+                  <p className="text-base font-bold" style={{ color }}>{title}</p>
                 </div>
                 <button onClick={() => setAnnouncement(null)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center"
                         style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>✕</button>
@@ -817,13 +828,11 @@ export default function App() {
                 <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text)' }}>{announcement.message}</p>
               </div>
               <div className="flex gap-3">
-                {navigator.share && (
-                  <button onClick={() => navigator.share({ title: 'RYADOM', text: announcement.message, url: 'https://ryadom-1a705.web.app' })}
-                          className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
-                          style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}>
-                    🔗 Поделиться
-                  </button>
-                )}
+                <button onClick={handleShare}
+                        className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
+                        style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}>
+                  🔗 Поделиться
+                </button>
                 <button onClick={() => setAnnouncement(null)}
                         className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
                         style={{ background: 'var(--accent)', color: '#111827' }}>
