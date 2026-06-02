@@ -292,16 +292,22 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
     }
   }, [mapReady, radarActive, userLocation]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Маркеры событий ─────────────────────────────────────────
+  // ── Маркеры событий с кластеризацией ────────────────────────
+  const clustererRef = useRef(null)
+
   useEffect(() => {
     if (!mapReady || !pinLayoutRef.current || !mapRef.current) return
-    marksRef.current.forEach(p => {
-      try { mapRef.current.geoObjects.remove(p) } catch (_) {}
-    })
+
+    // Удаляем старый кластер
+    if (clustererRef.current) {
+      try { mapRef.current.geoObjects.remove(clustererRef.current) } catch (_) {}
+      clustererRef.current = null
+    }
     marksRef.current = []
 
     const spread = spreadOverlapping(events)
     const R = 19, circum = 2 * Math.PI * R
+    const placemarks = []
 
     spread.forEach((event, i) => {
       const cfg        = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG.chat
@@ -318,9 +324,26 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         { iconLayout: pinLayoutRef.current }
       )
       pm.events.add('click', () => onEventClick(events[i]))
-      mapRef.current.geoObjects.add(pm)
+      placemarks.push(pm)
       marksRef.current.push(pm)
     })
+
+    // Кластеризация — группируем если событий > 5
+    if (placemarks.length > 5) {
+      const clusterer = new window.ymaps.Clusterer({
+        preset: 'islands#invertedDarkBlueClusterIcons',
+        groupByCoordinates: false,
+        clusterDisableClickZoom: false,
+        clusterHideIconOnBalloonOpen: false,
+        geoObjectHideIconOnBalloonOpen: false,
+        clusterIconColor: '#22d3ee',
+      })
+      clusterer.add(placemarks)
+      mapRef.current.geoObjects.add(clusterer)
+      clustererRef.current = clusterer
+    } else {
+      placemarks.forEach(pm => mapRef.current.geoObjects.add(pm))
+    }
   }, [mapReady, events, onEventClick, tick])
 
   const handleLocateMe = () => {
