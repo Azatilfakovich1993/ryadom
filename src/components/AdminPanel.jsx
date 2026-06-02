@@ -554,7 +554,7 @@ function Broadcast() {
           ))}
         </div>
 
-        <textarea value={message} onChange={e => setMessage(e.target.value.slice(0, 200))}
+        <textarea value={message} onChange={e => setMessage(e.target.value.slice(0, 1000))}
                   placeholder="Текст сообщения…"
                   rows={3}
                   className="w-full rounded-xl px-3 py-2 text-sm resize-none outline-none mb-3"

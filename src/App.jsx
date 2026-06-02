@@ -795,23 +795,45 @@ export default function App() {
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
       {announcement && (() => {
-        const colors = { warning: ['rgba(245,158,11,0.15)', 'rgba(245,158,11,0.4)'], success: ['rgba(52,211,153,0.15)', 'rgba(52,211,153,0.4)'], info: ['rgba(34,211,238,0.15)', 'rgba(34,211,238,0.4)'] }
-        const icons  = { warning: '❗', success: '✅', info: 'ℹ️' }
-        const [bg, border] = colors[announcement.type] ?? colors.info
+        const icons = { warning: '❗', success: '✅', info: '📢' }
+        const colors = { warning: '#f59e0b', success: '#34d399', info: '#22d3ee' }
+        const color = colors[announcement.type] ?? colors.info
+        const icon = icons[announcement.type] ?? '📢'
         return (
-          <div className="absolute top-20 left-4 right-4 z-30 rounded-2xl px-4 py-3"
-               style={{ background: bg, border: `1px solid ${border}`, backdropFilter: 'blur(16px)' }}>
-            <div className="flex items-center gap-2 mb-1">
-              <span style={{ fontSize: 14 }}>{icons[announcement.type] ?? 'ℹ️'}</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>
-                Сообщение от администратора
-              </span>
-              <button onClick={() => setAnnouncement(null)} className="ml-auto" style={{ color: 'var(--hint)', fontSize: 14 }}>✕</button>
+          <div className="absolute inset-0 z-[60] flex items-end"
+               style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+            <div className="w-full rounded-t-3xl px-5 pt-5 pb-8 flex flex-col gap-4"
+                 style={{ background: 'rgba(17,24,39,0.98)', border: '1px solid var(--border)', borderBottom: 'none', maxHeight: '80vh' }}>
+              <div className="flex items-center gap-3">
+                <span style={{ fontSize: 28 }}>{icon}</span>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--hint)' }}>Сообщение от RYADOM</p>
+                  <p className="text-base font-bold" style={{ color }}>Важное обновление</p>
+                </div>
+                <button onClick={() => setAnnouncement(null)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ background: 'var(--bg-2)', color: 'var(--hint)' }}>✕</button>
+              </div>
+              <div className="overflow-y-auto flex-1">
+                <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text)' }}>{announcement.message}</p>
+              </div>
+              <div className="flex gap-3">
+                {navigator.share && (
+                  <button onClick={() => navigator.share({ title: 'RYADOM', text: announcement.message, url: 'https://ryadom-1a705.web.app' })}
+                          className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
+                          style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}>
+                    🔗 Поделиться
+                  </button>
+                )}
+                <button onClick={() => setAnnouncement(null)}
+                        className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
+                        style={{ background: 'var(--accent)', color: '#111827' }}>
+                  Понятно
+                </button>
+              </div>
             </div>
-            <p className="text-sm" style={{ color: 'var(--text)' }}>{announcement.message}</p>
           </div>
         )
-      })()}}
+      })()}
 
       {showOnboarding && (
         <OnboardingScreen onDone={() => {
