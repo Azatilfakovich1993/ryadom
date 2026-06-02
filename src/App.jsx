@@ -192,6 +192,7 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('ryadom_onboarded'))
   const [showAdmin, setShowAdmin]           = useState(false)
   const [newEventIds, setNewEventIds]       = useState(new Set())
+  const [showShareMenu, setShowShareMenu]   = useState(false)
   const [vkInsetTop, setVkInsetTop]         = useState(0)
   const [announcement, setAnnouncement]     = useState(null)
   const radarShown                          = useRef(false)
@@ -806,20 +807,15 @@ export default function App() {
         const color = colors[announcement.type] ?? colors.info
         const icon  = icons[announcement.type] ?? '📢'
         const title = titles[announcement.type] ?? 'Сообщение'
-        const shareText = `${announcement.message}\n\n📲 Скачать приложение:\n🤖 Android (RuStore): https://www.rustore.ru/catalog/app/com.ryadom.app\n🍎 iPhone (Safari): https://ryadom-1a705.web.app\n✈️ Telegram: https://t.me/ryadom_events_bot`
-        const handleShare = async () => {
-          let shared = false
-          if (navigator.share) {
-            try {
-              await navigator.share({ title: 'RYADOM — живые события', text: shareText, url: 'https://ryadom-1a705.web.app' })
-              shared = true
-            } catch {}
-          }
-          if (!shared) {
-            await navigator.clipboard.writeText(shareText).catch(() => {})
-            showToast('Текст скопирован — вставьте в любой мессенджер', 'info')
-          }
-        }
+        const shareTextRaw = `Присоединяйся к RYADOM — карта живых событий рядом с тобой 📍\n\n⬇️ Скачать:\n🤖 Android: https://www.rustore.ru/catalog/app/com.ryadom.app\n🍎 iPhone: https://ryadom-1a705.web.app\n✈️ Telegram: https://t.me/ryadom_events_bot`
+        const shareText = encodeURIComponent(shareTextRaw)
+        const shareUrl = encodeURIComponent('https://ryadom-1a705.web.app')
+        const shareApps = [
+          { label: 'WhatsApp', icon: '💬', url: `https://wa.me/?text=${shareText}` },
+          { label: 'Telegram', icon: '✈️', url: `https://t.me/share/url?url=${shareUrl}&text=${shareText}` },
+          { label: 'ВКонтакте', icon: '🔵', url: `https://vk.com/share.php?url=${shareUrl}` },
+          { label: 'SMS', icon: '📱', url: `sms:?body=${shareText}` },
+        ]
         return (
           <div className="absolute inset-0 z-[60] flex items-end"
                style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
@@ -837,8 +833,21 @@ export default function App() {
               <div className="overflow-y-auto flex-1">
                 <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text)' }}>{announcement.message}</p>
               </div>
+              {showShareMenu && (
+                <div className="grid grid-cols-4 gap-2 mb-2">
+                  {shareApps.map(app => (
+                    <a key={app.label} href={app.url} target="_blank" rel="noopener noreferrer"
+                       onClick={() => setShowShareMenu(false)}
+                       className="flex flex-col items-center gap-1 py-2 rounded-2xl transition active:scale-90"
+                       style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                      <span style={{ fontSize: 22 }}>{app.icon}</span>
+                      <span className="text-[9px]" style={{ color: 'var(--hint)' }}>{app.label}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-3">
-                <button onClick={handleShare}
+                <button onClick={() => setShowShareMenu(v => !v)}
                         className="flex-1 py-3 rounded-2xl text-sm font-bold transition active:scale-95"
                         style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}>
                   🔗 Поделиться
