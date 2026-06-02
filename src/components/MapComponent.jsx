@@ -358,10 +358,23 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
       const clusterer = new window.ymaps.Clusterer({
         clusterIconLayout: clusterLayoutRef.current,
         groupByCoordinates: false,
-        clusterDisableClickZoom: false,
+        clusterDisableClickZoom: true,
         clusterOpenBalloonOnClick: false,
         gridSize: 64,
         minClusterSize: 3,
+      })
+      clusterer.events.add('click', e => {
+        const target = e.get('target')
+        if (target.getGeoObjects) {
+          const bounds = target.getBounds()
+          if (bounds) {
+            mapRef.current.setBounds(bounds, {
+              checkZoomRange: true,
+              zoomMargin: [60, 40, 60, 40],
+              duration: 300,
+            })
+          }
+        }
       })
       clusterer.add(placemarks)
       mapRef.current.geoObjects.add(clusterer)
