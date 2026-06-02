@@ -359,6 +359,9 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
         clusterIconLayout: clusterLayoutRef.current,
         groupByCoordinates: false,
         clusterDisableClickZoom: false,
+        clusterOpenBalloonOnClick: false,
+        gridSize: 64,
+        minClusterSize: 3,
       })
       clusterer.add(placemarks)
       mapRef.current.geoObjects.add(clusterer)
