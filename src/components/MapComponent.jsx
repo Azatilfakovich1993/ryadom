@@ -68,6 +68,29 @@ const YA_ICON_SVG = encodeURIComponent(
 )
 const YA_ICON_URL = `data:image/svg+xml,${YA_ICON_SVG}`
 
+function makeClusterLayout(ymaps) {
+  return ymaps.templateLayoutFactory.createClass(`
+    <div style="position:relative;width:48px;height:64px;transform:translate(-24px,-62px);cursor:pointer;">
+      <svg width="48" height="64" viewBox="0 0 48 72" style="position:absolute;top:0;left:0;overflow:visible;">
+        <ellipse cx="24" cy="62" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+        <path d="M24 2 C12 2 3 11 3 23 C3 36 24 60 24 60 C24 60 45 36 45 23 C45 11 36 2 24 2 Z"
+              fill="#111827" stroke="#22d3ee" stroke-width="2.5"/>
+        <text x="24" y="27" font-size="{{ properties.geoObjects.length > 9 ? 12 : 15 }}"
+              font-weight="900" text-anchor="middle" dominant-baseline="middle"
+              fill="#22d3ee" font-family="system-ui,sans-serif"
+              style="user-select:none;pointer-events:none">{{ properties.geoObjects.length }}</text>
+      </svg>
+    </div>
+  `, {
+    build: function() {
+      this.constructor.superclass.build.call(this)
+    },
+    getShape: function() {
+      return new ymaps.shape.Rectangle(new ymaps.geometry.pixel.Rectangle([[0,0],[48,64]]))
+    }
+  })
+}
+
 function makePinLayout(ymaps) {
   return ymaps.templateLayoutFactory.createClass(`
     <div class="rp-wrap">
@@ -141,7 +164,8 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
   const containerRef   = useRef(null)
   const mapRef         = useRef(null)
   const marksRef       = useRef([])
-  const pinLayoutRef   = useRef(null)
+  const pinLayoutRef     = useRef(null)
+  const clusterLayoutRef = useRef(null)
   const userMarkRef    = useRef(null)
   const radarCleanRef  = useRef(null)
   const userLocRef     = useRef(userLocation)
@@ -163,7 +187,8 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
       window.ymaps.ready(() => {
         if (mapRef.current) return
         injectStyles()
-        pinLayoutRef.current = makePinLayout(window.ymaps)
+        pinLayoutRef.current     = makePinLayout(window.ymaps)
+        clusterLayoutRef.current = makeClusterLayout(window.ymaps)
         const loc = userLocRef.current
         const center = loc ? [loc.lat, loc.lon] : [55.7558, 37.6176]
         mapRef.current = new window.ymaps.Map(containerRef.current, {
@@ -331,12 +356,9 @@ export default function MapComponent({ events, onEventClick, userLocation, radar
     // Кластеризация — группируем если событий > 5
     if (placemarks.length > 5) {
       const clusterer = new window.ymaps.Clusterer({
-        preset: 'islands#invertedDarkBlueClusterIcons',
+        clusterIconLayout: clusterLayoutRef.current,
         groupByCoordinates: false,
         clusterDisableClickZoom: false,
-        clusterHideIconOnBalloonOpen: false,
-        geoObjectHideIconOnBalloonOpen: false,
-        clusterIconColor: '#22d3ee',
       })
       clusterer.add(placemarks)
       mapRef.current.geoObjects.add(clusterer)
