@@ -806,13 +806,18 @@ export default function App() {
         const color = colors[announcement.type] ?? colors.info
         const icon  = icons[announcement.type] ?? '📢'
         const title = titles[announcement.type] ?? 'Сообщение'
+        const shareText = `${announcement.message}\n\n📲 Скачать приложение:\n🤖 Android (RuStore): https://www.rustore.ru/catalog/app/com.ryadom.app\n🍎 iPhone (Safari): https://ryadom-1a705.web.app\n✈️ Telegram: https://t.me/ryadom_events_bot`
         const handleShare = async () => {
-          const shareData = { title: 'RYADOM', text: announcement.message, url: 'https://ryadom-1a705.web.app' }
+          let shared = false
           if (navigator.share) {
-            try { await navigator.share(shareData) } catch {}
-          } else {
-            await navigator.clipboard.writeText(`${announcement.message}\n\nhttps://ryadom-1a705.web.app`).catch(() => {})
-            showToast('Ссылка скопирована!', 'success')
+            try {
+              await navigator.share({ title: 'RYADOM — живые события', text: shareText, url: 'https://ryadom-1a705.web.app' })
+              shared = true
+            } catch {}
+          }
+          if (!shared) {
+            await navigator.clipboard.writeText(shareText).catch(() => {})
+            showToast('Текст скопирован — вставьте в любой мессенджер', 'info')
           }
         }
         return (
