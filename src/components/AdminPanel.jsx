@@ -176,8 +176,18 @@ function Events() {
   const handleDelete = async (id) => {
     if (!confirm('Удалить событие?')) return
     setDeletingId(id)
-    await deleteDoc(doc(db, 'events', id))
-    setEvents(prev => prev.filter(e => e.id !== id))
+    try {
+      await deleteDoc(doc(db, 'events', id))
+      setEvents(prev => {
+        const updated = prev.filter(e => e.id !== id)
+        // Чистим кеш карты
+        const cached = JSON.parse(localStorage.getItem('ryadom_events') || '[]')
+        localStorage.setItem('ryadom_events', JSON.stringify(cached.filter(e => e.id !== id)))
+        return updated
+      })
+    } catch (e) {
+      alert('Ошибка удаления: ' + e.message)
+    }
     setDeletingId(null)
   }
 
