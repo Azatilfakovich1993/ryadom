@@ -14,27 +14,35 @@ const TABS = [
   { key: 'seed',      label: '🌱 Тест-данные' },
 ]
 
+const SEED_CREATORS = [
+  'seed_user_a1b2c3d4e5f6',
+  'seed_user_b2c3d4e5f6a1',
+  'seed_user_c3d4e5f6a1b2',
+  'seed_user_d4e5f6a1b2c3',
+  'seed_user_e5f6a1b2c3d4',
+]
+
 const SEED_EVENTS = [
-  { title: 'Пробка на Пушкинской — объезд через Горького', category: 'help', lat: 56.8501, lon: 53.2098 },
-  { title: 'В парке Кирова играет живая музыка', category: 'chat', lat: 56.8612, lon: 53.1987 },
-  { title: 'Акция в Додо Пицца до 18:00 — скидка 30%', category: 'food', lat: 56.8489, lon: 53.2089 },
-  { title: 'На набережной пруда сейчас фестиваль еды', category: 'food', lat: 56.8601, lon: 53.2143 },
-  { title: 'Перекрыли ул. Ленина — идут ремонтные работы', category: 'help', lat: 56.8476, lon: 53.2067 },
-  { title: 'В ТЦ Столица открылся новый фудкорт', category: 'food', lat: 56.8534, lon: 53.2178 },
-  { title: 'Концерт на Центральной площади — вход свободный', category: 'chat', lat: 56.8512, lon: 53.2056 },
-  { title: 'На Буммаше сейчас дают бесплатную рассаду', category: 'help', lat: 56.8734, lon: 53.2478 },
-  { title: 'Футбол во дворе у школы №30, нужны игроки', category: 'sport', lat: 56.8527, lon: 53.2114 },
-  { title: 'Светофор не работает на Карла Маркса', category: 'help', lat: 56.8556, lon: 53.2234 },
-  { title: 'Кто сейчас у пруда? Присоединяйтесь', category: 'chat', lat: 56.8589, lon: 53.2212 },
-  { title: 'В Ашане скидки на овощи — только сегодня', category: 'food', lat: 56.8445, lon: 53.2356 },
-  { title: 'Велосипедисты едут колонной по Молодёжной', category: 'sport', lat: 56.8623, lon: 53.2312 },
-  { title: 'Потерялась собака в районе Север — помогите', category: 'help', lat: 56.8678, lon: 53.2389 },
-  { title: 'Ярмарка на Центральном рынке до 17:00', category: 'food', lat: 56.8467, lon: 53.2145 },
-  { title: 'Бесплатный мастер-класс по йоге в парке', category: 'sport', lat: 56.8712, lon: 53.2445 },
-  { title: 'Кафе Урал — бизнес-ланч 150р до 14:00', category: 'food', lat: 56.8498, lon: 53.2067 },
-  { title: 'Закрыт въезд на Молодёжную — ищите объезд', category: 'help', lat: 56.8445, lon: 53.1989 },
-  { title: 'Вечерняя пробежка от фонтана в 19:30', category: 'sport', lat: 56.8534, lon: 53.2201 },
-  { title: 'Раздаю котят в добрые руки — Север', category: 'help', lat: 56.8556, lon: 53.2098 },
+  { title: 'Футбол у Строителя — нужны ещё 3 человека', category: 'sport', lat: 56.8385, lon: 53.2095 },
+  { title: 'Иду на Татар базар — кто со мной?', category: 'food', lat: 56.8420, lon: 53.2180 },
+  { title: 'Утренняя пробежка от вокзала, 7:00', category: 'sport', lat: 56.8478, lon: 53.2218 },
+  { title: 'Волейбол у Строителя, есть мяч', category: 'sport', lat: 56.8382, lon: 53.2092 },
+  { title: 'Гуляю у вокзала — кто рядом?', category: 'chat', lat: 56.8480, lon: 53.2210 },
+  { title: 'Нужна помощь донести сумки от вокзала до такси', category: 'help', lat: 56.8488, lon: 53.2225 },
+  { title: 'Пикник в сквере у Строителя — присоединяйтесь', category: 'food', lat: 56.8378, lon: 53.2088 },
+  { title: 'Ищу попутчика с вокзала до центра', category: 'help', lat: 56.8486, lon: 53.2223 },
+  { title: 'Сижу у вокзала жду электричку — кто рядом?', category: 'chat', lat: 56.8485, lon: 53.2220 },
+  { title: 'Детская площадка у Строителя — встречаемся', category: 'chat', lat: 56.8376, lon: 53.2085 },
+  { title: 'Обедаю у Татар базара — кто составит компанию?', category: 'food', lat: 56.8415, lon: 53.2175 },
+  { title: 'Бадминтон у Строителя, ракетки есть', category: 'sport', lat: 56.8383, lon: 53.2094 },
+  { title: 'Вечерняя прогулка по Строителю в 19:00', category: 'chat', lat: 56.8388, lon: 53.2102 },
+  { title: 'Нужна помощь с переездом — Строитель', category: 'help', lat: 56.8380, lon: 53.2090 },
+  { title: 'Кто идёт на рынок? Пойдём вместе', category: 'food', lat: 56.8422, lon: 53.2182 },
+  { title: 'Самокат сдам в аренду на час — вокзал', category: 'help', lat: 56.8482, lon: 53.2216 },
+  { title: 'Настолки вечером — Строитель, кто?', category: 'chat', lat: 56.8379, lon: 53.2087 },
+  { title: 'Йога на улице у вокзала утром', category: 'sport', lat: 56.8476, lon: 53.2214 },
+  { title: 'Ищу компанию поесть шаурму у базара', category: 'food', lat: 56.8418, lon: 53.2178 },
+  { title: 'Выгуливаю собаку у Строителя — присоединяйтесь', category: 'chat', lat: 56.8384, lon: 53.2096 },
 ]
 
 // ── Analytics ────────────────────────────────────────────────
@@ -731,13 +739,14 @@ function SeedEvents() {
     const now = Date.now()
     for (const e of SEED_EVENTS) {
       const hours = 2 + Math.floor(Math.random() * 2)
+      const creator = SEED_CREATORS[Math.floor(Math.random() * SEED_CREATORS.length)]
       await addDoc(collection(db, 'events'), {
         title: e.title,
         category: e.category,
         lat: e.lat + (Math.random() - 0.5) * 0.008,
         lon: e.lon + (Math.random() - 0.5) * 0.008,
         expires_at: new Date(now + hours * 60 * 60 * 1000),
-        creator_id: 'ZWbYDP3i1ffKoAAlzuWdqjGnm562',
+        creator_id: creator,
         chat_enabled: true,
         photos: [],
         creator_is_business: false,
