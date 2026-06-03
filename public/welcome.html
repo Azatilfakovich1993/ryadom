@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#0a0e17"/>
+  <title>RYADOM — живые события рядом</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0e17;
+      color: #f9fafb;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      animation: fadeDown 0.8s ease;
+    }
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: #22d3ee22;
+      border: 1.5px solid #22d3ee44;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .logo-text {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #22d3ee;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse 2s infinite;
+    }
+
+    .pin-wrap {
+      position: relative;
+      margin-bottom: 40px;
+      animation: fadeIn 1s ease 0.3s both;
+    }
+    .pin-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      border: 2px solid #22d3ee44;
+      animation: ringPulse 2s ease-out infinite;
+    }
+    .pin-ring-2 {
+      animation-delay: 0.7s;
+    }
+    .pin {
+      font-size: 64px;
+      position: relative;
+      z-index: 1;
+      animation: pinBounce 2s ease-in-out infinite;
+    }
+
+    .headline {
+      font-size: 28px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.3;
+      margin-bottom: 16px;
+      animation: fadeUp 0.8s ease 0.4s both;
+    }
+    .headline span { color: #22d3ee; }
+
+    .sub {
+      font-size: 15px;
+      color: #9ca3af;
+      text-align: center;
+      line-height: 1.6;
+      max-width: 320px;
+      margin-bottom: 48px;
+      animation: fadeUp 0.8s ease 0.6s both;
+    }
+
+    .features {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 48px;
+      animation: fadeUp 0.8s ease 0.7s both;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .feature {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      animation: fadeUp 0.8s ease 0.9s both;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.15s, opacity 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-primary {
+      background: #22d3ee;
+      color: #0a0e17;
+    }
+    .btn-secondary {
+      background: #1f2937;
+      color: #f9fafb;
+      border: 1px solid #374151;
+    }
+    .btn-tg {
+      background: #1f2937;
+      color: #2AABEE;
+      border: 1px solid #2AABEE33;
+    }
+    .btn-icon { font-size: 20px; }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #4b5563;
+      text-align: center;
+      animation: fadeIn 1s ease 1.2s both;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    @keyframes ringPulse {
+      0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+    }
+    @keyframes pinBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo">
+    <div class="logo-icon">📍</div>
+    <div class="logo-text">RYADOM</div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="pin-wrap">
+    <div class="pin-ring"></div>
+    <div class="pin-ring pin-ring-2"></div>
+    <div class="pin">📍</div>
+  </div>
+
+  <h1 class="headline">Что происходит<br><span>рядом с тобой</span><br>прямо сейчас?</h1>
+
+  <p class="sub">
+    Живые события твоего района — спорт, встречи, помощь соседям.<br>
+    Исчезает через 3 часа. Никакой истории.
+  </p>
+
+  <div class="features">
+    <div class="feature">🗺 Карта событий</div>
+    <div class="feature">💬 Чат участников</div>
+    <div class="feature">⏱ Исчезает за 3ч</div>
+    <div class="feature">📍 Только рядом</div>
+  </div>
+
+  <div class="buttons">
+    <a href="https://www.rustore.ru/catalog/app/com.ryadom.app" class="btn btn-primary">
+      <span class="btn-icon">🤖</span>
+      Скачать для Android
+    </a>
+    <a href="https://ryadom-1a705.web.app" class="btn btn-secondary">
+      <span class="btn-icon">🍎</span>
+      Открыть на iPhone
+    </a>
+    <a href="https://t.me/ryadom_events_bot" class="btn btn-tg">
+      <span class="btn-icon">✈️</span>
+      Открыть в Telegram
+    </a>
+  </div>
+
+  <p class="footer">Ижевск · 2026 · Бесплатно</p>
+
+</body>
+</html>
